@@ -3,3 +3,7 @@ tests
 *.log
 .git
 .cache
+*_rsa
+*.pub
+client-secret.json
+credentials.tar.gz
