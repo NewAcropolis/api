@@ -20,7 +20,6 @@ before_deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script: rsync -ravzhe "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" 
-          --exclude-from '$TRAVIS_BUILD_DIR/.exclude' --progress $TRAVIS_BUILD_DIR/ $user@$deploy_host:www-development
+  script: ./deploy.sh
   on:
     branch: master

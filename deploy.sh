@@ -1,44 +1,32 @@
-#!/bin/sh
-
+#!/bin/bash
 set +x
 
-if [ -e environment.sh ]; then
+if [ -z $TRAVIS_BUILD_DIR ]; then
     echo "source environment"
     source environment.sh
-    basedir=.
+    src=.
 else 
-    if [ -z "$environment" ]; then
-        echo "setting environment as preview"
-        environment=preview
-    fi 
-
-    if [ $environment = preview  ]; then
-        work_dir=test
-    else
-        work_dir=$environment
-    fi
-
-    basedir=~/workspace/$work_dir
-
+    src="$TRAVIS_BUILD_DIR"
 fi
 
-port="$(python $basedir/app/config.py -e $environment)"
+if [ -z "$environment" ]; then
+    echo "set environment as dev"
+    environment=development
+fi 
+
+port="$(python $src/app/config.py -e $environment)"
 if [ $port != 'No environment' ]; then
-
-    src=$basedir/
-
-    rsync -ravzhe ssh $src --exclude-from '.exclude' $webhost:www-$environment/; 
+    rsync -ravzhe "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --exclude-from "$src/.exclude" $src/ $user@$deploy_host:www-$environment
 
     eval "DATABASE_URL_ENV=\${DATABASE_URL_$environment}"
 
     echo starting app $environment on port $port
-    ssh $webhost """
+    ssh $user@$deploy_host """
     cd www-$environment
     export DATABASE_URL_$environment=$DATABASE_URL_ENV
     export PGPASSWORD=$PGPASSWORD
-    su root sh bootstrap.sh $environment
+    sh bootstrap.sh $environment
     sh run_app.sh $environment >&- 2>&- <&- &"""
-
 else
     echo "$port"
     exit 1

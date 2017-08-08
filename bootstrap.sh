@@ -7,10 +7,10 @@ if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
   source ./venv/bin/activate
 fi
 
-if [ ! -z "$1" ]; then
-  ENV=$1
-else 
+if [ -z "$1" ]; then
   ENV=development
+else 
+  ENV=$1
 fi
 
 pip install -r requirements.txt
