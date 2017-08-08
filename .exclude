@@ -5,5 +5,9 @@ tests
 .cache
 *_rsa
 *.pub
+*.enc
+deploy.sh
 client-secret.json
 credentials.tar.gz
+.exclude
+environment.sh
