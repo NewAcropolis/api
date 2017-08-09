@@ -23,8 +23,9 @@ before_deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script: rsync -ravzhe "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-    ./ --exclude-from .exclude kentsang@35.197.111.255:www-development/
+  script: ./deploy.sh
+  # script: rsync -ravzhe "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+  #   ./ --exclude-from .exclude kentsang@35.197.111.255:www-development/
   on:
     branch: master
 before_install:
