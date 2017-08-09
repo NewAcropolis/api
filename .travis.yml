@@ -22,7 +22,7 @@ deploy:
   provider: script
   skip_cleanup: true
   script: 
-- rsync -ravzhe "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$TRAVIS_BUILD_DIR"/ --exclude-from ""$TRAVIS_BUILD_DIR"/.exclude" kentsang@35.197.111.255:www-development/
+- rsync -ravzhe "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$TRAVIS_BUILD_DIR"/ --exclude-from "$TRAVIS_BUILD_DIR"/.exclude kentsang@35.197.111.255:www-development/
 # ./deploy.sh
   on:
     branch: master
