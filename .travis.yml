@@ -1,6 +1,7 @@
 language: python
 python:
 - '2.7'
+cache: pip
 services:
 - postgresql
 env:
@@ -20,6 +21,6 @@ before_deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script: "./deploy.sh"
+  script: ./deploy.sh
   on:
     branch: master
