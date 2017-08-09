@@ -20,7 +20,7 @@ if [ $port != 'No environment' ]; then
     eval "DATABASE_URL_ENV=\${DATABASE_URL_$environment}"
 
     echo starting app $environment on port $port
-    ssh $user@$deploy_host """
+    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
     cd www-$environment
     export DATABASE_URL_$environment=$DATABASE_URL_ENV
     export PGPASSWORD=$PGPASSWORD
