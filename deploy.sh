@@ -25,8 +25,7 @@ if [ $port != 'No environment' ]; then
     export DATABASE_URL_$environment=$DATABASE_URL_ENV
     export PGPASSWORD=$PGPASSWORD
     sh bootstrap.sh $environment
-    sh run_app.sh $environment"""
-    # sh run_app.sh $environment >&- 2>&- <&- &"""
+    sh run_app.sh $environment >&- 2>&- <&- &"""
 else
     echo "$port"
     exit 1

@@ -13,19 +13,17 @@ script:
 addons:
   ssh_known_hosts: 35.197.111.255  # $deploy_host
 before_deploy:
-- openssl aes-256-cbc -K $encrypted_cc02c135ea1a_key -iv $encrypted_cc02c135ea1a_iv
-  -in na_rsa.enc -out na_rsa -d
 # - openssl aes-256-cbc -K $encrypted_cc02c135ea1a_key -iv $encrypted_cc02c135ea1a_iv
-#   -in deploy_rsa.enc -out /tmp/deploy_rsa -d
+#   -in na_rsa.enc -out na_rsa -d
+- openssl aes-256-cbc -K $encrypted_cc02c135ea1a_key -iv $encrypted_cc02c135ea1a_iv
+  -in deploy_rsa.enc -out deploy_rsa -d
 - eval "$(ssh-agent -s)"
-- chmod 600 na_rsa
-- ssh-add na_rsa
+- chmod 600 deploy_rsa
+- ssh-add deploy_rsa
 deploy:
   provider: script
   skip_cleanup: true
   script: ./deploy.sh
-  # script: rsync -ravzhe "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-  #   ./ --exclude-from .exclude kentsang@35.197.111.255:www-development/
   on:
     branch: master
 before_install:
