@@ -16,7 +16,7 @@ fi
 
 port="$(python $src/app/config.py -e $environment)"
 if [ $port != 'No environment' ]; then
-    rsync -ravzhe "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" $src/ --exclude-from "$src/.exclude" $user@$deploy_host:www-$environment/
+    rsync -ravzhe "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" $src/ --exclude-from "$src/.exclude" --quiet $user@$deploy_host:www-$environment/
     eval "DATABASE_URL_ENV=\${DATABASE_URL_$environment}"
 
     echo starting app $environment on port $port

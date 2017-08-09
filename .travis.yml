@@ -10,8 +10,6 @@ install:
 - ./bootstrap.sh
 script:
 - ./run_tests.sh
-addons:
-  ssh_known_hosts: 35.197.111.255
 before_deploy:
 - openssl aes-256-cbc -K $encrypted_cc02c135ea1a_key -iv $encrypted_cc02c135ea1a_iv
   -in travis_rsa.enc -out travis_rsa -d
@@ -21,6 +19,6 @@ before_deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script: ./deploy.sh
+  script: ./deploy.sh 
   on:
     branch: master
