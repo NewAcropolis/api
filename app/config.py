@@ -26,7 +26,7 @@ def main(argv):
 
 class Config(object):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL_development']
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
 
 
 class Development(Config):

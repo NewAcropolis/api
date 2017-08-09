@@ -22,6 +22,8 @@ def create_app(**kwargs):
     application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     application.config.update(kwargs)
 
+    logging.debug("connected to db: {}".format(application.config['SQLALCHEMY_DATABASE_URI']))
+
     db.init_app(application)
 
     register_blueprint(application)

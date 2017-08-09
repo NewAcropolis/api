@@ -4,8 +4,6 @@ python:
 cache: pip
 services:
 - postgresql
-env:
-- DATABASE_URL_development=postgresql://localhost/newacropolis_db
 install:
 - ./bootstrap.sh
 script:
