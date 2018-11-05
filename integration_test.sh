@@ -44,13 +44,7 @@ event_types=$(cat  << EOF
         {"id":"1","EventType":"Talk","Fees":"5","ConcFees":"3","EventDesc":"","EventFilename":null},
         {"id":"2","EventType":"Introductory Course","Fees":"120","ConcFees":"85","EventDesc":"","EventFilename":null},
         {"id":"3","EventType":"Seminar","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":null},
-        {"id":"4","EventType":"Ecological event","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":null},
-        {"id":"5","EventType":"Excursion","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":"TextExcursion.gif"},
-        {"id":"6","EventType":"Exhibition","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":null},
-        {"id":"7","EventType":"Meeting","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":null},
-        {"id":"8","EventType":"Cultural Event","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":"TextCultural.gif"},
-        {"id":"9","EventType":"Short Course","Fees":"0","ConcFees":null,"EventDesc":null,"EventFilename":null},
-        {"id":"10","EventType":"Workshop","Fees":"0","ConcFees":null,"EventDesc":null,"EventFilename":null}
+        {"id":"4","EventType":"Ecological event","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":null}
     ]
 EOF
 )
@@ -61,7 +55,7 @@ function ImportEventTypes {
     curl -X POST $api_server'/event_types/import' \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
-    -d "$event_types"
+    -d @data/event_types.json
 }
 
 function GetSpeakers {
@@ -221,6 +215,14 @@ function ImportEvents {
     -d @data/events.json
 }
 
+function GetEvents {
+    echo "*** Get Events ***"
+
+    curl -X GET $api_server'/events' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
 function Logout {
     echo "*** Logout ***"
 
@@ -292,6 +294,10 @@ case "$arg" in
 
         -ie)
             ImportEvents
+        ;;
+
+        -e)
+            GetEvents
         ;;
 
         -x)
