@@ -26,8 +26,8 @@ def sample_data(sample_speaker):
             "Description": "How Plato and Confucius can help understand economic development",
             "venue": "1",
             "Speaker": sample_speaker.name,
-            "MultiDayFee": "0",
-            "MultiDayConcFee": "0",
+            "MultiDayFee": "10",
+            "MultiDayConcFee": "8",
             "StartDate": "2004-09-20 19:30:00",
             "StartDate2": "2004-09-21 19:30:00",
             "StartDate3": "2004-09-22 19:30:00",
@@ -125,6 +125,12 @@ class WhenPostingImportEvents(object):
         for i in range(0, len(sample_data) - 1):
             assert json_events[i]["old_id"] == int(sample_data[i]["id"])
             assert json_events[i]["title"] == sample_data[i]["Title"]
+            assert json_events[i]["fee"] == int(sample_data[i]["Fee"])
+            assert json_events[i]["conc_fee"] == int(sample_data[i]["ConcFee"])
+            assert json_events[i]["multi_day_fee"] == int(sample_data[i]["MultiDayFee"])
+            assert json_events[i]["multi_day_conc_fee"] == int(sample_data[i]["MultiDayConcFee"])
+            assert json_events[i]["venue"]['name'] == sample_venue.name
+            assert json_events[i]["venue"]['directions'] == sample_venue.directions
 
     def it_creates_multiple_speakers_for_imported_events_with_multiple_speakers(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data

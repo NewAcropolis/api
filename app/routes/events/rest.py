@@ -29,7 +29,25 @@ register_errors(events_blueprint)
 @events_blueprint.route('/events')
 def get_events():
     events = [e.serialize() if e else None for e in dao_get_events()]
+
+    def extract_startdate(json):
+        try:
+            return json['event_dates'][0]['event_datetime']
+        except KeyError:
+            return 0
+
+    events.sort(key=extract_startdate, reverse=True)
     return jsonify(events)
+
+
+@events_blueprint.route('/events/future')
+def get_future_events():
+    pass
+
+
+@events_blueprint.route('/events/past-year')
+def get_past_year_events():
+    pass
 
 
 @events_blueprint.route('/events/extract-speakers', methods=['POST'])
@@ -94,17 +112,17 @@ def import_events():
                 description=item['Description'],
                 booking_code=item['BookingCode'],
                 image_filename=item['ImageFilename'],
+                fee=item['Fee'],
+                conc_fee=item['ConcFee'],
+                multi_day_fee=item['MultiDayFee'],
+                multi_day_conc_fee=item['MultiDayConcFee'],
+                duration=item['Duration'],
+                venue_id=venue.id
             )
 
             def add_event_date(event_datetime):
                 event_date = EventDate(
                     event_datetime=event_datetime,
-                    duration=item['Duration'],
-                    fee=item['Fee'],
-                    conc_fee=item['ConcFee'],
-                    multi_day_fee=item['MultiDayFee'],
-                    multi_day_conc_fee=item['MultiDayConcFee'],
-                    venue_id=venue.id
                 )
 
                 dao_create_event_date(event_date, speakers)

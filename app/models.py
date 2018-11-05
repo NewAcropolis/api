@@ -99,6 +99,7 @@ class Event(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     old_id = db.Column(db.Integer)
+    duration = db.Column(db.Integer, nullable=True)
     event_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_types.id'), nullable=False)
     title = db.Column(db.String(255))
     sub_title = db.Column(db.String(255))
@@ -111,6 +112,8 @@ class Event(db.Model):
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     event_dates = db.relationship("EventDate", backref=db.backref("events"))
+    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
+    venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
 
     def serialize(self):
         return {
@@ -125,6 +128,7 @@ class Event(db.Model):
             'conc_fee': self.conc_fee,
             'multi_day_fee': self.multi_day_fee,
             'multi_day_conc_fee': self.multi_day_conc_fee,
+            'venue': self.venue.serialize() if self.venue else None,
             'event_dates': [e.serialize() for e in self.event_dates]
         }
 
@@ -164,37 +168,6 @@ event_date_to_speaker = db.Table(
 )
 
 
-class EventDate(db.Model):
-    __tablename__ = 'event_dates'
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    event_datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    duration = db.Column(db.Integer, nullable=True)
-    soldout = db.Column(db.Boolean, default=False)
-    repeat = db.Column(db.Integer, nullable=True)
-    repeat_interval = db.Column(db.Integer, nullable=True)
-    fee = db.Column(db.Integer, nullable=True)
-    conc_fee = db.Column(db.Integer, nullable=True)
-    multi_day_fee = db.Column(db.Integer, nullable=True)
-    multi_day_conc_fee = db.Column(db.Integer, nullable=True)
-    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'), nullable=False)
-    speakers = db.relationship(
-        'Speaker',
-        secondary=event_date_to_speaker,
-        backref=db.backref('event_date_to_speaker', lazy='dynamic')
-    )
-
-    def serialize(self):
-        return {
-            'id': str(self.id),
-            'event_id': str(self.event_id),
-            'event_datetime': self.event_datetime.strftime('%Y-%m-%d %H:%M'),
-            'speakers': [s.serialize() for s in self.speakers]
-        }
-
-
 class Venue(db.Model):
     __tablename__ = 'venues'
 
@@ -213,4 +186,41 @@ class Venue(db.Model):
             'address': self.address,
             'directions': self.directions,
             'default': self.default,
+        }
+
+
+class EventDate(db.Model):
+    __tablename__ = 'event_dates'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    event_datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    duration = db.Column(db.Integer, nullable=True)
+    soldout = db.Column(db.Boolean, default=False)
+    repeat = db.Column(db.Integer, nullable=True)
+    repeat_interval = db.Column(db.Integer, nullable=True)
+    fee = db.Column(db.Integer, nullable=True)
+    conc_fee = db.Column(db.Integer, nullable=True)
+    multi_day_fee = db.Column(db.Integer, nullable=True)
+    multi_day_conc_fee = db.Column(db.Integer, nullable=True)
+    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
+    venue = db.relationship(Venue, backref=db.backref("event_date", uselist=False))
+    speakers = db.relationship(
+        'Speaker',
+        secondary=event_date_to_speaker,
+        backref=db.backref('event_date_to_speaker', lazy='dynamic')
+    )
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'event_id': str(self.event_id),
+            'event_datetime': self.event_datetime.strftime('%Y-%m-%d %H:%M'),
+            'speakers': [s.serialize() for s in self.speakers],
+            'fee': self.fee,
+            'conc_fee': self.conc_fee,
+            'multi_day_fee': self.multi_day_fee,
+            'multi_day_conc_fee': self.multi_day_conc_fee,
+            'venue': self.venue.serialize() if self.venue else None
         }
