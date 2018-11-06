@@ -18,7 +18,8 @@ def create_event(
     conc_fee=3,
     multi_day_fee=12,
     multi_day_conc_fee=10,
-    old_id=1
+    old_id=1,
+    event_dates=None
 ):
     if not event_type_id:
         event_type = create_event_type(event_type='workshop')
@@ -34,6 +35,9 @@ def create_event(
         'multi_day_conc_fee': multi_day_conc_fee,
     }
     event = Event(**data)
+
+    # if event_dates:
+    #     event.event_dates.extend([e for e in event_dates])
 
     dao_create_event(event)
     return event

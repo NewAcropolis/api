@@ -2,11 +2,16 @@ import copy
 import pytest
 from flask import json, url_for
 from tests.conftest import request, create_authorization_header
-from tests.db import create_event_type, create_speaker
+from tests.db import create_event, create_event_date, create_event_type, create_speaker
 
 
 @pytest.fixture
 def events_page(client):
+    from app.models import Event
+    print("events_page", Event.query.order_by(Event.id).all())
+    # from app.dao.events_dao import dao_get_events
+    # print("events_page", dao_get_events())
+
     return request(url_for('events.get_events'), client.get)
 
 
@@ -82,7 +87,13 @@ def sample_data(sample_speaker):
 
 class WhenGettingEvents(object):
 
-    def it_returns_all_events(self, sample_event, events_page, db_session):
+    def it_returns_all_events(self, events_page, sample_speaker, db_session):
+        event_date = create_event_date(speakers=[sample_speaker])
+
+        create_event(event_dates=[event_date])
+        from app.models import Event
+        print("all_events", Event.query.order_by(Event.id).all())
+
         data = json.loads(events_page.get_data(as_text=True))
         assert len(data) == 1
 

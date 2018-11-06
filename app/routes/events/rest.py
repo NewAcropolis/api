@@ -32,6 +32,7 @@ def get_events():
 
     def extract_startdate(json):
         try:
+            # print(json['event_dates'][0]['event_datetime'])
             return json['event_dates'][0]['event_datetime']
         except KeyError:
             return 0
