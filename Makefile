@@ -5,6 +5,10 @@ SHELL := /bin/bash
 help:
 	@cat $(MAKEFILE_LIST) | grep -E '^[a-zA-Z_-]+:.*?## .*$$' | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
+.PHONY: dependencies
+dependencies: ## Install dependencies
+	pip install -r requirements.txt
+
 .PHONY: current
 current: ## Current db
 	python app_start.py db current

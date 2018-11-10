@@ -1,7 +1,7 @@
 # New Acropolis UK API  [![Build Status](https://travis-ci.org/NewAcropolis/api.svg?branch=master)](https://travis-ci.org/NewAcropolis/api)
 [![Coverage Status](https://coveralls.io/repos/github/NewAcropolis/api/badge.svg?branch=master)](https://coveralls.io/github/NewAcropolis/api?branch=master)
 
-## Create virtualenv (optional)
+## Create virtualenv
 
 A Virtual Environment is an isolated working copy of Python which
 allows you to work on a specific project without worry of affecting other projects
@@ -9,9 +9,11 @@ allows you to work on a specific project without worry of affecting other projec
 Follow this guide to set up your virtualenv for this project;
 https://virtualenvwrapper.readthedocs.io/en/latest/
 
-## Install requirements
+## Using Makefile
 
-run `pip install -r requirements.txt`
+Run `make dependencies` to install dependencies
+
+Run `Make` to list available commands
 
 ## Set up environment variables
 
@@ -27,10 +29,6 @@ env_variables:
 ```
 
 Run `source environment.sh` to make the parameters available
-
-## Makefile
-
-Run `make` to see list of available commands
 
 ## Running tests
 
