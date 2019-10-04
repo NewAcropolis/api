@@ -1,7 +1,9 @@
 import os
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 
+from celery.signals import after_setup_logger, after_setup_task_logger
 import jinja2
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -162,6 +164,17 @@ def configure_logging():
 
     db_name = application.config.get('SQLALCHEMY_DATABASE_URI').split('/')[-1]
     application.logger.debug("connected to db: {}".format(db_name))
+
+
+@after_setup_logger.connect
+def setup_loggers(logger, *args, **kwargs):  # pragma: no cover
+    my_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    rfh = RotatingFileHandler('logs/celery.log', maxBytes=10000, backupCount=3)
+    rfh.setLevel(logging.DEBUG)
+    rfh.setFormatter(my_formatter)
+
+    logger.addHandler(rfh)
 
 
 def setup_gce_logging(gunicorn_access_logger, gunicorn_error_logger):  # pragma: no cover
