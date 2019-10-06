@@ -23,6 +23,9 @@ celery = NewAcropolisCelery()
 def create_app(**kwargs):
     from app.config import configs
 
+    # if 'app' in kwargs:
+    #     application = kwargs.pop('app')
+
     environment_state = get_env()
 
     application.config.from_object(configs[environment_state])
@@ -110,7 +113,7 @@ def get_root_path():
 
 
 def report_missing_config():  # pragma: no cover
-    if application.config['ENVIRONMENT'] == 'test':
+    if application.config.get('ENVIRONMENT') == 'test':
         return
     from app.config import Config
     for key in [k for k in Config.__dict__.keys() if k[:1] != '_']:
