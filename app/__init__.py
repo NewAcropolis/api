@@ -11,6 +11,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 from app.na_celery import NewAcropolisCelery
 
+LOG_FORMAT = "{} %(asctime)s;[%(process)d];%(levelname)s;%(message)s"
+
 
 db = SQLAlchemy()
 application = Flask(__name__)
@@ -126,8 +128,7 @@ def configure_logging():
 
     del application.logger.handlers[:]
 
-    f = LogTruncatingFormatter(
-        "{} %(asctime)s;[%(process)d];%(levelname)s;%(message)s".format(get_env()), "%Y-%m-%d %H:%M:%S")
+    f = LogTruncatingFormatter(LOG_FORMAT.format(get_env()))
     ch.setFormatter(f)
     application.logger.addHandler(ch)
 
@@ -168,7 +169,7 @@ def configure_logging():
 
 @after_setup_logger.connect
 def setup_loggers(logger, *args, **kwargs):  # pragma: no cover
-    my_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    my_formatter = logging.Formatter(LOG_FORMAT.format(get_env()))
 
     rfh = RotatingFileHandler('logs/celery.log', maxBytes=10000, backupCount=3)
     rfh.setLevel(logging.DEBUG)
