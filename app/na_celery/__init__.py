@@ -1,6 +1,14 @@
 from celery import Celery
+from celery.schedules import crontab
 from celery.task.control import revoke
 from flask import current_app
+
+CELERYBEAT_SCHEDULE = {
+    'send-periodic-emails': {
+        'task': 'send_periodic_emails',
+        'schedule': crontab(minute='*'),
+    },
+}
 
 
 class NewAcropolisCelery(Celery):  # pragma: no cover
@@ -20,6 +28,8 @@ class NewAcropolisCelery(Celery):  # pragma: no cover
         app.logger.info('Setting up celery: %s', app.config['CELERY_BROKER_URL'])
 
         self.conf.update(app.config)
+
+        self.conf.CELERYBEAT_SCHEDULE = CELERYBEAT_SCHEDULE
 
         class ContextTask(self.Task):
             def __call__(self, *args, **kwargs):

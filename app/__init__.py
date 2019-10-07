@@ -171,6 +171,7 @@ def configure_logging():
 
 
 @after_setup_logger.connect
+# @after_setup_task_logger.connect
 def setup_loggers(logger, *args, **kwargs):  # pragma: no cover
     my_formatter = logging.Formatter(LOG_FORMAT.format(get_env()))
 

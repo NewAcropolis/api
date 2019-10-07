@@ -14,7 +14,6 @@ if [ ! -z "$1" ]; then
     fi
 
     www_dir="www-$ENV"
-    cd $www_dir
     port="$(python app/config.py -e $ENV)"
 fi
 

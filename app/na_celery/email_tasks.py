@@ -1,4 +1,4 @@
-from celery.schedules import crontab
+# from celery.schedules import crontab
 from datetime import datetime, timedelta
 from flask import current_app
 
@@ -10,16 +10,16 @@ from app.dao.users_dao import dao_get_admin_users
 from app.models import EVENT
 
 
-celery.conf.CELERYBEAT_SCHEDULE = {
-    'send-periodic-emails': {
-        'task': 'send_periodic_emails',
-        'schedule': crontab(minute='*'),
-    },
-    # 'send-periodic-emails-10': {
-    #     'task': 'send_periodic_emails',
-    #     'schedule': 10.0,
-    # },
-}
+# celery.conf.CELERYBEAT_SCHEDULE = {
+#     'send-periodic-emails': {
+#         'task': 'send_periodic_emails',
+#         'schedule': crontab(minute='*'),
+#     },
+#     # 'send-periodic-emails-10': {
+#     #     'task': 'send_periodic_emails',
+#     #     'schedule': 10.0,
+#     # },
+# }
 
 
 @celery.task()
@@ -54,4 +54,6 @@ def send_emails(email_id):
 
 @celery.task(name='send_periodic_emails')
 def send_periodic_emails():
+    with current_app.app_context():
+        current_app.logger.info('running my send_periodic_emails')
     current_app.logger.info('Task send_periodic_emails received')
