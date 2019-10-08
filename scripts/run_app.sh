@@ -69,8 +69,8 @@ if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
     --workers $NUM_WORKERS \
     --log-level DEBUG \
     --reload \
-    --worker-class gevent \
-    --pid /tmp/gunicorn-$ENV.pid
+    --worker-class gevent # \
+    # --pid /tmp/gunicorn-$ENV.pid
     # --user=$USER --group=$GROUP \
     # --bind=unix:$SOCKFILE
 else
