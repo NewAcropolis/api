@@ -1,6 +1,11 @@
 #!/bin/bash
 set +ex
 
+if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
+  echo 'activate venv'
+  source ./venv/bin/activate
+fi
+
 ENV=development
 www_dir="www-$ENV"
 
@@ -31,11 +36,6 @@ if psql -lqt "${DATABASE_URL}" | cut -d \| -f 1 | grep -qw ${DATABASE_URL##*/}; 
 else
   createdb ${DATABASE_URL##*/}
   echo ${DATABASE_URL##*/} 'created'
-fi
-
-if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
-  echo 'activate venv'
-  source ./venv/bin/activate
 fi
 
 if [ -z "$TRAVIS_COMMIT" ]; then

@@ -31,8 +31,10 @@ fi
 
 if [ -z $debug ]; then
     output_params=">&- 2>&- <&- &"
+    celery_output_params=">&- 2>&- <&- &"
 else
     output_params="&>> /var/log/na-api/$environment.log"
+    celery_output_params="&>> /var/log/na-api/celery-$environment.log"
 fi
 
 port="$(python $src/app/config.py -e $environment)"
@@ -137,8 +139,8 @@ systemctl restart na-api.service
         fi
 
         ./scripts/bootstrap.sh
-        ./scripts/run_celery.sh $environment
         ./scripts/run_app.sh $environment gunicorn $output_params
+        ./scripts/run_celery.sh $environment $celery_output_params
         """
     fi
 

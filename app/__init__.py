@@ -2,6 +2,7 @@ import os
 import logging
 import sys
 from logging.handlers import RotatingFileHandler
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 
 from celery.signals import after_setup_logger, after_setup_task_logger
 import jinja2
@@ -175,7 +176,7 @@ def configure_logging():
 def setup_loggers(logger, *args, **kwargs):  # pragma: no cover
     my_formatter = logging.Formatter(LOG_FORMAT.format(get_env()))
 
-    rfh = RotatingFileHandler('logs/celery.log', maxBytes=10000, backupCount=3)
+    rfh = ConcurrentRotatingFileHandler('logs/celery.log', maxBytes=10000, backupCount=3)
     rfh.setLevel(logging.DEBUG)
     rfh.setFormatter(my_formatter)
 
