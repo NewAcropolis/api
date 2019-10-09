@@ -24,6 +24,8 @@ class NewAcropolisCelery(Celery):  # pragma: no cover
 
         self.conf.CELERYBEAT_SCHEDULE = app.config['_CELERYBEAT_SCHEDULE']
 
+        app.logger.info('Celery beat schedule: %r', app.config['_CELERYBEAT_SCHEDULE'])
+
         class ContextTask(self.Task):
             def __call__(self, *args, **kwargs):
                 with app.app_context():

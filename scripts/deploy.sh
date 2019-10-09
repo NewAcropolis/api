@@ -64,6 +64,7 @@ if [ $port != 'No environment' ]; then
     eval "PROJECT=\$PROJECT_$environment"
     eval "GOOGLE_AUTH_USER=\$GOOGLE_AUTH_USER_$environment"
     eval "JWT_SECRET=\$JWT_SECRET_$environment"
+    eval "RESTART_FLOWER=\$RESTART_FLOWER"
     
     echo starting app $environment on port $port
     if [ $environment = 'live' ]; then
@@ -97,6 +98,7 @@ IMAGES_URL=$IMAGES_URL
 GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
 TRAVIS_COMMIT=$TRAVIS_COMMIT
 CELERY_BROKER_URL=$CELERY_BROKER_URL
+RESTART_FLOWER=$RESTART_FLOWER
 EOL
 
 systemctl daemon-reload
@@ -133,6 +135,7 @@ systemctl restart na-api.service
         # export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
         export TRAVIS_COMMIT=$TRAVIS_COMMIT
         export CELERY_BROKER_URL=$CELERY_BROKER_URL
+        export RESTART_FLOWER=$RESTART_FLOWER
 
         if [ ! -z $GOOGLE_AUTH_USER ]; then
             gcloud auth activate-service-account $GOOGLE_AUTH_USER --key-file=$GOOGLE_APPLICATION_CREDENTIALS

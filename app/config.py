@@ -72,11 +72,11 @@ class Config(object):
     _CELERYBEAT_SCHEDULE = {
         'send-periodic-emails': {
             'task': 'send_periodic_emails',
-            'schedule': crontab(hour='*'),
+            'schedule': crontab(minute=0, hour='*'),
         },
     }
 
-    EMAIL_DELAY = 60
+    EMAIL_DELAY = 1  # hours
     EMAIL_LIMIT = 400
 
 
