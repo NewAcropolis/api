@@ -2,9 +2,9 @@ import os
 import logging
 import sys
 from logging.handlers import RotatingFileHandler
-from concurrent_log_handler import ConcurrentRotatingFileHandler
+# from concurrent_log_handler import ConcurrentRotatingFileHandler
 
-from celery.signals import after_setup_logger, after_setup_task_logger
+# from celery.signals import after_setup_logger, after_setup_task_logger
 import jinja2
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -19,6 +19,26 @@ db = SQLAlchemy()
 application = Flask(__name__)
 jwt = JWTManager(application)
 celery = NewAcropolisCelery()
+
+
+# def setup_log(**args):
+#     from logging.handlers import SysLogHandler
+
+#     # redirect stdout and stderr to logger
+#     redirect_stdouts_to_logger(args['logger'])
+#     # logs to local syslog
+#     hl = SysLogHandler('/var/log')
+#     # setting log level
+#     hl.setLevel(args['loglevel'])
+#     # setting log format
+#     formatter = Formatter(BASIC_FORMAT)
+#     hl.setFormatter(formatter)
+#     # add new handler to logger
+#     args['logger'].addHandler(hl)
+
+
+# after_setup_logger.connect(setup_log)
+# after_setup_task_logger.connect(setup_log)
 
 
 def create_app(**kwargs):
@@ -171,16 +191,25 @@ def configure_logging():
     application.logger.debug("connected to db: {}".format(db_name))
 
 
-@after_setup_logger.connect
-# @after_setup_task_logger.connect
-def setup_loggers(logger, *args, **kwargs):  # pragma: no cover
-    my_formatter = logging.Formatter(LOG_FORMAT.format(get_env()))
+# @after_setup_logger.connect
+# # @after_setup_task_logger.connect
+# def setup_loggers(logger, *args, **kwargs):  # pragma: no cover
+#     my_formatter = logging.Formatter(LOG_FORMAT.format(get_env()))
 
-    rfh = ConcurrentRotatingFileHandler('logs/celery.log', maxBytes=10000, backupCount=3)
-    rfh.setLevel(logging.DEBUG)
-    rfh.setFormatter(my_formatter)
+#     rfh = ConcurrentRotatingFileHandler('logs/celery.log', maxBytes=10000, backupCount=3)
+#     rfh.setLevel(logging.DEBUG)
+#     rfh.setFormatter(my_formatter)
 
-    logger.addHandler(rfh)
+#     logger.addHandler(rfh)
+
+#     from logging.handlers import SysLogHandler
+
+#     # redirect stdout and stderr to logger
+#     # redirect_stdouts_to_logger(logger)
+#     # logs to local syslog
+#     syslog = SysLogHandler(address='/var/log')
+#     syslog.setFormatter(my_formatter)
+#     logger.addHandler(syslog)
 
 
 def setup_gce_logging(gunicorn_access_logger, gunicorn_error_logger):  # pragma: no cover

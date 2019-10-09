@@ -64,16 +64,15 @@ class Config(object):
     TRAVIS_COMMIT = os.environ.get('TRAVIS_COMMIT')
 
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
-    # CELERY_TASK_RESULT_EXPIRES = 30
     CELERY_TIMEZONE = 'Europe/London'
     CELERY_ENABLE_UTC = True
     CELERY_ACCEPT_CONTENT = ['json']
     CELERY_TASK_SERIALIZER = 'json'
 
-    CELERYBEAT_SCHEDULE = {
+    _CELERYBEAT_SCHEDULE = {
         'send-periodic-emails': {
             'task': 'send_periodic_emails',
-            'schedule': crontab(minute='*'),
+            'schedule': crontab(hour='*'),
         },
     }
 
