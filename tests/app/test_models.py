@@ -106,7 +106,8 @@ class WhenUsingArticleModel(object):
 
 class WhenUsingEmailModel:
     def it_shows_email_json_on_serialize(self, db, db_session):
-        email = create_email(created_at='2019-06-01T10:00:00', send_starts_at='2019-06-02T11:00:00')
+        email = create_email(
+            created_at='2019-06-01T10:00:00', send_starts_at='2019-06-02T11:00:00', send_after='2019-06-02T12:00:00')
 
         assert email.serialize() == {
             'id': str(email.id),
@@ -122,5 +123,5 @@ class WhenUsingEmailModel:
             'email_state': u'draft',
             'send_starts_at': '2019-06-02',
             'expires': '2019-06-21',
-            'task_id': None
+            'send_after': '2019-06-02 12:00'
         }

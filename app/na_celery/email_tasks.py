@@ -3,7 +3,7 @@ from flask import current_app
 
 from app import celery
 from app.comms.email import send_email, get_email_html
-from app.dao.emails_dao import dao_get_email_by_id, dao_add_member_sent_to_email
+from app.dao.emails_dao import dao_get_email_by_id, dao_add_member_sent_to_email, dao_get_approved_emails_for_sending
 from app.dao.members_dao import dao_get_members_not_sent_to
 from app.dao.users_dao import dao_get_admin_users
 from app.models import EVENT
@@ -17,7 +17,7 @@ def send_emails(email_id):
         limit = 3
 
     current_app.logger.info(
-        'Task send_emails received %s, sending %d emails', email_id, limit or len(members_not_sent_to))
+        'Task send_emails received %s, sending %d emails', str(email_id), limit or len(members_not_sent_to))
 
     email = dao_get_email_by_id(email_id)
 
@@ -42,3 +42,6 @@ def send_emails(email_id):
 @celery.task(name='send_periodic_emails')
 def send_periodic_emails():
     current_app.logger.info('Task send_periodic_emails received')
+
+    for email in dao_get_approved_emails_for_sending():
+        send_emails(email.id)

@@ -1,14 +1,25 @@
 from datetime import datetime, timedelta
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
+from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app.dao.decorators import transactional
+from app.dao.events_dao import dao_get_event_by_id
 from app.dao.members_dao import dao_get_member_by_id
-from app.models import Email, EmailToMember
+from app.errors import InvalidRequest
+from app.models import Email, EmailToMember, EVENT, APPROVED
 
 
 @transactional
 def dao_create_email(email):
+    if email.email_type == EVENT:
+        try:
+            event = dao_get_event_by_id(email.event_id)
+            if not email.expires:
+                email.expires = event.get_last_event_date()
+        except NoResultFound:
+            raise InvalidRequest('event not found: {}'.format(email.event_id), 400)
+
     db.session.add(email)
 
 
@@ -75,4 +86,15 @@ def dao_get_future_emails():
     today = datetime.today().strftime("%Y-%m-%d")
     return Email.query.filter(
         Email.expires >= today
+    ).all()
+
+
+def dao_get_approved_emails_for_sending():
+    now = datetime.today()
+    emails = Email.query.all()
+
+    return Email.query.filter(
+        Email.expires >= now,
+        Email.send_after <= now,
+        Email.email_state == APPROVED
     ).all()

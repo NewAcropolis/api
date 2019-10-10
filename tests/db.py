@@ -16,7 +16,7 @@ from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
 from app.models import (
     Article, Email, Event, EventDate, EventType, Fee, Marketing, Member, RejectReason, Speaker, Ticket, User, Venue,
-    EVENT, TICKET_STATUS_UNUSED
+    EVENT, TICKET_STATUS_UNUSED, DRAFT
 )
 
 
@@ -212,9 +212,11 @@ def create_email(
         extra_txt='test extra text',
         replace_all=False,
         email_type=EVENT,
+        email_state=DRAFT,
         created_at=None,
         send_starts_at=None,
-        expires=None
+        expires=None,
+        send_after=None
 ):
     if old_event_id:
         event = dao_get_event_by_old_id(old_event_id)
@@ -231,9 +233,11 @@ def create_email(
         'extra_txt': extra_txt,
         'replace_all': replace_all,
         'email_type': email_type,
+        'email_state': email_state,
         'created_at': created_at,
         'send_starts_at': send_starts_at,
-        'expires': expires
+        'expires': expires,
+        'send_after': send_after
     }
     email = Email(**data)
 

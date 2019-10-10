@@ -111,9 +111,7 @@ def update_email(email_id):
             event_html = get_email_html(**data)
             response = send_email(emails_to, subject, review_part + event_html)
         elif data.get('email_state') == REJECTED:
-            if email.task_id:
-                revoke_task(email.task_id)
-                dao_update_email(email_id, task_id=None)
+            dao_update_email(email_id, email_state=REJECTED)
 
             message = '<div>Please correct this email <a href="{}">{}</a></div>'.format(
                 '{}/emails/{}'.format(current_app.config['FRONTEND_ADMIN_URL'], str(email.id)),
@@ -123,18 +121,14 @@ def update_email(email_id):
 
             response = send_email(emails_to, '{} email needs to be corrected'.format(event.title), message)
         elif data.get('email_state') == APPROVED:
-            # send the email later in order to allow it to be rejected
-            later = datetime.utcnow() + timedelta(seconds=current_app.config['EMAIL_DELAY'])
+            later = datetime.utcnow() + timedelta(hours=current_app.config['EMAIL_DELAY'])
             if later < email.send_starts_at:
                 later = email.send_starts_at + timedelta(hours=9)
 
-            result = email_tasks.send_emails.apply_async(((str(email_id)),), eta=later)
+            dao_update_email(email_id, send_after=later)
 
-            dao_update_email(email_id, task_id=result.id)
-            current_app.logger.info('Task: send_email: %d, %r at %r', email_id, result.id, later)
-
-            review_part = '<div>Email will be sent at {}, log in to reject: {}/emails/{}</div>'.format(
-                later, current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
+            review_part = '<div>Email will be sent after {}, log in to reject: {}/emails/{}</div>'.format(
+                later.strftime("%d/%m/%Y %H:%M"), current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
             event_html = get_email_html(**data)
             response = send_email(
                 emails_to, "{} has been approved".format(email.get_subject()), review_part + event_html)

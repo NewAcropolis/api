@@ -1,10 +1,12 @@
 from bs4 import BeautifulSoup
 from flask import current_app
+from freezegun import freeze_time
 
-from app.na_celery.email_tasks import send_emails
+from app.na_celery.email_tasks import send_emails, send_periodic_emails
 from app.comms.encryption import decrypt, get_tokens
+from app.models import APPROVED
 
-from tests.db import create_member
+from tests.db import create_email, create_member
 
 
 class WhenProcessingSendEmailsTask:
@@ -34,6 +36,23 @@ class WhenProcessingSendEmailsTask:
         assert mock_send_email.call_args_list[0][0][0] == sample_member.email
         assert mock_send_email.call_args_list[1][0][0] == member_1.email
         assert mock_send_email.call_args_list[2][0][0] == member_2.email
+
+    @freeze_time("2019-06-03T10:00:00")
+    def it_only_sends_approved_emails(self, mocker, db, db_session, sample_email, sample_member):
+        mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails')
+        create_email(send_starts_at='2019-06-07', created_at='2019-06-01', send_after='2019-06-07 9:00')
+        create_email(send_starts_at='2019-08-08', created_at='2019-06-01', send_after='2019-07-14 9:00')
+
+        approved_email = create_email(
+            send_starts_at='2019-06-02',
+            created_at='2019-06-01',
+            send_after='2019-06-03 9:00',
+            email_state=APPROVED
+        )
+        send_periodic_emails()
+
+        assert mock_send_emails.call_count == 1
+        assert mock_send_emails.call_args_list[0][0][0] == approved_email.id
 
     def it_sends_an_email_to_members_up_to_email_limit(self):
         pass
