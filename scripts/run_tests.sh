@@ -1,6 +1,10 @@
 #!/bin/bash
 set -o pipefail
 
+if [ ! -z $RESTART_CELERY ]; then
+  return
+fi
+
 function display_result {
   RESULT=$1
   EXIT_STATUS=$2
