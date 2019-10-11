@@ -151,9 +151,9 @@ class Email(db.Model):
             'email_type': self.email_type,
             'email_state': self.email_state,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
-            'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d'),
+            'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d') if self.send_starts_at else None,
             'expires': self.expires.strftime('%Y-%m-%d') if self.expires else self.get_expired_date(),
-            'send_after': self.send_after.strftime('%Y-%m-%d %H:%M')
+            'send_after': self.send_after.strftime('%Y-%m-%d %H:%M') if self.send_after else None
         }
 
 
