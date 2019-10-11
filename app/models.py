@@ -114,6 +114,7 @@ class Email(db.Model):
     )
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     send_starts_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    send_after = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     expires = db.Column(db.DateTime)
     task_id = db.Column(db.String)
     members_sent_to = db.relationship(
@@ -152,7 +153,7 @@ class Email(db.Model):
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
             'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d'),
             'expires': self.expires.strftime('%Y-%m-%d') if self.expires else self.get_expired_date(),
-            'task_id': self.task_id
+            'send_after': self.send_after.strftime('%Y-%m-%d %H:%M')
         }
 
 

@@ -31,8 +31,10 @@ fi
 
 if [ -z $debug ]; then
     output_params=">&- 2>&- <&- &"
+    celery_output_params=">&- 2>&- <&- &"
 else
     output_params="&>> /var/log/na-api/$environment.log"
+    celery_output_params="&>> /var/log/na-api/celery-$environment.log"
 fi
 
 port="$(python $src/app/config.py -e $environment)"
@@ -62,6 +64,8 @@ if [ $port != 'No environment' ]; then
     eval "PROJECT=\$PROJECT_$environment"
     eval "GOOGLE_AUTH_USER=\$GOOGLE_AUTH_USER_$environment"
     eval "JWT_SECRET=\$JWT_SECRET_$environment"
+    eval "RESTART_FLOWER=\$RESTART_FLOWER"
+    eval "RESTART_CELERY=\$RESTART_CELERY"
     
     echo starting app $environment on port $port
     if [ $environment = 'live' ]; then
@@ -95,6 +99,8 @@ IMAGES_URL=$IMAGES_URL
 GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
 TRAVIS_COMMIT=$TRAVIS_COMMIT
 CELERY_BROKER_URL=$CELERY_BROKER_URL
+RESTART_FLOWER=$RESTART_FLOWER
+RESTART_CELERY=$RESTART_CELERY
 EOL
 
 systemctl daemon-reload
@@ -131,18 +137,24 @@ systemctl restart na-api.service
         # export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
         export TRAVIS_COMMIT=$TRAVIS_COMMIT
         export CELERY_BROKER_URL=$CELERY_BROKER_URL
+        export RESTART_FLOWER=$RESTART_FLOWER
+        export RESTART_CELERY=$RESTART_CELERY
 
-        if [ ! -z $GOOGLE_AUTH_USER ]; then
-            gcloud auth activate-service-account $GOOGLE_AUTH_USER --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-        fi
+        # if [ ! -z $GOOGLE_AUTH_USER ]; then
+        #     gcloud auth activate-service-account $GOOGLE_AUTH_USER --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+        # fi
 
         ./scripts/bootstrap.sh
-        ./scripts/run_celery.sh
-        ./scripts/run_app.sh $environment gunicorn $output_params
+        if [ -z "$RESTART_CELERY" ]; then
+            ./scripts/run_app.sh $environment gunicorn $output_params
+        fi
+        ./scripts/run_celery.sh $environment $celery_output_params
         """
     fi
 
-    ./scripts/check_site.sh $deploy_host:$port
+    if [ -z "$RESTART_CELERY" ]; then
+        ./scripts/check_site.sh $deploy_host:$port
+    fi
 else
     echo "$port"
     exit 1

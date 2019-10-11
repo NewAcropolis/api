@@ -1,6 +1,11 @@
 #!/bin/bash
 set +ex
 
+if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
+  echo 'activate venv'
+  source ./venv/bin/activate
+fi
+
 ENV=development
 www_dir="www-$ENV"
 
@@ -14,7 +19,6 @@ if [ ! -z "$1" ]; then
     fi
 
     www_dir="www-$ENV"
-    cd $www_dir
     port="$(python app/config.py -e $ENV)"
 fi
 
@@ -32,11 +36,6 @@ if psql -lqt "${DATABASE_URL}" | cut -d \| -f 1 | grep -qw ${DATABASE_URL##*/}; 
 else
   createdb ${DATABASE_URL##*/}
   echo ${DATABASE_URL##*/} 'created'
-fi
-
-if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
-  echo 'activate venv'
-  source ./venv/bin/activate
 fi
 
 if [ -z "$TRAVIS_COMMIT" ]; then
@@ -70,8 +69,8 @@ if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
     --workers $NUM_WORKERS \
     --log-level DEBUG \
     --reload \
-    --worker-class gevent \
-    --pid /tmp/gunicorn-$ENV.pid
+    --worker-class gevent # \
+    # --pid /tmp/gunicorn-$ENV.pid
     # --user=$USER --group=$GROUP \
     # --bind=unix:$SOCKFILE
 else

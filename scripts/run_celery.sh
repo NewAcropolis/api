@@ -1,13 +1,52 @@
 #!/bin/bash
-set +x
+set +ex
+
+ENV=development
+
+if [ ! -z "$1" ]; then
+    ENV=$1
+fi
+
+if [ "$ENV" = 'preview' ]; then
+    FLOWER_PORT=4555
+else
+    FLOWER_PORT=5555
+fi
 
 if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
   echo 'activate venv for celery'
   source ./venv/bin/activate
-  nooutput=' >&- 2>&- <&- &'
 fi
 
-# kill existing celery workers
-ps auxww | grep 'celery worker' | awk '{print $2}' | xargs kill -9
+logoutput=" >>/var/log/na-api/celery-$ENV.log 2>&1 &"
 
-eval "celery -A run_celery.celery worker --loglevel=INFO --concurrency=1"$nooutput
+pip install flower==0.9.3
+
+# kill existing celery workers
+ps auxww | grep "celery worker -n worker-$ENV" | awk '{print $2}' | xargs kill -9
+
+# give time for workers to shutdown
+sleep 10
+
+if [ -f "celerybeat.pid" ]; then
+  kill -9 `cat celerybeat.pid` && rm celerybeat.pid
+fi
+
+# kill celery flower
+FLOWER_PID=lsof -i :$FLOWER_PORT  | awk '{if(NR>1)print $2}'
+
+if [ -z "$FLOWER_PID" -o "$RESTART_FLOWER" ]; then
+  if [ ! -z "$FLOWER_PID" ]; then
+    kill -9 $FLOWER_PID
+  fi
+  eval "celery -A run_celery.celery flower --url_prefix=celery --address=127.0.0.1 --port=$FLOWER_PORT"$logoutput
+fi
+
+eval "celery -A run_celery.celery worker -n worker-$ENV --loglevel=INFO --concurrency=1"$logoutput
+eval "celery -A run_celery.celery beat"$logoutput
+
+# check that celery has started properly
+num_workers=$(( $(ps auxww | grep "celery worker -n worker-$ENV" | wc -l) -1))
+echo "Running $num_workers workers"
+
+[ $num_workers == 1 ] && echo 'ok' || echo 'not ok'

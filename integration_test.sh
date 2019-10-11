@@ -432,7 +432,7 @@ function GetUserByEmail {
 
 email=$(cat  << EOF
     {
-        "event_id": "27c93ad8-71a3-4775-9506-da9e9f17a2df",
+        "event_id": "$EVENT_ID",
         "details": "<div>Some additional details</div>",
         "extra_txt": "<div>Some more information about the event</div>",
         "replace_all": false,

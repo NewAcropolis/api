@@ -64,7 +64,7 @@ def app():
         'FRONTEND_URL': 'http://frontend-test',
         'FRONTEND_ADMIN_URL': 'http://frontend-test/admin',
         'CELERY_BROKER_URL': 'http://mock-celery',
-        'EMAIL_DELAY': 60
+        'EMAIL_DELAY': 1
     })
 
     ctx = _app.app_context()

@@ -1,5 +1,6 @@
 import os
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 
 import jinja2
@@ -8,6 +9,8 @@ from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 
 from app.na_celery import NewAcropolisCelery
+
+LOG_FORMAT = "{} %(asctime)s;[%(process)d];%(levelname)s;%(message)s"
 
 
 db = SQLAlchemy()
@@ -106,7 +109,7 @@ def get_root_path():
 
 
 def report_missing_config():  # pragma: no cover
-    if application.config['ENVIRONMENT'] == 'test':
+    if application.config.get('ENVIRONMENT') == 'test':
         return
     from app.config import Config
     for key in [k for k in Config.__dict__.keys() if k[:1] != '_']:
@@ -124,8 +127,7 @@ def configure_logging():
 
     del application.logger.handlers[:]
 
-    f = LogTruncatingFormatter(
-        "{} %(asctime)s;[%(process)d];%(levelname)s;%(message)s".format(get_env()), "%Y-%m-%d %H:%M:%S")
+    f = LogTruncatingFormatter(LOG_FORMAT.format(get_env()))
     ch.setFormatter(f)
     application.logger.addHandler(ch)
 

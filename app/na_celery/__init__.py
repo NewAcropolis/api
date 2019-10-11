@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 from celery.task.control import revoke
 from flask import current_app
 
@@ -20,6 +21,8 @@ class NewAcropolisCelery(Celery):  # pragma: no cover
         app.logger.info('Setting up celery: %s', app.config['CELERY_BROKER_URL'])
 
         self.conf.update(app.config)
+
+        app.logger.info('Celery beat schedule: %r', app.config['CELERYBEAT_SCHEDULE'])
 
         class ContextTask(self.Task):
             def __call__(self, *args, **kwargs):
