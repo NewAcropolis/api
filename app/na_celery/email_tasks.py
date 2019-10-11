@@ -41,7 +41,9 @@ def send_emails(email_id):
 
 @celery.task(name='send_periodic_emails')
 def send_periodic_emails():
-    current_app.logger.info('Task send_periodic_emails received')
+    emails = dao_get_approved_emails_for_sending()
+    current_app.logger.info('Task send_periodic_emails received: {}'.format(
+        ", ".join([str(e.id) for e in emails]) if emails else 'no emails to send'))
 
-    for email in dao_get_approved_emails_for_sending():
+    for email in emails:
         send_emails(email.id)
