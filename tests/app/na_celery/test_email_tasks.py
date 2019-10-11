@@ -6,7 +6,7 @@ from app.na_celery.email_tasks import send_emails, send_periodic_emails
 from app.comms.encryption import decrypt, get_tokens
 from app.models import APPROVED
 
-from tests.db import create_email, create_member
+from tests.db import create_email, create_member, create_email_to_member
 
 
 class WhenProcessingSendEmailsTask:
@@ -36,6 +36,19 @@ class WhenProcessingSendEmailsTask:
         assert mock_send_email.call_args_list[0][0][0] == sample_member.email
         assert mock_send_email.call_args_list[1][0][0] == member_1.email
         assert mock_send_email.call_args_list[2][0][0] == member_2.email
+
+    def it_only_sends_to_unsent_members(self, mocker, db, db_session, sample_email, sample_member):
+        member_1 = create_member(name='Test 1', email='test1@example.com')
+        member_2 = create_member(name='Test 2', email='test2@example.com')
+
+        create_email_to_member(sample_email.id, sample_member.id)
+
+        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+        send_emails(sample_email.id)
+
+        assert mock_send_email.call_count == 2
+        assert mock_send_email.call_args_list[0][0][0] == member_1.email
+        assert mock_send_email.call_args_list[1][0][0] == member_2.email
 
     @freeze_time("2019-06-03T10:00:00")
     def it_only_sends_approved_emails(self, mocker, db, db_session, sample_email, sample_member):

@@ -3,7 +3,7 @@ from app import db
 from app.dao import dao_create_record
 from app.dao.articles_dao import dao_create_article
 from app.dao.blacklist_dao import store_token
-from app.dao.emails_dao import dao_create_email
+from app.dao.emails_dao import dao_create_email, dao_create_email_to_member
 from app.dao.events_dao import dao_create_event, dao_get_event_by_old_id
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_create_event_type
@@ -15,7 +15,8 @@ from app.dao.speakers_dao import dao_create_speaker
 from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
 from app.models import (
-    Article, Email, Event, EventDate, EventType, Fee, Marketing, Member, RejectReason, Speaker, Ticket, User, Venue,
+    Article, Email, EmailToMember, Event, EventDate, EventType, Fee, Marketing,
+    Member, RejectReason, Speaker, Ticket, User, Venue,
     EVENT, TICKET_STATUS_UNUSED, DRAFT
 )
 
@@ -299,6 +300,24 @@ def create_member(
     dao_create_member(member)
 
     return member
+
+
+def create_email_to_member(email_id=None, member_id=None):
+    if not email_id:
+        email = create_email()
+        email_id = email.id
+    if not member_id:
+        member = create_member()
+        member_id = member.id
+
+    data = {
+        'email_id': email_id,
+        'member_id': member_id
+    }
+
+    member_to_email = EmailToMember(**data)
+
+    dao_create_email_to_member(member_to_email)
 
 
 def create_user(email='test@example.com', name='First Mid Last-name', access_area=',email,event,report,article,'):
