@@ -37,6 +37,20 @@ class WhenProcessingSendEmailsTask:
         assert mock_send_email.call_args_list[1][0][0] == member_1.email
         assert mock_send_email.call_args_list[2][0][0] == member_2.email
 
+    def it_only_sends_to_1_emails_if_restrict_email(self, mocker, db, db_session, sample_email, sample_member):
+        mocker.patch.dict('app.application.config', {
+            'ENVIRONMENT': 'test',
+            'EMAIL_RESTRICT': 1
+        })
+
+        create_member(name='Test 1', email='test1@example.com')
+
+        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+        send_emails(sample_email.id)
+
+        assert mock_send_email.call_count == 1
+        assert mock_send_email.call_args_list[0][0][0] == sample_member.email
+
     def it_only_sends_to_unsent_members(self, mocker, db, db_session, sample_email, sample_member):
         member_1 = create_member(name='Test 1', email='test1@example.com')
         member_2 = create_member(name='Test 2', email='test2@example.com')

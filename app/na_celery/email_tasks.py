@@ -13,8 +13,10 @@ from app.models import EVENT
 def send_emails(email_id):
     members_not_sent_to = dao_get_members_not_sent_to(email_id)
 
-    if current_app.config['ENVIRONMENT'] != 'live':
-        limit = 3
+    if current_app.config.get('EMAIL_RESTRICT'):
+        limit = 1
+    else:
+        limit = current_app.config['EMAIL_LIMIT']
 
     current_app.logger.info(
         'Task send_emails received %s, sending %d emails', str(email_id), limit or len(members_not_sent_to))
