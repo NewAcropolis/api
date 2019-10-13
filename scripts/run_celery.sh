@@ -49,4 +49,4 @@ eval "celery -A run_celery.celery beat"$logoutput
 num_workers=$(( $(ps auxww | grep "celery worker -n worker-$ENV" | wc -l) -1))
 echo "Running $num_workers workers"
 
-[ $num_workers == 1 ] && echo 'ok' || echo 'not ok'
+[ $num_workers == 2 ] && echo 'celery running with correct number of workers' || echo 'ERROR: incorrect number of celery workers'
