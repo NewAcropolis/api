@@ -78,6 +78,7 @@ class Config(object):
 
     EMAIL_DELAY = 1  # hours
     EMAIL_LIMIT = 400
+    EMAIL_RESTRICT = os.environ.get('EMAIL_RESTRICT')
 
 
 class Development(Config):
@@ -88,6 +89,7 @@ class Development(Config):
     PORT = 5000
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_development')
     STORAGE = '{}development'.format(os.environ.get('GOOGLE_STORE'))
+    EMAIL_LIMIT = 3
 
 
 class Preview(Config):
@@ -98,6 +100,7 @@ class Preview(Config):
     PORT = 4000
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_preview')
     STORAGE = '{}preview'.format(os.environ.get('GOOGLE_STORE'))
+    EMAIL_LIMIT = 3
 
 
 class Live(Config):
