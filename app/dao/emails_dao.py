@@ -15,6 +15,8 @@ def dao_create_email(email):
     if email.email_type == EVENT:
         try:
             event = dao_get_event_by_id(email.event_id)
+            if not email.send_starts_at:
+                email.send_starts_at = datetime.strptime(event.get_first_event_date(), "%Y-%m-%d") - timedelta(weeks=2)
             if not email.expires:
                 email.expires = event.get_last_event_date()
         except NoResultFound:

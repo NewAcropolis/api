@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import pytest
 from freezegun import freeze_time
 from sqlalchemy.exc import IntegrityError
@@ -24,8 +25,18 @@ class WhenUsingEmailsDAO(object):
 
         assert email == email_from_db
 
+    def it_creates_an_event_email(self, db_session, sample_event_with_dates):
+        email = create_email(event_id=sample_event_with_dates.id, old_event_id=None)
+        assert Email.query.count() == 1
+
+        email_from_db = Email.query.filter(Email.id == email.id).first()
+
+        assert email == email_from_db
+        assert email_from_db.send_starts_at == \
+            datetime.strptime(sample_event_with_dates.get_first_event_date(), "%Y-%m-%d") - timedelta(weeks=2)
+
     def it_updates_an_email_dao(self, db, db_session, sample_email):
-        dao_update_email(sample_email.id, extra_txt='test update')
+        dao_update_email(sample_email.id, send_starts_at='2019-06-05', extra_txt='test update')
 
         email_from_db = Email.query.filter(Email.id == sample_email.id).first()
 
