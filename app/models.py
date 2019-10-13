@@ -113,8 +113,8 @@ class Email(db.Model):
         index=True,
     )
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    send_starts_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    send_after = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    send_starts_at = db.Column(db.DateTime)
+    send_after = db.Column(db.DateTime)
     expires = db.Column(db.DateTime)
     task_id = db.Column(db.String)
     members_sent_to = db.relationship(
@@ -282,10 +282,14 @@ class Event(db.Model):
             dates.sort(key=lambda k: k['event_datetime'])
             return dates
 
+    def get_first_event_date(self):
+        dates = self.get_sorted_event_dates()
+        if dates:
+            return dates[0]['event_datetime'].split(' ')[0]
+
     def get_last_event_date(self):
-        if self.event_dates:
-            dates = [e.serialize() for e in self.event_dates]
-            dates.sort(key=lambda k: k['event_datetime'])
+        dates = self.get_sorted_event_dates()
+        if dates:
             return dates[-1]['event_datetime'].split(' ')[0]
 
     def serialize(self):
