@@ -123,5 +123,6 @@ class WhenUsingEmailModel:
             'email_state': u'draft',
             'send_starts_at': '2019-06-02',
             'expires': '2019-06-21',
-            'send_after': '2019-06-02 12:00'
+            'send_after': '2019-06-02 12:00',
+            'emails_sent_count': 0
         }

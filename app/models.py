@@ -136,7 +136,10 @@ class Email(db.Model):
             from app.dao.events_dao import dao_get_event_by_id
 
             event = dao_get_event_by_id(str(self.event_id))
-            return "{}".format(event.get_last_event_date())
+            return event.get_last_event_date()
+
+    def get_emails_sent_count(self):
+        return EmailToMember.query.filter_by(email_id=self.id).count()
 
     def serialize(self):
         return {
@@ -153,7 +156,8 @@ class Email(db.Model):
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
             'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d') if self.send_starts_at else None,
             'expires': self.expires.strftime('%Y-%m-%d') if self.expires else self.get_expired_date(),
-            'send_after': self.send_after.strftime('%Y-%m-%d %H:%M') if self.send_after else None
+            'send_after': self.send_after.strftime('%Y-%m-%d %H:%M') if self.send_after else None,
+            'emails_sent_count': self.get_emails_sent_count()
         }
 
 
