@@ -18,6 +18,10 @@ venv
 .cache
 .pytest_cache
 
+# celery
+celerybeat.pid
+celerybeat-schedule.db
+
 # environment
 *environment.sh
 env.sh

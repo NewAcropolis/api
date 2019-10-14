@@ -19,7 +19,10 @@ def send_emails(email_id):
         limit = current_app.config['EMAIL_LIMIT']
 
     current_app.logger.info(
-        'Task send_emails received %s, sending %d emails', str(email_id), limit or len(members_not_sent_to))
+        'Task send_emails received %s, sending %d emails',
+        str(email_id),
+        len(members_not_sent_to) if len(members_not_sent_to) < limit else limit
+    )
 
     email = dao_get_email_by_id(email_id)
 
