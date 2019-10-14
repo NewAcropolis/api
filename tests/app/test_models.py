@@ -124,5 +124,9 @@ class WhenUsingEmailModel:
             'send_starts_at': '2019-06-02',
             'expires': '2019-06-21',
             'send_after': '2019-06-02 12:00',
-            'emails_sent_count': 0
+            'emails_sent_counts': {
+                'success': 0,
+                'failed': 0,
+                'total_active_members': 0
+            }
         }

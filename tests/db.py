@@ -302,7 +302,7 @@ def create_member(
     return member
 
 
-def create_email_to_member(email_id=None, member_id=None):
+def create_email_to_member(email_id=None, member_id=None, status_code=200):
     if not email_id:
         email = create_email()
         email_id = email.id
@@ -312,7 +312,8 @@ def create_email_to_member(email_id=None, member_id=None):
 
     data = {
         'email_id': email_id,
-        'member_id': member_id
+        'member_id': member_id,
+        'status_code': status_code
     }
 
     member_to_email = EmailToMember(**data)
