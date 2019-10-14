@@ -23,7 +23,11 @@ class WhenProcessingSendEmailsTask:
         unsubcode = page.select_one('#unsublink')['href'].split('/')[-1]
         tokens = get_tokens(decrypt(unsubcode, current_app.config['EMAIL_UNSUB_SALT']))
         assert tokens[current_app.config['EMAIL_TOKENS']['member_id']] == str(sample_member.id)
-        assert sample_email.serialize()['emails_sent_count'] == 1
+        assert sample_email.serialize()['emails_sent_counts'] == {
+            'success': 1,
+            'failed': 0,
+            'total_active_members': 1
+        }
 
     def it_only_sends_to_3_emails_if_not_live_environment(self, mocker, db, db_session, sample_email, sample_member):
         member_1 = create_member(name='Test 1', email='test1@example.com')
@@ -37,7 +41,11 @@ class WhenProcessingSendEmailsTask:
         assert mock_send_email.call_args_list[0][0][0] == sample_member.email
         assert mock_send_email.call_args_list[1][0][0] == member_1.email
         assert mock_send_email.call_args_list[2][0][0] == member_2.email
-        assert sample_email.serialize()['emails_sent_count'] == 3
+        assert sample_email.serialize()['emails_sent_counts'] == {
+            'success': 3,
+            'failed': 0,
+            'total_active_members': 4
+        }
 
     def it_only_sends_to_1_emails_if_restrict_email(self, mocker, db, db_session, sample_email, sample_member):
         mocker.patch.dict('app.application.config', {
@@ -53,12 +61,14 @@ class WhenProcessingSendEmailsTask:
         assert mock_send_email.call_count == 1
         assert mock_send_email.call_args_list[0][0][0] == sample_member.email
 
-    def it_only_sends_to_unsent_members(self, mocker, db, db_session, sample_email, sample_member):
+    def it_only_sends_to_unsent_members_and_shows_failed_stat(
+        self, mocker, db, db_session, sample_email, sample_member
+    ):
         member_1 = create_member(name='Test 1', email='test1@example.com')
         member_2 = create_member(name='Test 2', email='test2@example.com')
         create_member(name='Test 2', email='test3@example.com', active=False)
 
-        create_email_to_member(sample_email.id, sample_member.id)
+        create_email_to_member(sample_email.id, sample_member.id, status_code=500)
 
         mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
         send_emails(sample_email.id)
@@ -66,7 +76,11 @@ class WhenProcessingSendEmailsTask:
         assert mock_send_email.call_count == 2
         assert mock_send_email.call_args_list[0][0][0] == member_1.email
         assert mock_send_email.call_args_list[1][0][0] == member_2.email
-        assert sample_email.serialize()['emails_sent_count'] == 3
+        assert sample_email.serialize()['emails_sent_counts'] == {
+            'success': 2,
+            'failed': 1,
+            'total_active_members': 3
+        }
 
     @freeze_time("2019-06-03T10:00:00")
     def it_only_sends_approved_emails(self, mocker, db, db_session, sample_email, sample_member):
