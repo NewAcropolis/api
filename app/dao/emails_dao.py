@@ -91,6 +91,10 @@ def dao_get_future_emails():
     ).all()
 
 
+def dao_get_latest_emails():
+    return Email.query.order_by(Email.created_at.desc()).limit(30).all()
+
+
 def dao_get_approved_emails_for_sending():
     now = datetime.today()
     emails = Email.query.all()

@@ -99,6 +99,44 @@ class WhenGettingFutureEmails:
         assert json_future_emails[2] == future_email_3.serialize()
 
 
+class WhenGettingLatestEmails:
+    @freeze_time("2019-07-10T10:00:00")
+    def it_returns_latest_emails(self, client, db, db_session):
+        event = create_event(title='Event 1')
+        event_2 = create_event(title='Event 2')
+        event_3 = create_event(title='Event 3')
+        past_event = create_event(title='Past event')
+
+        event_date = create_event_date(event_id=str(event.id), event_datetime='2019-07-20 19:00')
+        event_date_2 = create_event_date(event_id=str(event_2.id), event_datetime='2019-07-13 19:00')
+        event_date_3 = create_event_date(event_id=str(event_3.id), event_datetime='2019-08-13 19:00')
+        past_event_date = create_event_date(event_id=str(past_event.id), event_datetime='2019-06-13 19:00')
+
+        future_email = create_email(
+            event_id=str(event.id), created_at='2019-07-01 11:00', send_starts_at='2019-07-10', expires='2019-07-20')
+        future_email_2 = create_email(
+            event_id=str(event_2.id), created_at='2019-07-02 11:00', send_starts_at='2019-07-01', expires='2019-07-12')
+        future_email_3 = create_email(
+            event_id=str(event_3.id), created_at='2019-07-03 11:00', send_starts_at='2019-08-01', expires='2019-08-12')
+        past_email = create_email(
+            event_id=str(past_event.id),
+            created_at='2019-06-01 11:00',
+            send_starts_at='2019-06-01',
+            expires='2019-06-12')
+
+        response = client.get(
+            url_for('emails.get_latest_emails'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        json_latest_emails = json.loads(response.get_data(as_text=True))
+
+        assert len(json_latest_emails) == 4
+        assert json_latest_emails[0] == future_email_3.serialize()
+        assert json_latest_emails[1] == future_email_2.serialize()
+        assert json_latest_emails[2] == future_email.serialize()
+        assert json_latest_emails[3] == past_email.serialize()
+
+
 class WhenPostingImportingEmails:
     def it_creates_emails_for_imported_emails(
         self, client, db_session, sample_old_emails, sample_event_with_dates
