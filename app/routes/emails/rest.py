@@ -20,6 +20,7 @@ from app.dao.emails_dao import (
     dao_create_email,
     dao_create_email_to_member,
     dao_get_future_emails,
+    dao_get_latest_emails,
     dao_add_member_sent_to_email,
     dao_get_email_by_id,
     dao_get_emails_for_year_starting_on,
@@ -151,6 +152,14 @@ def get_email_types():
 @jwt_required
 def get_future_emails():
     emails = dao_get_future_emails()
+
+    return jsonify([e.serialize() for e in emails])
+
+
+@emails_blueprint.route('/emails/latest', methods=['GET'])
+@jwt_required
+def get_latest_emails():
+    emails = dao_get_latest_emails()
 
     return jsonify([e.serialize() for e in emails])
 
