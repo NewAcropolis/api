@@ -16,8 +16,13 @@ def get_info():
     except Exception as e:
         current_app.logger.error('Database exception: %r', e)
         full_name = 'Database error, check logs'
-    return jsonify(
-        environment=current_app.config['ENVIRONMENT'],
-        info=full_name,
-        commit=current_app.config['TRAVIS_COMMIT']
-    )
+
+    resp = {
+        'environment': current_app.config['ENVIRONMENT'],
+        'info': full_name,
+        'commit': current_app.config['TRAVIS_COMMIT'],
+    }
+
+    if current_app.config.get('EMAIL_RESTRICT'):  # pragma: no cover
+        resp['email_restrict'] = True
+    return jsonify(resp)

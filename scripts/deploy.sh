@@ -105,8 +105,8 @@ RESTART_FLOWER=$RESTART_FLOWER
 RESTART_CELERY=$RESTART_CELERY
 EOL
 
-systemctl daemon-reload
-systemctl restart na-api.service
+sudo systemctl daemon-reload
+sudo systemctl restart na-api.service
         """
     else
         ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
