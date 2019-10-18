@@ -32,6 +32,9 @@ if [ -f "celerybeat.pid" ]; then
   kill -9 `cat celerybeat.pid` && rm celerybeat.pid
 fi
 
+eval "celery -A run_celery.celery worker -n worker-$ENV --loglevel=INFO --concurrency=1"$logoutput
+eval "celery -A run_celery.celery beat"$logoutput
+
 # kill celery flower
 FLOWER_PID=lsof -i :$FLOWER_PORT  | awk '{if(NR>1)print $2}'
 
@@ -41,9 +44,6 @@ if [ -z "$FLOWER_PID" -o "$RESTART_FLOWER" ]; then
   fi
   eval "celery -A run_celery.celery flower --url_prefix=celery --address=127.0.0.1 --port=$FLOWER_PORT"$logoutput
 fi
-
-eval "celery -A run_celery.celery worker -n worker-$ENV --loglevel=INFO --concurrency=1"$logoutput
-eval "celery -A run_celery.celery beat"$logoutput
 
 # check that celery has started properly
 num_workers=$(( $(ps auxww | grep "celery worker -n worker-$ENV" | wc -l) -1))
