@@ -1,3 +1,6 @@
+from app.schema_validation.definitions import uuid
+
+
 post_import_member_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "POST schema for importing member",
@@ -27,4 +30,16 @@ post_import_members_schema = {
     "definitions": {
         "member": post_import_member_schema
     }
+}
+
+post_subscribe_member_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for subscribing member",
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "email": {"format": "email", "type": "string"},
+        "marketing_id": uuid,
+    },
+    "required": ["name", "email", "marketing_id"]
 }
