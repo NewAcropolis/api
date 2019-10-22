@@ -564,3 +564,27 @@ class WhenPostingImportingEmailsMailings:
         assert response.status_code == 400
         assert response.json['errors'] == [
             '0: Already exists email_to_member {}, {}'.format(str(sample_email.id), str(sample_member.id))]
+
+
+class WhenPostingSendMessage:
+    def it_sends_message_to_admin_emails(self, client, mocker, db_session, sample_admin_user):
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_email')
+
+        data = {
+            "name": "Test email",
+            "email": "test@example.com",
+            "reason": "Make contact",
+            "message": "Test message"
+        }
+
+        response = client.post(
+            url_for('emails.send_message'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert mock_send_email.called
+        assert mock_send_email.call_args == call(
+            [sample_admin_user.email], 'Web message: {}'.format(data['reason']), data['message'],
+            _from='{}<{}>'.format(data['name'], data['email'])
+        )

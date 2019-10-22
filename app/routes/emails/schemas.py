@@ -115,3 +115,17 @@ post_import_email_members_schema = {
         "email_member": post_import_email_member_schema
     }
 }
+
+
+post_send_message_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for send message",
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "email": {"format": "email", "type": "string"},
+        "reason": {"type": "string"},
+        "message": {"type": "string"}
+    },
+    "required": ["name", "email", "reason", "message"]
+}
