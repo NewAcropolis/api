@@ -39,7 +39,7 @@ from app.models import (
 )
 from app.routes.emails.schemas import (
     post_create_email_schema, post_update_email_schema, post_import_emails_schema, post_preview_email_schema,
-    post_import_email_members_schema
+    post_import_email_members_schema, post_send_message_schema
 )
 from app.schema_validation import validate
 
@@ -279,3 +279,18 @@ def import_emails_members_sent_to():
         res['errors'] = errors
 
     return jsonify(res), 201 if emails_to_members else 400 if errors else 200
+
+
+@emails_blueprint.route('/send_message', methods=['POST'])
+@jwt_required
+def send_message():
+    data = request.get_json(force=True)
+    current_app.logger.info('send_message: %r', data)
+
+    validate(data, post_send_message_schema)
+
+    emails_to = [user.email for user in dao_get_admin_users()]
+
+    send_email(emails_to, 'Web message: {}'.format(
+        data['reason']), data['message'], _from='{}<{}>'.format(data['name'], data['email']))
+    return jsonify({'message': 'Your message was sent'})

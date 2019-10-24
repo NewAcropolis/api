@@ -24,6 +24,41 @@ class WhenGettingMembers:
 
 class WhenPostingMembers:
 
+    def it_subscribes_member(self, app, client, db_session, sample_marketing):
+        data = {
+            'name': 'Test member',
+            'email': 'test@example.com',
+            'marketing_id': sample_marketing.id
+        }
+        response = client.post(
+            url_for('members.subscribe_member'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        members = Member.query.all()
+        assert len(members) == 1
+        assert members[0].name == data['name']
+        assert members[0].email == data['email']
+        assert members[0].active is True
+        assert members[0].marketing_id == sample_marketing.id
+
+    def it_doesnt_subscribes_member_with_matching_email(self, app, client, db_session, sample_member, sample_marketing):
+        data = {
+            'name': 'Test member',
+            'email': sample_member.email,
+            'marketing_id': sample_marketing.id
+        }
+        response = client.post(
+            url_for('members.subscribe_member'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+        members = Member.query.all()
+        assert len(members) == 1
+
     def it_unsubscribes_member(self, app, client, db_session, sample_member):
         unsubcode = encrypt(
             "{}={}".format(app.config['EMAIL_TOKENS']['member_id'], str(sample_member.id)),

@@ -5,25 +5,53 @@ from flask import (
     request
 )
 import json
+from sqlalchemy.orm.exc import NoResultFound
 
 from flask_jwt_extended import jwt_required
 
 from app.dao.members_dao import (
     dao_create_member,
     dao_get_members,
+    dao_get_member_by_email,
     dao_get_member_by_id,
     dao_update_member
 )
 
 from app.comms.encryption import decrypt, get_tokens
-from app.errors import register_errors
+from app.errors import register_errors, InvalidRequest
 
 from app.models import Marketing, Member
-from app.routes.members.schemas import post_import_members_schema
+from app.routes.members.schemas import post_import_members_schema, post_subscribe_member_schema
 from app.schema_validation import validate
 
 members_blueprint = Blueprint('members', __name__)
 register_errors(members_blueprint)
+
+
+@members_blueprint.route('/member/subscribe', methods=['POST'])
+@jwt_required
+def subscribe_member():
+    data = request.get_json(force=True)
+
+    current_app.logger.info('Subscribe member: {}'.format(data))
+
+    validate(data, post_subscribe_member_schema)
+
+    member = dao_get_member_by_email(data.get('email'))
+
+    if member:
+        return jsonify({'error': 'member already subscribed: {}'.format(member.email)}), 400
+
+    member = Member(
+        name=data['name'],
+        email=data['email'],
+        marketing_id=data['marketing_id'],
+        active=True
+    )
+
+    dao_create_member(member)
+
+    return jsonify(member.serialize())
 
 
 @members_blueprint.route('/member/unsubscribe/<unsubcode>', methods=['POST'])
