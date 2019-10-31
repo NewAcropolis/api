@@ -3,7 +3,7 @@ import requests
 from HTMLParser import HTMLParser
 
 from app.comms.encryption import encrypt
-from app.models import EVENT
+from app.models import BASIC, EVENT
 from app.dao.events_dao import dao_get_event_by_id
 
 h = HTMLParser()
@@ -56,6 +56,12 @@ def get_email_html(email_type, **kwargs):
             details=kwargs.get('details'),
             extra_txt=kwargs.get('extra_txt'),
             unsubcode=unsubcode
+        )
+    elif email_type == BASIC:
+        return render_template(
+            'emails/basic.html',
+            title=kwargs.get('title', ''),
+            message=kwargs.get('message')
         )
 
 
