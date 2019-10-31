@@ -12,12 +12,15 @@ from app import db
 ANON_PROCESS = 'anon_process'
 ANON_REMINDER = 'anon_reminder'
 ANNOUNCEMENT = 'announcement'
+BASIC = 'basic'
 EVENT = 'event'
 MAGAZINE = 'magazine'
 REPORT_MONTHLY = 'report_monthly'
 REPORT_ANNUALLY = 'report_annually'
 TICKET = 'ticket'
-EMAIL_TYPES = [ANON_PROCESS, ANON_REMINDER, EVENT, MAGAZINE, ANNOUNCEMENT, REPORT_MONTHLY, REPORT_ANNUALLY, TICKET]
+EMAIL_TYPES = [
+    ANON_PROCESS, ANON_REMINDER, EVENT, MAGAZINE, ANNOUNCEMENT, REPORT_MONTHLY, REPORT_ANNUALLY, TICKET, BASIC
+]
 MANAGED_EMAIL_TYPES = [EVENT, MAGAZINE, ANNOUNCEMENT]
 
 DRAFT = 'draft'
@@ -196,7 +199,7 @@ class Member(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     marketing_id = db.Column(UUID(as_uuid=True), db.ForeignKey('marketings.id'), nullable=False)
     old_marketing_id = db.Column(db.Integer)
-    is_course_member = db.Column(db.Boolean)
+    is_course_member = db.Column(db.Boolean, default=False)
     last_updated = db.Column(db.DateTime)
 
     def serialize(self):
