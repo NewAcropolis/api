@@ -442,6 +442,7 @@ EOF
 )
 
 preview_email="%7B%22details%22%3A%20%22%3Cdiv%3ESome%20additional%20details%3C/div%3E%22%2C%20%22email_type%22%3A%20%22event%22%2C%20%22event_id%22%3A%20%22$EVENT_ID%22%2C%20%22extra_txt%22%3A%20%22%3Cdiv%3ESome%20more%20information%20about%20the%20event%3C/div%3E%22%2C%20%22replace_all%22%3A%20false%7D"
+preview_basic_email="%7B%22email_type%22%3A%20%22basic%22%2C%20%22name%22%3A%20%22Test%20name%22%2C%20%22message%22%3A%20%22Test%20message%22%7D"
 
 update_email=$(cat  << EOF
     {
@@ -464,9 +465,16 @@ EOF
 function PreviewEmail {
     echo "*** Preview email ***"
 
-    echo $preview_email
-
     curl -X GET $api_server'/email/preview?data='$preview_email \
+    -H "Accept: application/json" > 'data/preview_email.html'
+
+    open 'data/preview_email.html'
+}
+
+function PreviewBasicEmail {
+    echo "*** Preview basic email ***"
+
+    curl -X GET $api_server'/email/preview?data='$preview_basic_email \
     -H "Accept: application/json" > 'data/preview_email.html'
 
     open 'data/preview_email.html'
@@ -709,6 +717,10 @@ case "$arg" in
 
         -pe)
             PreviewEmail
+        ;;
+
+        -pbe)
+            PreviewBasicEmail
         ;;
 
         -cem)

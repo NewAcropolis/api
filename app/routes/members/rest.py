@@ -17,10 +17,11 @@ from app.dao.members_dao import (
     dao_update_member
 )
 
+from app.comms.email import get_email_html, send_email
 from app.comms.encryption import decrypt, get_tokens
 from app.errors import register_errors, InvalidRequest
 
-from app.models import Marketing, Member
+from app.models import Marketing, Member, BASIC
 from app.routes.members.schemas import post_import_members_schema, post_subscribe_member_schema
 from app.schema_validation import validate
 
@@ -50,6 +51,14 @@ def subscribe_member():
     )
 
     dao_create_member(member)
+
+    basic_html = get_email_html(
+        email_type=BASIC,
+        title='Subscription',
+        message="Thank you{} for subscribing to New Acropolis events and news letters".format(
+            ' {}'.format(data.get('name', '')) if 'name' in data else ''
+        ))
+    response = send_email(data['email'], 'New Acropolis subscription', basic_html)
 
     return jsonify(member.serialize())
 

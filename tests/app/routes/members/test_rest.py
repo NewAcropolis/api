@@ -24,7 +24,8 @@ class WhenGettingMembers:
 
 class WhenPostingMembers:
 
-    def it_subscribes_member(self, app, client, db_session, sample_marketing):
+    def it_subscribes_member(self, mocker, app, client, db_session, sample_marketing):
+        mock_send_email = mocker.patch('app.routes.members.rest.send_email')
         data = {
             'name': 'Test member',
             'email': 'test@example.com',
@@ -42,6 +43,11 @@ class WhenPostingMembers:
         assert members[0].email == data['email']
         assert members[0].active is True
         assert members[0].marketing_id == sample_marketing.id
+        assert mock_send_email.called
+        assert mock_send_email.call_args[0][0] == data['email']
+        assert mock_send_email.call_args[0][1] == 'New Acropolis subscription'
+        assert 'Thank you {} for subscribing to New Acropolis events and news letters'.format(data['name']) \
+            in mock_send_email.call_args[0][2]
 
     def it_doesnt_subscribes_member_with_matching_email(self, app, client, db_session, sample_member, sample_marketing):
         data = {
