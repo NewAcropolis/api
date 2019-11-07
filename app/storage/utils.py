@@ -1,7 +1,11 @@
 import base64
+from datetime import datetime
+from io import BytesIO
 import os
+import sys
 
 from flask import current_app
+from PIL import Image
 
 from google.auth import compute_engine
 from google.cloud import storage
@@ -62,6 +66,9 @@ class Storage(object):
 
         binary = base64.b64decode(base64data)
 
+        if 'image/' in content_type:
+            self.generate_web_image(destination_blob_name, BytesIO(binary))
+
         blob.upload_from_string(binary, content_type=content_type)
         blob.make_public()
 
@@ -79,6 +86,52 @@ class Storage(object):
 
         blobs = self.bucket.list_blobs(prefix=prefix, delimiter=delimiter)
         return any(True for _ in blobs)
+
+    def generate_web_images(self, year=None):
+        if not year:
+            year = datetime.now().strftime("%Y")
+
+        print('Generate web images for {}/{}'.format(self.bucket.name, year))
+
+        for blob in self.storage_client.list_blobs(self.bucket.name, prefix='{}/'.format(year), delimiter='/'):
+            source_img = BytesIO()
+            blob.download_to_file(source_img)
+            print('Loaded {} bytes for {}'.format(sizeof_fmt(sys.getsizeof(source_img)), blob.name))
+            self.generate_web_image(blob.name, source_img)
+
+    def generate_web_image(self, filename, source_img):
+        standard_img = BytesIO()
+        thumbnail_img = BytesIO()
+
+        img = Image.open(source_img)
+
+        img.thumbnail(current_app.config.get('STANDARD_MAXSIZE'), Image.ANTIALIAS)
+        img.save(standard_img, "PNG", optimize=True, quality=80)
+
+        self.upload_web_image(
+            'standard/{}'.format(filename),
+            standard_img.getvalue()
+        )
+
+        img.thumbnail(current_app.config.get('THUMBNAIL_MAXSIZE'), Image.ANTIALIAS)
+        img.save(thumbnail_img, "PNG", optimize=True, quality=80)
+
+        self.upload_web_image(
+            'thumbnail/{}'.format(filename),
+            thumbnail_img.getvalue()
+        )
+
+    def upload_web_image(self, filename, binary, content_type='image/png'):
+        blob = self.bucket.blob(filename)
+
+        blob.upload_from_string(binary, content_type=content_type)
+        blob.make_public()
+
+        binary_len = len(binary)
+        current_app.logger.info('Uploaded {} for file {}'.format(
+            sizeof_fmt(binary_len),
+            filename)
+        )
 
 
 def sizeof_fmt(num, suffix='B'):
