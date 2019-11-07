@@ -1,10 +1,17 @@
 import base64
 import pytest
 
+from mock import Mock
+
 from app.storage.utils import Storage, sizeof_fmt
 
 
 class MockBlob:
+    def __call__(self, filename=None):
+        self.name = filename
+        self.filename = filename
+        return self
+
     def upload_from_filename(self, filename):
         self.source_filename = filename
 
@@ -58,6 +65,9 @@ class MockStorageClient:
 
     def get_bucket(self, bucket_name):
         return MockBucket(bucket_name)
+
+    def list_blobs(self, bucket_name, **kwargs):
+        return [Mock()]
 
 
 class WhenUsingStorage:
@@ -150,6 +160,20 @@ class WhenUsingStorage:
         assert store.bucket.destination_filename == 'destination'
         assert store.bucket.blob.source_filename == 'source'
         assert store.bucket.blob.public
+
+    def it_generates_web_images(self, app, mocker):
+        mocker.patch.dict('os.environ', {
+            'GOOGLE_APPLICATION_CREDENTIALS': 'path/to/creds'
+        })
+
+        mocker.patch("google.cloud.storage.Client", MockStorageClient)
+        mocker.patch("google.auth.compute_engine.Credentials")
+        mock_generate_web_image = mocker.patch("app.storage.utils.Storage.generate_web_image")
+
+        store = Storage('test-store')
+        store.generate_web_images()
+
+        assert mock_generate_web_image.called
 
     def it_logs_args_if_development_and_no_google_config_when_upload_file(self, app, mocker):
         mocker.patch.dict('app.storage.utils.current_app.config', {
