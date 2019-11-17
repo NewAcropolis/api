@@ -1,6 +1,6 @@
 import base64
 from datetime import datetime
-from io import BytesIO
+from io import BytesIO, StringIO
 import os
 import sys
 
@@ -86,6 +86,12 @@ class Storage(object):
 
         blobs = self.bucket.list_blobs(prefix=prefix, delimiter=delimiter)
         return any(True for _ in blobs)
+
+    def get_blob(self, image_filename):  # pragma: no cover
+        blob = self.bucket.get_blob(image_filename)
+        current_app.logger.info('Getting %s', image_filename)
+        blob_data = blob.download_as_string()
+        return blob_data
 
     def generate_web_images(self, year=None):
         if not year:
