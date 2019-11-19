@@ -30,7 +30,6 @@ from app.dao.emails_dao import (
 from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.dao.events_dao import dao_get_event_by_old_id, dao_get_event_by_id
 
-from app.comms.email import get_nice_event_dates
 from app.errors import register_errors, InvalidRequest
 
 from app.models import (
