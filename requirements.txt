@@ -1,7 +1,7 @@
 beautifulsoup4==4.6.0
 celery==4.1.1
 cryptography==2.4.2
-Flask==1.0
+Flask==1.0.2
 Flask-Migrate==1.8.0
 Flask-Script==2.0.5
 Flask-SQLAlchemy==2.1 
@@ -21,3 +21,5 @@ pyqrcode==1.2.1
 redis==3.3.5
 requests>=2.0.0
 six==1.11.0
+
+-e git+https://github.com/NewAcropolis/na-common.git@afd9e32dfe2d6e7c6c72f61dee417cf85a1b625e#egg=na-common
