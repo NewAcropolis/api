@@ -171,6 +171,25 @@ class Email(db.Model):
         }
 
 
+class Magazine(db.Model):
+    __tablename__ = 'magazines'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_id = db.Column(db.Integer, unique=True)
+    title = db.Column(db.String, unique=True)
+    filename = db.Column(db.String, unique=True)
+    old_filename = db.Column(db.String, unique=True)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def serialize(self):
+        return {
+            "id": str(self.id),
+            "old_id": self.old_id,
+            "title": self.title,
+            "filename": self.filename,
+            "old_filename": self.old_filename
+        }
+
+
 class Marketing(db.Model):
     __tablename__ = 'marketings'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
