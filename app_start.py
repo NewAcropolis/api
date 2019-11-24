@@ -5,6 +5,7 @@ import re
 import requests
 from flask_script import Manager, Server
 from app import create_app, db
+from app.routes.magazine import get_magazine_filename, MAGAZINE_PATTERN
 from app.storage.utils import Storage
 from flask_migrate import Migrate, MigrateCommand
 
@@ -38,8 +39,6 @@ def upload_magazines(folder):
     application.logger.info('Upload magazines')
     storage = Storage(application.config['STORAGE'])
 
-    magazine_pattern = r'( |_)issue( |_)(?P<issue_no>\d+)( .*)?\.pdf'
-
     share_items = []
     with open(os.path.join('data', 'shareitems.json')) as f:
         json_shareitems = json.loads(f.read())
@@ -50,13 +49,13 @@ def upload_magazines(folder):
 
     for item in share_items:
         filename = item['ImageFilename']
-        match = re.search(magazine_pattern, filename, re.IGNORECASE)
+        match = re.search(MAGAZINE_PATTERN, filename, re.IGNORECASE)
         if match:
             issue_no = match.group('issue_no')
 
             with open(os.path.join(folder, filename)) as f:
                 binary = f.read()
-                new_filename = 'bi_monthly_issue_{}.pdf'.format(issue_no)
+                new_filename = get_magazine_filename(issue_no)
 
                 storage.upload_blob_from_base64string(
                     filename,
