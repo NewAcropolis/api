@@ -53,13 +53,13 @@ class Storage(object):
             destination_blob_name))
 
     def upload_blob_from_base64string(
-        self, image_filename, destination_blob_name, base64data, content_type='image/png'
+        self, src_filename, destination_blob_name, base64data, content_type='image/png'
     ):
         if self.no_google_config():
             current_app.logger.info(
                 'No Google config, upload_blob_from_base64string: fielname: '
                 '%s, destination: %s, base64data: %s, content_type %s',
-                image_filename, destination_blob_name, base64data, content_type)
+                src_filename, destination_blob_name, base64data, content_type)
             return
 
         blob = self.bucket.blob(destination_blob_name)
@@ -75,7 +75,7 @@ class Storage(object):
         binary_len = len(binary)
         current_app.logger.info('Uploaded {} file {} uploaded to {}'.format(
             sizeof_fmt(binary_len),
-            image_filename,
+            src_filename,
             destination_blob_name))
 
     def blob_exists(self, prefix, delimiter=None):
