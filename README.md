@@ -114,6 +114,16 @@ Images have to be uploaded from the dev machine, after which they can be copied 
 gsutil -m rsync -r -d -p gs://<dev storage name> gs://<target storage name>
 ```
 
+### Generate web images
+
+Generate web images by running this command:
+
+    python app_start.py generate_web_images --year=2019 
+
+### Import magazines
+
+    python app_start.py upload_magazines --folder=<folder path> 
+
 ## Logging
 
 Logs are stored under the `logs` folder
