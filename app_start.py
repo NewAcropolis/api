@@ -5,7 +5,7 @@ import re
 import requests
 from flask_script import Manager, Server
 from app import create_app, db
-from app.routes.magazine import get_magazine_filename, MAGAZINE_PATTERN
+from app.routes.magazines import get_magazine_filename, MAGAZINE_PATTERN
 from app.storage.utils import Storage
 from flask_migrate import Migrate, MigrateCommand
 
