@@ -25,7 +25,7 @@ def sample_old_emails():
             "extratxt": "<a href='http://www.example.org/download.php?<member>&id=1'><img title="
             "'Click to download Issue 1' src='http://www.example.org/images/NA_Newsletter_Issue_1.pdf'></a>",
             "replaceAll": "n",
-            "timestamp": "2019-01-01 10:00",
+            "timestamp": "2019-01-01 10:00:00",
             "Title": "",
             "ImageFilename": "",
             "Status": "new",
@@ -37,7 +37,7 @@ def sample_old_emails():
             "eventdetails": "",
             "extratxt": "",
             "replaceAll": "n",
-            "timestamp": "2019-02-01 11:00",
+            "timestamp": "2019-02-01 11:00:00",
         },
         {
             "id": "3",
@@ -45,7 +45,7 @@ def sample_old_emails():
             "eventdetails": "Some announcement",
             "extratxt": "",
             "replaceAll": "n",
-            "timestamp": "2019-03-01 11:00",
+            "timestamp": "2019-03-01 11:00:00",
         }
     ]
 
@@ -156,7 +156,7 @@ class WhenPostingImportingEmails:
             if json_emails[i]['email_type'] == EVENT:
                 assert json_emails[i]['event_id'] == str(sample_event_with_dates.id)
             assert json_emails[i]['email_type'] == email_types[i]
-            assert json_emails[i]['created_at'] == sample_old_emails[i]['timestamp']
+            assert json_emails[i]['created_at'] == sample_old_emails[i]['timestamp'][:-3]
             assert json_emails[i]['extra_txt'] == sample_old_emails[i]['extratxt']
             assert json_emails[i]['details'] == sample_old_emails[i]['eventdetails']
             assert str(json_emails[i]['old_id']) == sample_old_emails[i]['id']
@@ -185,7 +185,7 @@ class WhenPostingImportingEmails:
         assert len(json_emails) == len(sample_old_emails) - 1
         for i in range(0, len(sample_old_emails) - 1):
             assert json_emails[i]['email_type'] == email_types[i]
-            assert json_emails[i]['created_at'] == sample_old_emails[i + 1]['timestamp']
+            assert json_emails[i]['created_at'] == sample_old_emails[i + 1]['timestamp'][:-3]
             assert json_emails[i]['extra_txt'] == sample_old_emails[i + 1]['extratxt']
             assert json_emails[i]['details'] == sample_old_emails[i + 1]['eventdetails']
             assert str(json_emails[i]['old_id']) == sample_old_emails[i + 1]['id']
@@ -213,7 +213,7 @@ class WhenPostingImportingEmails:
             if i == 1:
                 offset = 1  # skip event email as shouldnt be created
             assert json_emails[i]['email_type'] == email_types[i]
-            assert json_emails[i]['created_at'] == sample_old_emails[i + offset]['timestamp']
+            assert json_emails[i]['created_at'] == sample_old_emails[i + offset]['timestamp'][:-3]
             assert json_emails[i]['extra_txt'] == sample_old_emails[i + offset]['extratxt']
             assert json_emails[i]['details'] == sample_old_emails[i + offset]['eventdetails']
             assert str(json_emails[i]['old_id']) == sample_old_emails[i + offset]['id']

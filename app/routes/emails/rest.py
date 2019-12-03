@@ -197,7 +197,7 @@ def import_emails():
                 expires = event.get_last_event_date()
             else:
                 # default to 2 weeks expiry after email was created
-                expires = datetime.strptime(item['timestamp'], "%Y-%m-%d %H:%M") + timedelta(weeks=2)
+                expires = datetime.strptime(item['timestamp'], "%Y-%m-%d %H:%M:%S") + timedelta(weeks=2)
 
             email = Email(
                 event_id=event_id,
