@@ -131,7 +131,7 @@ class Email(db.Model):
             from app.dao.events_dao import dao_get_event_by_id
 
             event = dao_get_event_by_id(str(self.event_id))
-            return "{}: {}".format(event.event_type.event_type, event.title)
+            return u"{}: {}".format(event.event_type.event_type, event.title)
         return 'No email type'
 
     def get_expired_date(self):
