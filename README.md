@@ -104,6 +104,9 @@ Imports can be run via `integration_test.sh`
 ./integration_test.sh -iem
 # import email to members
 ./integration_test.sh -ie2m <local|preview|live> emailmailings_0-10000.json
+
+# import magazines
+python app_start.py upload_magazines data/pdfs
 ```
 
 ### Importing images

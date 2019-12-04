@@ -5,6 +5,7 @@ import re
 import requests
 from flask_script import Manager, Server
 from app import create_app, db
+from app.dao.magazines_dao import dao_get_magazine_by_old_id
 from app.routes.magazines import get_magazine_filename, MAGAZINE_PATTERN
 from app.storage.utils import Storage
 from flask_migrate import Migrate, MigrateCommand
@@ -34,7 +35,7 @@ def generate_web_images(year=None):
 
 
 @manager.command
-def upload_magazines(folder):
+def upload_magazines(folder=None):
     """Upload magazines."""
     application.logger.info('Upload magazines')
     storage = Storage(application.config['STORAGE'])
@@ -48,21 +49,20 @@ def upload_magazines(folder):
     access_token = get_access_token()
 
     for item in share_items:
-        filename = item['ImageFilename']
-        match = re.search(MAGAZINE_PATTERN, filename, re.IGNORECASE)
-        if match:
-            issue_no = match.group('issue_no')
+        if not dao_get_magazine_by_old_id(item['id']):
+            filename = item['ImageFilename']
+            new_filename = get_magazine_filename(filename)
+            if new_filename:
+                if folder:
+                    with open(os.path.join(folder, filename)) as f:
+                        binary = f.read()
 
-            with open(os.path.join(folder, filename)) as f:
-                binary = f.read()
-                new_filename = get_magazine_filename(issue_no)
-
-                storage.upload_blob_from_base64string(
-                    filename,
-                    new_filename,
-                    base64.b64encode(binary),
-                    content_type='application/pdf'
-                )
+                        storage.upload_blob_from_base64string(
+                            filename,
+                            new_filename,
+                            base64.b64encode(binary),
+                            content_type='application/pdf'
+                        )
 
                 payload = {
                     'old_id': item['id'],
@@ -72,6 +72,8 @@ def upload_magazines(folder):
                 }
 
                 auth_request('magazine/import', access_token, payload)
+        else:
+            application.logger.info("Magazine already uploaded: %s", item['Title'])
 
 
 def get_access_token():
