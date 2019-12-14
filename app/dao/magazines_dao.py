@@ -7,5 +7,9 @@ def dao_get_magazines():
     return Magazine.query.order_by(Magazine.created_at.desc()).all()
 
 
+def dao_get_magazine_by_id(id):
+    return Magazine.query.filter_by(id=id).one()
+
+
 def dao_get_magazine_by_old_id(old_id):
     return Magazine.query.filter_by(old_id=old_id).first()
