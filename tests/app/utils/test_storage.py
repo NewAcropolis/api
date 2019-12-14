@@ -270,7 +270,7 @@ class WhenUsingStorage:
         with open(os.path.join('tests', 'test_files', 'simple.pdf')) as f:
             pdf = f.read()
             store.upload_blob_from_base64string(
-                'simple.pdf', 'pdfs/simple.pdf.png', base64.b64encode(pdf), content_type='application/pdf')
+                'simple.pdf', 'simple.pdf', base64.b64encode(pdf), content_type='application/pdf')
 
             assert len(store.bucket.blob.source_strings) == 3
             assert store.bucket.blob.source_strings[2] == pdf
@@ -278,3 +278,5 @@ class WhenUsingStorage:
         with open(os.path.join('tests', 'test_files', 'simple.pdf.png')) as f:
             img = f.read()
             assert store.bucket.blob.source_strings[0] == img
+
+        assert "pdfs" == store.bucket.blob.filename.split('/')[1]

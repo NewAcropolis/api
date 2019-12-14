@@ -64,6 +64,9 @@ class Storage(object):
                 src_filename, destination_blob_name, base64data, content_type)
             return
 
+        if content_type == 'application/pdf':
+            destination_blob_name = 'pdfs/' + destination_blob_name
+
         blob = self.bucket.blob(destination_blob_name)
 
         binary = base64.b64decode(base64data)
