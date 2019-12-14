@@ -7,7 +7,7 @@ from flask_script import Manager, Server
 from app import create_app, db
 from app.dao.magazines_dao import dao_get_magazine_by_old_id
 from app.routes.magazines import get_magazine_filename, MAGAZINE_PATTERN
-from app.storage.utils import Storage
+from app.utils.storage import Storage
 from flask_migrate import Migrate, MigrateCommand
 
 
@@ -35,7 +35,7 @@ def generate_web_images(year=None):
 
 
 @manager.command
-def upload_magazines(folder=None):
+def upload_magazines(folder='data/pdfs'):
     """Upload magazines."""
     application.logger.info('Upload magazines')
     storage = Storage(application.config['STORAGE'])
@@ -55,12 +55,12 @@ def upload_magazines(folder=None):
             if new_filename:
                 if folder:
                     with open(os.path.join(folder, filename)) as f:
-                        binary = f.read()
+                        pdf = f.read()
 
                         storage.upload_blob_from_base64string(
                             filename,
                             new_filename,
-                            base64.b64encode(binary),
+                            base64.b64encode(pdf),
                             content_type='application/pdf'
                         )
 
