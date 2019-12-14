@@ -69,5 +69,29 @@ class WhenGettingMagazines(object):
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 200
-        assert response.json
         assert len(response.json) == 2
+
+
+class WhenGettingMagazine(object):
+
+    def it_gets_magazine_by_id(self, client, db_session):
+        magazine = create_magazine(title='title', filename='new filename')
+        create_magazine(old_id='2', title='title 2', filename='new filename 2')
+
+        response = client.get(
+            url_for('magazines.get_magazine_by_id', id=magazine.id),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+        assert response.json['id'] == str(magazine.id)
+
+    def it_gets_magazine_by_old_id(self, client, db_session):
+        magazine = create_magazine(old_id='1', title='title', filename='new filename')
+        create_magazine(old_id='2', title='title 2', filename='new filename 2')
+
+        response = client.get(
+            url_for('magazines.get_magazine_by_old_id', old_id=magazine.old_id),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+        assert response.json['id'] == str(magazine.id)
