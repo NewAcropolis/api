@@ -21,5 +21,6 @@ pyqrcode==1.2.1
 redis==3.3.5
 requests>=2.0.0
 six==1.11.0
+Wand==0.5.8
 
 -e git+https://github.com/NewAcropolis/na-common.git@afd9e32dfe2d6e7c6c72f61dee417cf85a1b625e#egg=na-common
