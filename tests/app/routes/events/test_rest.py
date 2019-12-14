@@ -330,8 +330,8 @@ class WhenPostingImportEvents(object):
 
     @pytest.fixture
     def mock_storage(self, mocker):
-        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
-        mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists")
+        mock_storage = mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mock_storage_blob_exists = mocker.patch("app.utils.storage.Storage.blob_exists")
         yield
         mock_storage.assert_called_with('test-store')
         mock_storage_blob_exists.assert_called_with('2004/WinterCourse.jpg')
@@ -339,9 +339,9 @@ class WhenPostingImportEvents(object):
     @pytest.fixture
     def mock_storage_not_exists(self, mocker):
         mocker.patch('os.path.isfile', return_value=True)
-        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
-        mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
-        mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob")
+        mock_storage = mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mock_storage_blob_exists = mocker.patch("app.utils.storage.Storage.blob_exists", return_value=False)
+        mock_storage_blob_upload = mocker.patch("app.utils.storage.Storage.upload_blob")
         yield
         mock_storage.assert_called_with('test-store')
         mock_storage_blob_exists.assert_called_with('2004/Economics.jpg')
@@ -349,9 +349,9 @@ class WhenPostingImportEvents(object):
 
     @pytest.fixture
     def mock_storage_not_exists_without_asserts(self, mocker):
-        mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
-        mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
-        mocker.patch("app.storage.utils.Storage.upload_blob")
+        mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mocker.patch("app.utils.storage.Storage.blob_exists", return_value=False)
+        mocker.patch("app.utils.storage.Storage.upload_blob")
 
     def it_creates_events_for_imported_events(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data,
@@ -472,13 +472,13 @@ class WhenPostingImportEvents(object):
 class WhenPostingCreatingAnEvent:
     @pytest.fixture
     def mock_storage_without_asserts(self, mocker):
-        mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
-        mocker.patch("app.storage.utils.Storage.upload_blob_from_base64string")
+        mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mocker.patch("app.utils.storage.Storage.upload_blob_from_base64string")
 
     @pytest.fixture
     def mock_storage(self, mocker):
-        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
-        mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob_from_base64string")
+        mock_storage = mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mock_storage_blob_upload = mocker.patch("app.utils.storage.Storage.upload_blob_from_base64string")
         yield
         mock_storage.assert_called_with('test-store')
         for event in Event.query.all():
@@ -489,7 +489,7 @@ class WhenPostingCreatingAnEvent:
     def it_creates_an_event_via_rest(
         self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts, mock_paypal
     ):
-        mocker.patch("app.storage.utils.Storage.blob_exists", return_value=True)
+        mocker.patch("app.utils.storage.Storage.blob_exists", return_value=True)
 
         speaker = create_speaker(name='Fred White')
 
@@ -561,7 +561,7 @@ class WhenPostingCreatingAnEvent:
     def it_creates_an_event_without_speakers_via_rest(
         self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts, mock_paypal
     ):
-        mocker.patch("app.storage.utils.Storage.blob_exists", return_value=True)
+        mocker.patch("app.utils.storage.Storage.blob_exists", return_value=True)
         data = {
             "event_type_id": sample_req_event_data['event_type'].id,
             "title": "Test title",
@@ -738,8 +738,8 @@ class WhenPostingCreatingAnEvent:
     def it_raises_400_if_image_filename_not_found(
         self, mocker, client, db_session, sample_req_event_data
     ):
-        mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
-        mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
+        mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mocker.patch("app.utils.storage.Storage.blob_exists", return_value=False)
         data = {
             "event_type_id": sample_req_event_data['event_type'].id,
             "title": "Test title",
@@ -812,24 +812,24 @@ class WhenPostingUpdatingAnEvent:
 
     @pytest.fixture
     def mock_storage(self, mocker):
-        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
-        mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists")
+        mock_storage = mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mock_storage_blob_exists = mocker.patch("app.utils.storage.Storage.blob_exists")
         yield
         mock_storage.assert_called_with('test-store')
         mock_storage_blob_exists.assert_called_with('2019/test_img.png')
 
     @pytest.fixture
     def mock_storage_not_exist(self, mocker):
-        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
-        mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
+        mock_storage = mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mock_storage_blob_exists = mocker.patch("app.utils.storage.Storage.blob_exists", return_value=False)
         yield
         mock_storage.assert_called_with('test-store')
         mock_storage_blob_exists.assert_called_with('2019/test_img.png')
 
     @pytest.fixture
     def mock_storage_upload(self, mocker):
-        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
-        mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob_from_base64string")
+        mock_storage = mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mock_storage_blob_upload = mocker.patch("app.utils.storage.Storage.upload_blob_from_base64string")
         yield
         mock_storage.assert_called_with('test-store')
         for event in Event.query.all():

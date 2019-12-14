@@ -10,6 +10,8 @@ from PIL import Image
 from google.auth import compute_engine
 from google.cloud import storage
 
+from app.utils.pdf import extract_first_page
+
 
 class Storage(object):
 
@@ -66,7 +68,13 @@ class Storage(object):
 
         binary = base64.b64decode(base64data)
 
-        if 'image/' in content_type:
+        if content_type == 'application/pdf':
+            source_img = extract_first_page(binary)
+
+            self.generate_web_image(
+                destination_blob_name + '.png', BytesIO(source_img), size=current_app.config.get('LARGE_MAXSIZE'))
+
+        elif 'image/' in content_type:
             self.generate_web_image(destination_blob_name, BytesIO(binary))
 
         blob.upload_from_string(binary, content_type=content_type)
@@ -105,14 +113,21 @@ class Storage(object):
             print('Loaded {} bytes for {}'.format(sizeof_fmt(sys.getsizeof(source_img)), blob.name))
             self.generate_web_image(blob.name, source_img)
 
-    def generate_web_image(self, filename, source_img):
+    def generate_web_image(self, filename, source_img, size=None):
+        if not size:
+            size = current_app.config.get('STANDARD_MAXSIZE')
         standard_img = BytesIO()
         thumbnail_img = BytesIO()
 
         img = Image.open(source_img)
 
-        img.thumbnail(current_app.config.get('STANDARD_MAXSIZE'), Image.ANTIALIAS)
+        img.thumbnail(size, Image.ANTIALIAS)
         img.save(standard_img, "PNG", optimize=True, quality=80)
+
+        # create the image object to be the final product
+        final_thumb = Image.new(mode='RGBA', size=size, color=(255, 255, 255, 0))
+        final_thumb.paste(img)
+        final_thumb.save(standard_img, 'PNG')
 
         self.upload_web_image(
             'standard/{}'.format(filename),
