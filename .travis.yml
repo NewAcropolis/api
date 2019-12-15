@@ -9,6 +9,9 @@ install:
 - pip install coveralls
 script:
 # - eval $INTEGRITY_SCRIPT
+- sudo apt-get install ghostscript
+- gs --version
+- sudo mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.off
 - ./scripts/run_tests.sh
 after_success:
 - coveralls
