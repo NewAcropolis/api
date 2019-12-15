@@ -1,6 +1,10 @@
 import base64
 import os
 import pytest
+from io import BytesIO
+
+from PIL import Image
+import imagehash
 
 from mock import Mock
 
@@ -275,8 +279,15 @@ class WhenUsingStorage:
             assert len(store.bucket.blob.source_strings) == 3
             assert store.bucket.blob.source_strings[2] == pdf
 
+        # to compare the preview image extracted from the PDF use average hash rather than checking the binary
+        # as faster, binary can be different even though the output is same
         with open(os.path.join('tests', 'test_files', 'simple.pdf.png')) as f:
-            img = f.read()
-            assert store.bucket.blob.source_strings[0] == img
+            expected_image = Image.open(f)
+            expected_hash = imagehash.average_hash(expected_image)
+
+            uploaded_image = Image.open(BytesIO(store.bucket.blob.source_strings[0]))
+
+            uploaded_hash = imagehash.average_hash(uploaded_image)
+            assert expected_hash == uploaded_hash
 
         assert "pdfs" == store.bucket.blob.filename.split('/')[1]
