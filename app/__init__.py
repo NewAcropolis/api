@@ -67,6 +67,7 @@ def register_blueprint():
     from app.routes.event_dates.rest import event_dates_blueprint, event_date_blueprint
     from app.routes.event_types.rest import event_types_blueprint, event_type_blueprint
     from app.routes.legacy.rest import legacy_blueprint
+    from app.routes.magazines.rest import magazines_blueprint
     from app.routes.marketings.rest import marketings_blueprint
     from app.routes.orders.rest import orders_blueprint
     from app.routes.members.rest import members_blueprint
@@ -86,6 +87,7 @@ def register_blueprint():
     application.register_blueprint(fees_blueprint)
     application.register_blueprint(fee_blueprint)
     application.register_blueprint(legacy_blueprint)
+    application.register_blueprint(magazines_blueprint)
     application.register_blueprint(marketings_blueprint)
     application.register_blueprint(members_blueprint)
     application.register_blueprint(orders_blueprint)

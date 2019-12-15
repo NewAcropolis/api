@@ -131,7 +131,7 @@ class Email(db.Model):
             from app.dao.events_dao import dao_get_event_by_id
 
             event = dao_get_event_by_id(str(self.event_id))
-            return "{}: {}".format(event.event_type.event_type, event.title)
+            return u"{}: {}".format(event.event_type.event_type, event.title)
         return 'No email type'
 
     def get_expired_date(self):
@@ -168,6 +168,25 @@ class Email(db.Model):
             'expires': self.expires.strftime('%Y-%m-%d') if self.expires else self.get_expired_date(),
             'send_after': self.send_after.strftime('%Y-%m-%d %H:%M') if self.send_after else None,
             'emails_sent_counts': self.get_emails_sent_counts()
+        }
+
+
+class Magazine(db.Model):
+    __tablename__ = 'magazines'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_id = db.Column(db.Integer, unique=True)
+    title = db.Column(db.String, unique=True)
+    filename = db.Column(db.String, unique=True)
+    old_filename = db.Column(db.String, unique=True)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def serialize(self):
+        return {
+            "id": str(self.id),
+            "old_id": self.old_id,
+            "title": self.title,
+            "filename": self.filename,
+            "old_filename": self.old_filename
         }
 
 

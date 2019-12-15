@@ -1,7 +1,7 @@
 import StringIO
 from flask import Blueprint, current_app, request, send_file
 
-from app.storage.utils import Storage
+from app.utils.storage import Storage
 
 legacy_blueprint = Blueprint('legacy', __name__)
 

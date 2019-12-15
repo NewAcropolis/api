@@ -1,12 +1,20 @@
 import base64
+import os
 import pytest
+from io import BytesIO
+
+from PIL import Image
+import imagehash
 
 from mock import Mock
 
-from app.storage.utils import Storage, sizeof_fmt
+from app.utils.storage import Storage, sizeof_fmt
 
 
 class MockBlob:
+    def __init__(self):
+        self.source_strings = []
+
     def __call__(self, filename=None):
         self.name = filename
         self.filename = filename
@@ -17,6 +25,7 @@ class MockBlob:
 
     def upload_from_string(self, string, content_type=None):
         self.source_string = string
+        self.source_strings.append(string)
 
     def make_public(self):
         self.public = True
@@ -108,12 +117,12 @@ class WhenUsingStorage:
         assert store.storage_client.list_buckets() == ['test-store']
 
     def it_logs_args_if_development_and_no_google_config(self, app, mocker):
-        mocker.patch.dict('app.storage.utils.current_app.config', {
+        mocker.patch.dict('app.utils.storage.current_app.config', {
             'ENVIRONMENT': 'development',
             'GOOGLE_APPLICATION_CREDENTIALS': '',
         })
 
-        mock_logger = mocker.patch("app.storage.utils.current_app.logger.info")
+        mock_logger = mocker.patch("app.utils.storage.current_app.logger.info")
 
         Storage('test-store')
 
@@ -168,7 +177,7 @@ class WhenUsingStorage:
 
         mocker.patch("google.cloud.storage.Client", MockStorageClient)
         mocker.patch("google.auth.compute_engine.Credentials")
-        mock_generate_web_image = mocker.patch("app.storage.utils.Storage.generate_web_image")
+        mock_generate_web_image = mocker.patch("app.utils.storage.Storage.generate_web_image")
 
         store = Storage('test-store')
         store.generate_web_images()
@@ -176,12 +185,12 @@ class WhenUsingStorage:
         assert mock_generate_web_image.called
 
     def it_logs_args_if_development_and_no_google_config_when_upload_file(self, app, mocker):
-        mocker.patch.dict('app.storage.utils.current_app.config', {
+        mocker.patch.dict('app.utils.storage.current_app.config', {
             'ENVIRONMENT': 'development',
             'GOOGLE_APPLICATION_CREDENTIALS': '',
         })
 
-        mock_logger = mocker.patch("app.storage.utils.current_app.logger.info")
+        mock_logger = mocker.patch("app.utils.storage.current_app.logger.info")
 
         store = Storage('test-store')
         store.upload_blob('source', 'destination')
@@ -204,12 +213,12 @@ class WhenUsingStorage:
         assert res
 
     def it_logs_args_if_development_and_no_google_config_when_blob_exists(self, app, mocker):
-        mocker.patch.dict('app.storage.utils.current_app.config', {
+        mocker.patch.dict('app.utils.storage.current_app.config', {
             'ENVIRONMENT': 'development',
             'GOOGLE_APPLICATION_CREDENTIALS': '',
         })
 
-        mock_logger = mocker.patch("app.storage.utils.current_app.logger.info")
+        mock_logger = mocker.patch("app.utils.storage.current_app.logger.info")
 
         store = Storage('test-store')
         store.blob_exists('prfix', 'delimiter')
@@ -230,12 +239,12 @@ class WhenUsingStorage:
         assert store.bucket.blob.source_string == base64.b64decode(self.base64img)
 
     def it_logs_args_if_development_and_no_google_config_when_upload_from_base64string(self, app, mocker):
-        mocker.patch.dict('app.storage.utils.current_app.config', {
+        mocker.patch.dict('app.utils.storage.current_app.config', {
             'ENVIRONMENT': 'development',
             'GOOGLE_APPLICATION_CREDENTIALS': '',
         })
 
-        mock_logger = mocker.patch("app.storage.utils.current_app.logger.info")
+        mock_logger = mocker.patch("app.utils.storage.current_app.logger.info")
 
         store = Storage('test-store')
         store.upload_blob_from_base64string('test.png', '2019/new_test.png', self.base64img)
@@ -247,6 +256,38 @@ class WhenUsingStorage:
         (1500, '1.5KiB'),
         (800, '800.0B'),
     ])
-    def it_gets_formatted_size(self, app, mocker, num, exp_res):
+    def it_gets_formatted_size(self, num, exp_res):
         res = sizeof_fmt(num)
         assert res == exp_res
+
+    def it_creates_a_preview_front_page_for_pdfs(self, app, mocker):
+        mocker.patch.dict('os.environ', {
+            'GOOGLE_APPLICATION_CREDENTIALS': 'path/to/creds'
+        })
+
+        mocker.patch("google.cloud.storage.Client", MockStorageClient)
+        mocker.patch("google.auth.compute_engine.Credentials")
+
+        store = Storage('test-store')
+
+        # expected upload is pdf first page preview, thumbnail then finally pdf upload
+        with open(os.path.join('tests', 'test_files', 'simple.pdf')) as f:
+            pdf = f.read()
+            store.upload_blob_from_base64string(
+                'simple.pdf', 'simple.pdf', base64.b64encode(pdf), content_type='application/pdf')
+
+            assert len(store.bucket.blob.source_strings) == 3
+            assert store.bucket.blob.source_strings[2] == pdf
+
+        # to compare the preview image extracted from the PDF use average hash rather than checking the binary
+        # as faster, binary can be different even though the output is same
+        with open(os.path.join('tests', 'test_files', 'simple.pdf.png')) as f:
+            expected_image = Image.open(f)
+            expected_hash = imagehash.average_hash(expected_image)
+
+            uploaded_image = Image.open(BytesIO(store.bucket.blob.source_strings[0]))
+
+            uploaded_hash = imagehash.average_hash(uploaded_image)
+            assert expected_hash == uploaded_hash
+
+        assert "pdfs" == store.bucket.blob.filename.split('/')[1]

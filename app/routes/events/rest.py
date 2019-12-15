@@ -40,7 +40,7 @@ from app.routes.events.schemas import post_create_event_schema, post_update_even
 from app.schema_validation import validate
 
 from app.payments.paypal import PayPal
-from app.storage.utils import Storage
+from app.utils.storage import Storage
 
 events_blueprint = Blueprint('events', __name__)
 register_errors(events_blueprint)

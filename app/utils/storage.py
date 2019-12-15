@@ -10,6 +10,8 @@ from PIL import Image
 from google.auth import compute_engine
 from google.cloud import storage
 
+from app.utils.pdf import extract_first_page
+
 
 class Storage(object):
 
@@ -53,20 +55,29 @@ class Storage(object):
             destination_blob_name))
 
     def upload_blob_from_base64string(
-        self, image_filename, destination_blob_name, base64data, content_type='image/png'
+        self, src_filename, destination_blob_name, base64data, content_type='image/png'
     ):
         if self.no_google_config():
             current_app.logger.info(
                 'No Google config, upload_blob_from_base64string: fielname: '
                 '%s, destination: %s, base64data: %s, content_type %s',
-                image_filename, destination_blob_name, base64data, content_type)
+                src_filename, destination_blob_name, base64data, content_type)
             return
+
+        if content_type == 'application/pdf':
+            destination_blob_name = 'pdfs/' + destination_blob_name
 
         blob = self.bucket.blob(destination_blob_name)
 
         binary = base64.b64decode(base64data)
 
-        if 'image/' in content_type:
+        if content_type == 'application/pdf':
+            source_img = extract_first_page(binary)
+
+            self.generate_web_image(
+                destination_blob_name + '.png', BytesIO(source_img), size=current_app.config.get('LARGE_MAXSIZE'))
+
+        elif 'image/' in content_type:
             self.generate_web_image(destination_blob_name, BytesIO(binary))
 
         blob.upload_from_string(binary, content_type=content_type)
@@ -75,7 +86,7 @@ class Storage(object):
         binary_len = len(binary)
         current_app.logger.info('Uploaded {} file {} uploaded to {}'.format(
             sizeof_fmt(binary_len),
-            image_filename,
+            src_filename,
             destination_blob_name))
 
     def blob_exists(self, prefix, delimiter=None):
@@ -105,14 +116,21 @@ class Storage(object):
             print('Loaded {} bytes for {}'.format(sizeof_fmt(sys.getsizeof(source_img)), blob.name))
             self.generate_web_image(blob.name, source_img)
 
-    def generate_web_image(self, filename, source_img):
+    def generate_web_image(self, filename, source_img, size=None):
+        if not size:
+            size = current_app.config.get('STANDARD_MAXSIZE')
         standard_img = BytesIO()
         thumbnail_img = BytesIO()
 
         img = Image.open(source_img)
 
-        img.thumbnail(current_app.config.get('STANDARD_MAXSIZE'), Image.ANTIALIAS)
+        img.thumbnail(size, Image.ANTIALIAS)
         img.save(standard_img, "PNG", optimize=True, quality=80)
+
+        # create the image object to be the final product
+        final_thumb = Image.new(mode='RGBA', size=size, color=(255, 255, 255, 0))
+        final_thumb.paste(img)
+        final_thumb.save(standard_img, 'PNG')
 
         self.upload_web_image(
             'standard/{}'.format(filename),

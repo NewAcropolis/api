@@ -15,7 +15,7 @@ from app.dao.speakers_dao import dao_create_speaker
 from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
 from app.models import (
-    Article, Email, EmailToMember, Event, EventDate, EventType, Fee, Marketing,
+    Article, Email, EmailToMember, Event, EventDate, EventType, Fee, Magazine, Marketing,
     Member, RejectReason, Speaker, Ticket, User, Venue,
     EVENT, TICKET_STATUS_UNUSED, DRAFT
 )
@@ -244,6 +244,26 @@ def create_email(
 
     dao_create_email(email)
     return email
+
+
+def create_magazine(
+    old_id=None,
+    title='title',
+    old_filename=None,
+    filename='new filename'
+):
+    data = {
+        'old_id': old_id,
+        'title': title,
+        'old_filename': old_filename,
+        'filename': filename,
+    }
+
+    magazine = Magazine(**data)
+
+    dao_create_record(magazine)
+
+    return magazine
 
 
 def create_marketing(

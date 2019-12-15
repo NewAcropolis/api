@@ -29,7 +29,7 @@ from app.dao.tickets_dao import dao_get_ticket_id, dao_update_ticket
 from app.errors import register_errors, InvalidRequest
 
 from app.models import Order, Ticket, TICKET_STATUS_USED
-from app.storage.utils import Storage
+from app.utils.storage import Storage
 
 orders_blueprint = Blueprint('orders', __name__)
 register_errors(orders_blueprint)
