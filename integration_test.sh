@@ -589,7 +589,15 @@ function Logout {
 }
 
 # setup 
-setupURLS "$2"
+if [ -z $2 ]; then
+    if [ ! -z $ENVIRONMENT ]; then
+        env=$ENVIRONMENT
+    fi
+else
+    env=$2
+fi
+
+setupURLS "$env"
 setupAccessToken
 
 if [ -z $1 ]; then
