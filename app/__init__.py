@@ -22,7 +22,10 @@ celery = NewAcropolisCelery()
 def create_app(**kwargs):
     from app.config import configs
 
-    environment_state = get_env()
+    if not kwargs:
+        environment_state = get_env()
+    else:
+        environment_state = kwargs['ENVIRONMENT']
 
     application.config.from_object(configs[environment_state])
     application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
