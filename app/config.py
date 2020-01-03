@@ -106,6 +106,14 @@ class Preview(Config):
     EMAIL_LIMIT = 3
 
 
+class Test(Config):
+    DEBUG = True
+    ENVIRONMENT = 'test'
+    SESSION_COOKIE_SECURE = False
+    SESSION_PROTECTION = None
+    EMAIL_LIMIT = 3
+
+
 class Live(Config):
     DEBUG = True
     ENVIRONMENT = 'live'
@@ -118,7 +126,7 @@ class Live(Config):
 
 configs = {
     'development': Development,
-    # 'test': Test,
+    'test': Test,
     'preview': Preview,
     # 'staging': Staging,
     'live': Live,

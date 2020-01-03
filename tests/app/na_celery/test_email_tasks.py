@@ -32,7 +32,7 @@ class WhenProcessingSendEmailsTask:
     def it_only_sends_to_3_emails_if_not_live_environment(self, mocker, db, db_session, sample_email, sample_member):
         member_1 = create_member(name='Test 1', email='test1@example.com')
         member_2 = create_member(name='Test 2', email='test2@example.com')
-        member_3 = create_member(name='Test 3', email='test3@example.com')
+        create_member(name='Test 3', email='test3@example.com')
 
         mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
         send_emails(sample_email.id)
