@@ -108,7 +108,10 @@ EOL
 sudo systemctl daemon-reload
 sudo systemctl restart na-api.service
 
-(cd www-live && . /venv/bin/activate && export $(cat na-api.env | xargs) && ./scripts/run_celery.sh live $celery_output_params)
+cd www-live
+set -a
+. ./na-api.env && ./scripts/run_celery.sh live $celery_output_params
+set +a
         """
     else
         ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
