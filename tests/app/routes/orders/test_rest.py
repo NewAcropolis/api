@@ -48,7 +48,17 @@ sample_ipns = [
     "receiver_email=receiver%40example.com&payment_fee=&receiver_id=XXYYYZZ&txn_type={txn_type}&"
     "item_name=&buyer_signature=no&mc_currency=GBP&item_number=&residence_country=GB&receipt_id=112233&"
     "handling_amount=0.00&transaction_subject=&invoice_number=0001&payment_gross=&shipping=0.00&ipn_track_id="
-    "112233"
+    "112233",
+    # no dates
+    "mc_gross=0.01&protection_eligibility=Ineligible&item_number1={id}&tax=0.00&payer_id=XXYYZZ1&payment_date="
+    "10%3A00%3A00+Jan+01%2C+2018+PST&option_selection1_1=Concession&payment_status=Completed&"
+    "charset=windows-1252&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&notify_version=3.8&custom=&"
+    "payer_status=verified&business=receiver%40example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=XXYYZZ1"
+    ".t.sign&payer_email=test1%40example.com&mc_shipping1=0.00&tax1=0.00&btn_id1="
+    "XXYYZZ1&option_name1_1=Type&txn_id={txn_id}&payment_type=instant&last_name=User&"
+    "item_name1=Get+Inspired+-+Discover+Philosophy&receiver_email=receiver%40example.com&payment_fee=&quantity1=1&"
+    "receiver_id=AABBCC1&txn_type={txn_type}&mc_gross_1=0.01&mc_currency=GBP&residence_country=GB&transaction_subject=&"
+    "payment_gross=&ipn_track_id=112233"
 ]
 
 
@@ -96,9 +106,9 @@ class WhenHandlingPaypalIPN:
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
         mocker.patch('app.routes.orders.rest.send_email')
-        txn_ids = ['112233', '112244', '112255']
-        txn_types = ['cart', 'cart', 'paypal_here']
-        num_tickets = [1, 2, 1]
+        txn_ids = ['112233', '112244', '112255', '112266']
+        txn_types = ['cart', 'cart', 'paypal_here', 'cart']
+        num_tickets = [1, 2, 1, 1]
 
         for i in range(len(txn_ids)):
             _sample_ipn = sample_ipns[i].format(
@@ -114,7 +124,7 @@ class WhenHandlingPaypalIPN:
                 )
 
         orders = dao_get_orders()
-        assert len(orders) == 3
+        assert len(orders) == 4
         for i in range(len(sample_ipns)):
             assert orders[i].txn_id == txn_ids[i]
             assert orders[i].txn_type == txn_types[i]

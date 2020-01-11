@@ -196,9 +196,10 @@ def parse_ipn(ipn):
                 counter += 1
                 continue
 
-            event_date_index = int(ipn['option_selection2_%d' % counter]) \
-                if ipn['option_name2_%d' % counter] == 'Date' else None
-            if not event_date_index:
+            if 'option_name2_%d' % counter in ipn.keys():
+                event_date_index = int(ipn['option_selection2_%d' % counter]) \
+                    if ipn['option_name2_%d' % counter] == 'Date' else 1
+            else:
                 event_date_index = 1
 
             if event_date_index > len(event.event_dates):
@@ -222,7 +223,7 @@ def parse_ipn(ipn):
                         ipn.get('option_selection3_%d' % counter)
                         if ipn.get('option_name3_%d' % counter) == 'Course Member name'
                         else ipn.get('option_selection2_%d' % counter)
-                        if ipn['option_name2_%d' % counter] == 'Course Member name'
+                        if ipn.get('option_name2_%d' % counter) == 'Course Member name'
                         else None
                 }
                 tickets.append(ticket)
