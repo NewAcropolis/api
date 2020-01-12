@@ -77,7 +77,7 @@ class Storage(object):
             self.generate_web_image(
                 destination_blob_name + '.png', BytesIO(source_img), size=current_app.config.get('LARGE_MAXSIZE'))
 
-        elif 'image/' in content_type:
+        elif 'image/' in content_type and 'qr_codes/' not in destination_blob_name:
             self.generate_web_image(destination_blob_name, BytesIO(binary))
 
         blob.upload_from_string(binary, content_type=content_type)
