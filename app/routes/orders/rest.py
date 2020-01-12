@@ -86,7 +86,7 @@ def paypal_ipn():
             img.png(buffer, scale=2)
 
             img_b64 = base64.b64encode(buffer.getvalue())
-            target_image_filename = '{}{}'.format('qr_codes', str(tickets[i]['ticket_id']))
+            target_image_filename = '{}/{}'.format('qr_codes', str(tickets[i]['ticket_id']))
             storage.upload_blob_from_base64string('qr.code', target_image_filename, img_b64)
 
             message += '<div><span><img src="{}/{}"></span>'.format(
