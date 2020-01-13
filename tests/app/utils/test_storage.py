@@ -232,11 +232,28 @@ class WhenUsingStorage:
 
         mocker.patch("google.cloud.storage.Client", MockStorageClient)
         mocker.patch("google.auth.compute_engine.Credentials")
+        mock_upload_web_image = mocker.patch("app.utils.storage.Storage.upload_web_image")
 
         store = Storage('test-store')
         store.upload_blob_from_base64string('test.png', '2019/new_test.png', self.base64img)
 
         assert store.bucket.blob.source_string == base64.b64decode(self.base64img)
+        assert mock_upload_web_image.called
+
+    def it_does_not_generate_web_images_for_qr_codes(self, app, mocker):
+        mocker.patch.dict('os.environ', {
+            'GOOGLE_APPLICATION_CREDENTIALS': 'path/to/creds'
+        })
+
+        mocker.patch("google.cloud.storage.Client", MockStorageClient)
+        mocker.patch("google.auth.compute_engine.Credentials")
+        mock_generate_web_image = mocker.patch("app.utils.storage.Storage.generate_web_image")
+
+        store = Storage('test-store')
+        store.upload_blob_from_base64string('test.png', 'qr_codes/ticket_id', self.base64img)
+
+        assert store.bucket.blob.source_string == base64.b64decode(self.base64img)
+        assert not mock_generate_web_image.called
 
     def it_logs_args_if_development_and_no_google_config_when_upload_from_base64string(self, app, mocker):
         mocker.patch.dict('app.utils.storage.current_app.config', {

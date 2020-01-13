@@ -62,6 +62,7 @@ def app():
         'PAYPAL_RECEIVER': 'receiver@example.com',
         'PAYPAL_VERIFY_URL': 'https://test.paypal/verify',
         'API_BASE_URL': 'http://test',
+        'IMAGES_URL': 'http://test/images',
         'FRONTEND_URL': 'http://frontend-test',
         'FRONTEND_ADMIN_URL': 'http://frontend-test/admin',
         'CELERY_BROKER_URL': 'http://mock-celery',

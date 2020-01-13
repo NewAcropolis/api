@@ -105,7 +105,7 @@ class WhenHandlingPaypalIPN:
     def it_creates_orders_and_tickets(self, mocker, client, db_session, sample_event_with_dates):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
         txn_ids = ['112233', '112244', '112255', '112266']
         txn_types = ['cart', 'cart', 'paypal_here', 'cart']
         num_tickets = [1, 2, 1, 1]
@@ -131,6 +131,10 @@ class WhenHandlingPaypalIPN:
 
             tickets = dao_get_tickets_for_order(orders[i].id)
             assert len(tickets) == num_tickets[i]
+
+            for n in range(num_tickets[i]):
+                assert 'http://test/images/qr_codes/{}'.format(
+                    str(tickets[n].id)) in mock_send_email.call_args_list[i][0][2]
 
     def it_does_not_create_an_order_if_payment_not_complete(self, mocker, client, db_session):
         with requests_mock.mock() as r:
