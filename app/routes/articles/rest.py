@@ -1,4 +1,5 @@
 import os
+from random import randint
 from flask import (
     Blueprint,
     current_app,
@@ -36,10 +37,26 @@ def get_articles():
 
 
 @articles_blueprint.route('/articles/summary')
+@articles_blueprint.route('/articles/summary/<string:ids>')
 @jwt_required
-def get_articles_summary():
-    current_app.logger.info('get_articles_summary')
-    articles = [a.serialize_summary() if a else None for a in dao_get_articles()]
+def get_articles_summary(ids=None):
+    if not ids:
+        current_app.logger.info('Limit articles summary to 4')
+        articles = dao_get_articles()
+        len_articles = len(articles)
+
+        ids = []
+
+        end = 4 if len_articles > 3 else len_articles
+
+        while len(ids) < end:
+            index = randint(0, len(articles) - 1)
+            if str(articles[index].id) not in ids:
+                ids.append(str(articles[index].id))
+    else:
+        ids = ids.split(',')
+
+    articles = [a.serialize_summary() if a else None for a in dao_get_articles(ids)]
     return jsonify(articles)
 
 
