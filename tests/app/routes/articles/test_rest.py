@@ -4,6 +4,8 @@ import uuid
 from flask import json, url_for
 from tests.conftest import create_authorization_header
 
+from tests.db import create_article
+
 
 sample_articles = [
     {
@@ -50,6 +52,38 @@ class WhenGettingArticles:
 
         assert len(data) == 1
         assert data[0]['id'] == str(sample_article.id)
+
+    def it_returns_up_to_4_articles_summary(self, client, sample_article, db_session):
+        create_article(title='test 1')
+        create_article(title='test 2')
+        create_article(title='test 3')
+        create_article(title='test 4')
+        create_article(title='test 5')
+        response = client.get(
+            url_for('articles.get_articles_summary'),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        data = json.loads(response.get_data(as_text=True))
+
+        assert len(data) == 4
+
+    def it_returns_selected_article_summary(self, client, sample_article, db_session):
+        article_1 = create_article(title='test 1')
+        create_article(title='test 2')
+
+        article_ids = "{},{}".format(sample_article.id, article_1.id)
+        response = client.get(
+            url_for('articles.get_articles_summary', ids=article_ids),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        data = json.loads(response.get_data(as_text=True))
+
+        assert len(data) == 2
+        assert set([str(sample_article.id), str(article_1.id)]) == set(article_ids.split(','))
 
 
 class WhenGettingArticleByID:
