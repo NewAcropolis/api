@@ -57,6 +57,80 @@ class WhenPostingMagazines(object):
         )
         assert response.status_code == 400
 
+    def it_doesnt_create_a_magazine_if_filename_already_exists(self, mocker, client, db_session):
+        magazine = create_magazine(title='title', filename='bi_monthly_issue_1.pdf')
+        mocker.patch('app.routes.magazines.rest.Storage.upload_blob_from_base64string')
+        mocker.patch('app.routes.magazines.rest.Storage.__init__', return_value=None)
+
+        data = {
+            'title': 'new title',
+            'filename': magazine.filename,
+            'pdf_data': 'test data'
+        }
+
+        response = client.post(
+            url_for('magazines.create_magazine'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 400
+        assert 'Duplicate key: duplicate key value violates unique constraint "magazines_filename_key"'\
+            in response.json['message']
+
+    def it_updates_a_magazine(self, mocker, client, db_session):
+        magazine = create_magazine(title='title', filename='new filename')
+
+        mocker_upload = mocker.patch('app.routes.magazines.rest.Storage.upload_blob_from_base64string')
+        mocker.patch('app.routes.magazines.rest.Storage.__init__', return_value=None)
+        data = {
+            'title': 'new title',
+            'filename': 'Magazine Issue 1.pdf',
+            'pdf_data': 'test data'
+        }
+
+        response = client.post(
+            url_for('magazines.update_magazine', id=magazine.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+        assert response.json['title'] == data['title']
+        assert mocker_upload.call_args == call(
+            u'Magazine Issue 1.pdf', 'bi_monthly_issue_1.pdf', u'test data', content_type='application/pdf')
+
+    def it_updates_a_magazine_without_pdf_data(self, mocker, client, db_session):
+        magazine = create_magazine(title='title', filename='new filename')
+
+        mocker_upload = mocker.patch('app.routes.magazines.rest.Storage.upload_blob_from_base64string')
+        data = {
+            'title': 'new title',
+            'filename': 'Magazine Issue 1.pdf',
+        }
+
+        response = client.post(
+            url_for('magazines.update_magazine', id=magazine.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+        assert response.json['title'] == data['title']
+        assert not mocker_upload.called
+
+    def it_doesnt_update_a_magazine_if_filename_not_matched(self, client, db_session):
+        magazine = create_magazine(title='title', filename='new filename')
+        data = {
+            'title': 'title',
+            'filename': 'Magazine 1.pdf',
+            'pdf_data': 'test data'
+        }
+
+        response = client.post(
+            url_for('magazines.update_magazine', id=magazine.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 400
+
 
 class WhenGettingMagazines(object):
 

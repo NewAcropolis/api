@@ -7,12 +7,14 @@ from flask import (
 )
 from flask_jwt_extended import jwt_required
 
-from app.dao import dao_create_record
+from app.dao import dao_create_record, dao_update_record
 from app.dao.magazines_dao import dao_get_magazine_by_id, dao_get_magazine_by_old_id, dao_get_magazines
 from app.errors import register_errors, InvalidRequest
 from app.models import Magazine
 from app.routes.magazines import get_magazine_filename
-from app.routes.magazines.schemas import post_create_magazine_schema, post_import_magazine_schema
+from app.routes.magazines.schemas import (
+    post_create_magazine_schema, post_import_magazine_schema, post_update_magazine_schema
+)
 from app.schema_validation import validate
 from app.utils.storage import Storage
 
@@ -66,6 +68,38 @@ def create_magazine():
         dao_create_record(magazine)
 
         return jsonify(magazine.serialize()), 201
+
+    raise InvalidRequest('Invalid filename for magazine: {}'.format(data['filename']), 400)
+
+
+@magazines_blueprint.route('/magazine/<uuid:id>', methods=['POST'])
+@jwt_required
+def update_magazine(id):
+    data = request.get_json(force=True)
+
+    validate(data, post_update_magazine_schema)
+
+    new_filename = get_magazine_filename(data['filename'])
+
+    if new_filename:
+        magazine = Magazine(
+            title=data['title'],
+            filename=new_filename
+        )
+
+        if 'pdf_data' in data:
+            storage = Storage(current_app.config['STORAGE'])
+
+            storage.upload_blob_from_base64string(
+                data['filename'],
+                magazine.filename,
+                data['pdf_data'],
+                content_type='application/pdf'
+            )
+
+        dao_update_record(Magazine, id=id, title=magazine.title, filename=magazine.filename)
+
+        return jsonify(magazine.serialize()), 200
 
     raise InvalidRequest('Invalid filename for magazine: {}'.format(data['filename']), 400)
 
