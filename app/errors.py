@@ -87,6 +87,9 @@ def register_errors(blueprint):
         if 'events_event_state_fkey' in str(exc):
             return jsonify(result="error",
                            message="Event state: '{}' not valid".format(exc.params['event_state'])), 400
+        elif 'duplicate key value violates unique constraint' in str(exc):
+            return jsonify(result="error",
+                           message="Duplicate key: {}".format(exc.orig.message)), 400
 
         current_app.logger.exception(exc)
         return jsonify(result='error', message="Internal server error"), 500
