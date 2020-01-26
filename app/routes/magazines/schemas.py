@@ -26,3 +26,15 @@ post_create_magazine_schema = {
     },
     "required": ["title", "filename", "pdf_data"]
 }
+
+
+post_update_magazine_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for update magazine",
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "filename": {"type": "string"},
+        "pdf_data": {"type": "string"},
+    },
+}
