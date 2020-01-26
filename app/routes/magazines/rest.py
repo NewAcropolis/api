@@ -83,6 +83,7 @@ def update_magazine(id):
 
     if new_filename:
         magazine = Magazine(
+            id=id,
             title=data['title'],
             filename=new_filename
         )

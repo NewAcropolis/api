@@ -113,6 +113,7 @@ class WhenPostingMagazines(object):
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 200
+        assert response.json['id'] == str(magazine.id)
         assert response.json['title'] == data['title']
         assert not mocker_upload.called
 
