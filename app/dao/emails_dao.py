@@ -1,13 +1,23 @@
 from datetime import datetime, timedelta
+from dateutils import relativedelta
+from flask import current_app
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app.dao.decorators import transactional
 from app.dao.events_dao import dao_get_event_by_id
+from app.dao.magazines_dao import dao_get_magazine_by_id
 from app.dao.members_dao import dao_get_member_by_id
 from app.errors import InvalidRequest
-from app.models import Email, EmailToMember, EVENT, APPROVED
+from app.models import Email, EmailToMember, APPROVED, EVENT, MAGAZINE
+
+
+def _get_nearest_bi_monthly_send_date():
+    today = datetime.today()
+    month_offset = 1 if today.month % 2 == 0 else 0
+    return datetime.strptime('{}-{}-{}'.format(today.year, today.month, 1), "%Y-%m-%d") +\
+        relativedelta(months=month_offset)
 
 
 @transactional
@@ -21,8 +31,21 @@ def dao_create_email(email):
                 email.expires = event.get_last_event_date()
         except NoResultFound:
             raise InvalidRequest('event not found: {}'.format(email.event_id), 400)
+    elif email.email_type == MAGAZINE and not email.old_id:
+        if email.magazine_id:
+            try:
+                dao_get_magazine_by_id(email.magazine_id)
+                if not email.send_starts_at:
+                    email.send_starts_at = _get_nearest_bi_monthly_send_date()
+                    email.expires = email.send_starts_at + timedelta(weeks=2)
+            except NoResultFound:
+                raise InvalidRequest('magazine not found: {}'.format(email.event_id), 400)
+        else:
+            current_app.logger.info('No magazine id for email')
+            return
 
     db.session.add(email)
+    return True
 
 
 @transactional
@@ -97,7 +120,6 @@ def dao_get_latest_emails():
 
 def dao_get_approved_emails_for_sending():
     now = datetime.today()
-    emails = Email.query.all()
 
     return Email.query.filter(
         Email.expires >= now,

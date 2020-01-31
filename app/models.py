@@ -96,6 +96,7 @@ class Email(db.Model):
     __tablename__ = 'emails'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
+    magazine_id = db.Column(UUID(as_uuid=True), db.ForeignKey('magazines.id'), nullable=True)
     old_id = db.Column(db.Integer)
     old_event_id = db.Column(db.Integer)
     details = db.Column(db.String)

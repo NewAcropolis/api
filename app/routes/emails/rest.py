@@ -212,8 +212,8 @@ def import_emails():
                 expires=expires
             )
 
-            dao_create_email(email)
-            emails.append(email)
+            if dao_create_email(email):
+                emails.append(email)
         else:
             err = u'email already exists: {}'.format(email.old_id)
             current_app.logger.info(err)
