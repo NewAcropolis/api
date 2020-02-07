@@ -1,12 +1,14 @@
 from flask import current_app, jsonify, render_template
+import json
 import requests
 from HTMLParser import HTMLParser
 
 from na_common.dates import get_nice_event_dates
 
 from app.comms.encryption import encrypt
-from app.models import BASIC, EVENT
+from app.models import BASIC, EVENT, MAGAZINE
 from app.dao.events_dao import dao_get_event_by_id
+from app.dao.magazines_dao import dao_get_magazine_by_id
 
 h = HTMLParser()
 
@@ -30,6 +32,18 @@ def get_email_html(email_type, **kwargs):
             details=kwargs.get('details'),
             extra_txt=kwargs.get('extra_txt'),
             unsubcode=unsubcode
+        )
+    elif email_type == MAGAZINE:
+        magazine = dao_get_magazine_by_id(kwargs.get('magazine_id'))
+        topics = []
+        if magazine.topics:
+            _topics = [(t.split(':')[0], t.split(':')[1]) for t in magazine.topics.split('\\n')]
+            for title, description in _topics:
+                topics.append({'title': title, 'description': description})
+        return render_template(
+            'emails/magazine.html',
+            magazine=magazine,
+            topics=topics
         )
     elif email_type == BASIC:
         return render_template(
