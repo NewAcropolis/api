@@ -100,16 +100,17 @@ def update_email(email_id):
         emails_to = [user.email for user in dao_get_users()]
 
         if data.get('email_state') == READY:
-            subject = None
-            if data['email_type'] == EVENT:
-                event = dao_get_event_by_id(data.get('event_id'))
-                subject = 'Please review {}'.format(event.title)
-
             # send email to admin users and ask them to log in in order to approve the email
             review_part = '<div>Please review this email: {}/emails/{}</div>'.format(
                 current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
-            event_html = get_email_html(**data)
-            response = send_email(emails_to, subject, review_part + event_html)
+
+            subject = None
+            if email.email_type == EVENT:
+                event = dao_get_event_by_id(data.get('event_id'))
+                subject = 'Please review {}'.format(event.title)
+
+                event_html = get_email_html(**data)
+                response = send_email(emails_to, subject, review_part + event_html)
         elif data.get('email_state') == REJECTED:
             dao_update_email(email_id, email_state=REJECTED)
 
@@ -129,10 +130,11 @@ def update_email(email_id):
 
             review_part = '<div>Email will be sent after {}, log in to reject: {}/emails/{}</div>'.format(
                 later.strftime("%d/%m/%Y %H:%M"), current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
-            event_html = get_email_html(**data)
-            response = send_email(
-                emails_to, "{} has been approved".format(email.get_subject()), review_part + event_html)
 
+            if email.email_type == EVENT:
+                event_html = get_email_html(**data)
+                response = send_email(
+                    emails_to, "{} has been approved".format(email.get_subject()), review_part + event_html)
         email_json = email.serialize()
         if response:
             email_json['email_status_code'] = response
@@ -212,8 +214,8 @@ def import_emails():
                 expires=expires
             )
 
-            dao_create_email(email)
-            emails.append(email)
+            if dao_create_email(email):
+                emails.append(email)
         else:
             err = u'email already exists: {}'.format(email.old_id)
             current_app.logger.info(err)

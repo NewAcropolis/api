@@ -498,6 +498,17 @@ function PreviewBasicEmail {
     open 'data/preview_email.html'
 }
 
+function PreviewMagazineEmail {
+    echo "*** Preview magazine email ***"
+
+    curl --GET \
+    --data-urlencode "data={\"title\": \"Issue 1\", \"email_type\": \"magazine\", \"magazine_id\": \"$MAGAZINE_ID\"}" \
+    $api_server'/email/preview' \
+    -H "Accept: application/json" > 'data/preview_email.html'
+
+    open 'data/preview_email.html'
+}
+
 function CreateEmail {
     echo "*** Create email ***"
 
@@ -747,6 +758,10 @@ case "$arg" in
 
         -pbe)
             PreviewBasicEmail
+        ;;
+
+        -pme)
+            PreviewMagazineEmail
         ;;
 
         -cem)

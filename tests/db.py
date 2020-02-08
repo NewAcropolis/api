@@ -209,6 +209,7 @@ def create_email(
         old_id=1,
         old_event_id=2,
         event_id=None,
+        magazine_id=None,
         details='test event details',
         extra_txt='test extra text',
         replace_all=False,
@@ -228,6 +229,7 @@ def create_email(
 
     data = {
         'event_id': event_id,
+        'magazine_id': magazine_id,
         'old_id': old_id,
         'old_event_id': old_event_id,
         'details': details,

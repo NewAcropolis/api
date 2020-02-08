@@ -5,6 +5,7 @@ cache: pip
 services:
 - postgresql
 install:
+- sudo apt-get install build-essential libpoppler-cpp-dev pkg-config
 - ./scripts/bootstrap.sh
 - pip install coveralls
 script:

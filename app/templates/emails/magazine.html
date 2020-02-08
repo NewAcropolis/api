@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Magazine{% endblock %}
+{% block extra_head%}
+<style>
+    .email_text h3 {
+        color:#5A90DC;
+    }
+    #email_image {
+        width:320px;
+    }
+    .topic_title {
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+{% block content %}
+
+<div>
+    <div class='email_box'>        
+        <table width="100%" align="center" cellpadding="10" cellspacing="0">
+        <tr>
+            <td align="center">
+                <div>
+                    <table class="msoFix" width="50%" cellpadding="0" cellspacing="0" align="left">
+                    <tr>
+                        <td width="15">&nbsp;</td>
+                        <td width="100%" style="padding: 0px;">&nbsp;<br>
+                            <div class='email_text'>
+                                <h3>TABLE OF CONTENTS</h3>
+                                {% for topic in topics %}
+                                    <div>
+                                        <span class='topic_title'>{{ topic.title }}:</span>
+                                        <span>{{ topic.description }}</span>
+                                    </div>
+                                {% endfor %}
+                                {% if unsubcode %}
+                                {% include "components/unsub.html" %}
+                                {% endif %}
+                            </div>
+
+                        <br>&nbsp;<br>&nbsp;
+                        </td>
+                        <td width="15">&nbsp;</td>
+                    </tr>
+                    </table>
+
+                    <table class="msoFix" width="320" cellpadding="0" cellspacing="0" align="left">
+                        <tr>
+                            <td width="15">&nbsp;</td>
+                            <td width="290" style="padding: 0px;">&nbsp;<br>
+                            <img id='email_image' src='{{IMAGES_URL}}standard/pdfs/{{magazine.filename}}.png' class='img-fluid'>
+                            </td>
+                            <td width="15">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td width="15">&nbsp;</td>
+                            <td width="290" style="padding: 0px;text-align: center;">&nbsp;<br>
+                            <a href='{{IMAGES_URL}}/pdfs/{{magazine.filename}}'>Download {{magazine.title}}</a>
+                            </td>
+                            <td width="15">&nbsp;</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -7,6 +7,7 @@ from flask_script import Manager, Server
 from app import create_app, db
 from app.dao.magazines_dao import dao_get_magazine_by_old_id
 from app.routes.magazines import get_magazine_filename, MAGAZINE_PATTERN
+from app.utils.pdf import extract_topics as _extract_topics
 from app.utils.storage import Storage
 from flask_migrate import Migrate, MigrateCommand
 
@@ -32,6 +33,14 @@ def generate_web_images(year=None):
     application.logger.info('Generate web images')
     storage = Storage(application.config['STORAGE'])
     storage.generate_web_images(year)
+
+
+@manager.command
+def extract_topics():
+    filename = 'Bi_monthly_Issue 38.pdf'
+    with open(os.path.join('data', 'pdfs', filename)) as f:
+        pdf_binary = f.read()
+        print(_extract_topics(pdf_binary))
 
 
 @manager.command

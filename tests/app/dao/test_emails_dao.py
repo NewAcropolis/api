@@ -9,10 +9,12 @@ from app.dao.emails_dao import (
     dao_get_email_by_id,
     dao_get_future_emails,
     dao_update_email,
+    _get_nearest_bi_monthly_send_date
 )
-from app.models import Email, EmailToMember
+from app.errors import InvalidRequest
+from app.models import Email, EmailToMember, MAGAZINE
 
-from tests.db import create_email, create_member
+from tests.db import create_email, create_magazine, create_member
 
 
 class WhenUsingEmailsDAO(object):
@@ -24,6 +26,26 @@ class WhenUsingEmailsDAO(object):
         email_from_db = Email.query.filter(Email.id == email.id).first()
 
         assert email == email_from_db
+
+    @freeze_time("2019-12-29T23:00:00")
+    def it_creates_a_magazine_email(self, db_session):
+        magazine = create_magazine()
+        email = create_email(magazine_id=magazine.id, email_type=MAGAZINE, old_id=None)
+        assert Email.query.count() == 1
+
+        email_from_db = Email.query.filter(Email.id == email.id).first()
+
+        assert email == email_from_db
+        assert email_from_db.magazine_id == magazine.id
+
+    def it_doesnt_create_a_magazine_email_if_no_match(self, db_session, sample_uuid):
+        with pytest.raises(expected_exception=InvalidRequest):
+            create_email(magazine_id=sample_uuid, email_type=MAGAZINE, old_id=None)
+        assert Email.query.count() == 0
+
+    def it_doesnt_create_a_magazine_email_if_no_magazine_id(self, db_session):
+        create_email(email_type=MAGAZINE, old_id=None)
+        assert Email.query.count() == 0
 
     def it_creates_an_event_email(self, db_session, sample_event_with_dates):
         email = create_email(event_id=sample_event_with_dates.id, old_event_id=None)
@@ -118,3 +140,26 @@ class WhenUsingEmailsDAO(object):
         assert emails_from_db[0] == active_email
         assert emails_from_db[1] == active_email_2
         assert emails_from_db[2] == active_email_3
+
+
+class WhenGettingNearestBimonthlyDate:
+
+    @freeze_time("2019-12-27T10:00:00")
+    def it_gets_the_nearest_bimonthly_send_date(self):
+        date = _get_nearest_bi_monthly_send_date()
+        assert str(date) == '2020-01-01 00:00:00'
+
+    @freeze_time("2020-01-05T10:00:00")
+    def it_gets_the_nearest_bimonthly_send_date_after_day_passed(self):
+        date = _get_nearest_bi_monthly_send_date()
+        assert str(date) == '2020-01-01 00:00:00'
+
+    @freeze_time("2019-12-05T10:00:00")
+    def it_gets_the_nearest_bimonthly_send_date_before(self):
+        date = _get_nearest_bi_monthly_send_date()
+        assert str(date) == '2020-01-01 00:00:00'
+
+    @freeze_time("2020-02-01T10:00:00")
+    def it_gets_the_nearest_bimonthly_send_date_month_before(self):
+        date = _get_nearest_bi_monthly_send_date()
+        assert str(date) == '2020-03-01 00:00:00'

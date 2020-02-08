@@ -12,11 +12,13 @@ from flask import json, url_for
 from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, APPROVED, READY, REJECTED, Email
 from app.dao.emails_dao import dao_add_member_sent_to_email
 from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
-from tests.db import create_email, create_event, create_event_date, create_member
+from tests.db import create_email, create_event, create_event_date, create_magazine, create_member
 
 
 @pytest.fixture
 def sample_old_emails():
+    magazine = create_magazine()
+
     return [
         {
             "id": "1",
@@ -34,6 +36,7 @@ def sample_old_emails():
         {
             "id": "2",
             "eventid": "1",
+            "magazine_id": str(magazine.id),
             "eventdetails": "",
             "extratxt": "",
             "replaceAll": "n",
