@@ -1,6 +1,7 @@
 beautifulsoup4==4.6.0
 celery==4.1.1
 cryptography==2.4.2
+dateutils==0.6.7
 Flask==1.0.2
 Flask-Migrate==1.8.0
 Flask-Script==2.0.5
@@ -14,6 +15,7 @@ imagehash==4.0
 iso8601==0.1.12
 jsonschema==2.6.0
 kombu==4.5.0
+pdftotext==2.1.4
 pillow==6.2.1
 psycopg2-binary==2.7.5
 pyOpenSSL==18.0.0
@@ -23,5 +25,6 @@ redis==3.3.5
 requests>=2.0.0
 six==1.11.0
 Wand==0.5.8
+Werkzeug==0.16.0
 
 -e git+https://github.com/NewAcropolis/na-common.git@afd9e32dfe2d6e7c6c72f61dee417cf85a1b625e#egg=na-common
