@@ -1,7 +1,8 @@
 from mock import call
 import pytest
 
-from app.comms.email import send_email
+from app.comms.email import get_email_html, send_email
+from app.models import MAGAZINE
 
 
 @pytest.fixture
@@ -75,3 +76,19 @@ class WhenSendingAnEmail:
         assert mock_logger.call_args == call(
             "Email not configured, email would have sent: {'to': 'test@example.com', 'html': 'test message',"
             " 'from': 'noreply@example.com', 'subject': 'test subject'}")
+
+
+class WhenGettingEmailHTML:
+
+    def it_gets_list_of_topics_for_magazine_emails(self, mocker, db_session, sample_magazine):
+        mock_render_template = mocker.patch('app.comms.email.render_template')
+        sample_magazine.topics = "Philosophy: test 1\nCulture: test 2\nArt: test 3"
+        get_email_html(MAGAZINE, magazine_id=sample_magazine.id)
+
+        args, kwargs = mock_render_template.call_args
+        assert args[0] == 'emails/magazine.html'
+        assert kwargs['topics'] == [
+            {'description': ' test 1', 'title': 'Philosophy'},
+            {'description': ' test 2', 'title': 'Culture'},
+            {'description': ' test 3', 'title': 'Art'}
+        ]

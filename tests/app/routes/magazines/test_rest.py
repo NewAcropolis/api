@@ -28,9 +28,7 @@ class WhenPostingMagazines(object):
         assert data['title'] == response.json['title']
 
     def it_creates_a_magazine_and_uploads_it_to_storage(self, mocker, client, db_session):
-        mocker_upload = mocker.patch('app.routes.magazines.rest.Storage.upload_blob_from_base64string')
-        mocker.patch('app.routes.magazines.rest.Storage.__init__', return_value=None)
-        mock_send_email = mocker.patch('app.routes.magazines.rest.send_email')
+        mocker_upload = mocker.patch('app.routes.magazines.rest.upload_tasks.upload_magazine.apply_async')
 
         with open(os.path.join('tests', 'test_files', 'test_magazine.pdf')) as f:
             pdf_data = base64.b64encode(f.read())
@@ -47,9 +45,7 @@ class WhenPostingMagazines(object):
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 201
-        assert mocker_upload.call_args == call(
-            u'Magazine Issue 1.pdf', 'bi_monthly_issue_1.pdf', pdf_data, content_type='application/pdf')
-        assert mock_send_email.called
+        assert pdf_data in mocker_upload.call_args[0][0]
 
     def it_doesnt_creates_a_magazine_if_filename_not_matched(self, client):
         data = {
@@ -67,9 +63,6 @@ class WhenPostingMagazines(object):
 
     def it_doesnt_create_a_magazine_if_filename_already_exists(self, mocker, client, db_session):
         magazine = create_magazine(title='title', filename='bi_monthly_issue_1.pdf')
-        mocker.patch('app.routes.magazines.rest.Storage.upload_blob_from_base64string')
-        mocker.patch('app.routes.magazines.rest.Storage.__init__', return_value=None)
-        mocker.patch('app.routes.magazines.rest.extract_topics', return_value={})
 
         data = {
             'title': 'new title',
@@ -89,8 +82,7 @@ class WhenPostingMagazines(object):
     def it_updates_a_magazine(self, mocker, client, db_session):
         magazine = create_magazine(title='title', filename='new filename')
 
-        mocker_upload = mocker.patch('app.routes.magazines.rest.Storage.upload_blob_from_base64string')
-        mocker.patch('app.routes.magazines.rest.Storage.__init__', return_value=None)
+        mocker_upload = mocker.patch('app.routes.magazines.rest.upload_tasks.upload_magazine.apply_async')
 
         data = {
             'title': 'new title',
@@ -106,13 +98,12 @@ class WhenPostingMagazines(object):
         )
         assert response.status_code == 200
         assert response.json['title'] == data['title']
-        assert mocker_upload.call_args == call(
-            u'Magazine Issue 1.pdf', 'bi_monthly_issue_1.pdf', u'test data', content_type='application/pdf')
+        assert data['pdf_data'] in mocker_upload.call_args[0][0]
 
     def it_updates_a_magazine_without_pdf_data(self, mocker, client, db_session):
         magazine = create_magazine(title='title', filename='new filename')
 
-        mocker_upload = mocker.patch('app.routes.magazines.rest.Storage.upload_blob_from_base64string')
+        mocker_upload = mocker.patch('app.routes.magazines.rest.upload_tasks.upload_magazine.apply_async')
         data = {
             'title': 'new title',
             'filename': 'Magazine Issue 1.pdf',

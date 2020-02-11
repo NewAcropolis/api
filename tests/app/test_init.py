@@ -55,6 +55,16 @@ class WhenInitializingApp(object):
         configure_logging()
         assert not mock_handler.called
 
+    def it_inits_celery_when_is_celery_kwarg_set(self, mocker):
+        mocker.patch('app.configure_logging')
+        mocker.patch('app.report_missing_config')
+        mocker.patch('app.init_app')
+        mocker.patch('app.SQLAlchemy.__init__')
+        mock_celery = mocker.patch('app.celery.init_app')
+
+        create_app(is_celery=True)
+        assert mock_celery.called
+
 
 class WhenFormattingLogs(object):
 
