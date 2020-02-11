@@ -22,15 +22,12 @@ celery = NewAcropolisCelery()
 def create_app(**kwargs):
     from app.config import configs
 
-    if not kwargs:
-        environment_state = get_env()
-    else:
-        environment_state = kwargs['ENVIRONMENT']
+    environment_state = kwargs.get('ENVIRONMENT', get_env())
 
     application.config.from_object(configs[environment_state])
     application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    if kwargs:
+    if kwargs.get('ENVIRONMENT'):
         application.config.update(kwargs)
 
     configure_logging()
@@ -38,7 +35,9 @@ def create_app(**kwargs):
     report_missing_config()
 
     db.init_app(application)
-    celery.init_app(application)
+
+    if kwargs.get('is_celery'):
+        celery.init_app(application)
 
     register_blueprint()
 
@@ -52,7 +51,7 @@ def init_app(app):
 
     app.jinja_env.globals['API_BASE_URL'] = app.config['API_BASE_URL']
     app.jinja_env.globals['FRONTEND_URL'] = app.config['FRONTEND_URL']
-    app.jinja_env.globals['IMAGES_URL'] = os.environ.get('IMAGES_URL', app.config['API_BASE_URL'] + '/images/')
+    app.jinja_env.globals['IMAGES_URL'] = os.environ.get('IMAGES_URL', app.config['API_BASE_URL'] + '/images')
 
     @app.before_request
     def check_for_apikey():
