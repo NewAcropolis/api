@@ -37,7 +37,8 @@ def get_email_html(email_type, **kwargs):
         magazine = dao_get_magazine_by_id(kwargs.get('magazine_id'))
         topics = []
         if magazine.topics:
-            _topics = [(t.split(':')[0], t.split(':')[1]) for t in magazine.topics.split('\\n')]
+            _topics = [(t.split(':')[0], t.split(':')[1]) for t in magazine.topics.split('\n')]
+
             for title, description in _topics:
                 topics.append({'title': title, 'description': description})
         return render_template(

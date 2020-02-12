@@ -1,5 +1,6 @@
 -r requirements.txt
 
+argh==0.26.2
 flake8==3.6.0
 freezegun==0.3.9
 mock==2.0.0
@@ -11,3 +12,5 @@ pytest-flake8==1.0.0
 pytest-flask==0.10.0
 pytest-mock==1.10.0
 requests-mock==1.7.0
+watchdog==0.10.2
+PyYAML==5.3

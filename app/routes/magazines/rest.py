@@ -7,7 +7,7 @@ from flask import (
 )
 from flask_jwt_extended import jwt_required
 
-from app.comms.email import get_email_html, send_email
+from app.na_celery import upload_tasks
 from app.dao import dao_create_record, dao_update_record
 from app.dao.emails_dao import dao_create_email
 from app.dao.magazines_dao import dao_get_magazine_by_id, dao_get_magazine_by_old_id, dao_get_magazines
@@ -19,8 +19,6 @@ from app.routes.magazines.schemas import (
     post_create_magazine_schema, post_import_magazine_schema, post_update_magazine_schema
 )
 from app.schema_validation import validate
-from app.utils.pdf import extract_topics
-from app.utils.storage import Storage
 
 magazines_blueprint = Blueprint('magazines', __name__)
 register_errors(magazines_blueprint)
@@ -60,40 +58,9 @@ def create_magazine():
             filename=new_filename
         )
 
-        storage = Storage(current_app.config['STORAGE'])
-
-        storage.upload_blob_from_base64string(
-            data['filename'],
-            magazine.filename,
-            data['pdf_data'],
-            content_type='application/pdf'
-        )
-
-        topics = extract_topics(base64.b64decode(data['pdf_data']))
-        if topics:
-            magazine.topics = topics
-
         dao_create_record(magazine)
 
-        email = Email(
-            magazine_id=magazine.id,
-            email_state=READY,
-            email_type=MAGAZINE
-        )
-        dao_create_email(email)
-
-        emails_to = [user.email for user in dao_get_users()]
-
-        subject = 'Please review {}'.format(data['title'])
-
-        # send email to admin users and ask them to log in in order to approve the email
-        review_part = '<div>Please review this email: {}/emails/{}</div>'.format(
-            current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
-        magazine_html = get_email_html(MAGAZINE, magazine_id=magazine.id)
-        response = send_email(emails_to, subject, review_part + magazine_html)
-
-        if response != 200:
-            current_app.logger.error('Error sending review email {}, for {}'.format(email.id, magazine.id))
+        upload_tasks.upload_magazine.apply_async((str(magazine.id), data['pdf_data']))
 
         return jsonify(magazine.serialize()), 201
 
@@ -118,14 +85,7 @@ def update_magazine(id):
         )
 
         if 'pdf_data' in data:
-            storage = Storage(current_app.config['STORAGE'])
-
-            storage.upload_blob_from_base64string(
-                data['filename'],
-                magazine.filename,
-                data['pdf_data'],
-                content_type='application/pdf'
-            )
+            upload_tasks.upload_magazine.apply_async((id, data['pdf_data']))
 
         dao_update_record(Magazine, id=id, title=magazine.title, filename=magazine.filename)
 
