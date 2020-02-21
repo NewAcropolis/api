@@ -10,13 +10,14 @@ from app.dao.events_dao import dao_get_event_by_id
 from app.dao.magazines_dao import dao_get_magazine_by_id
 from app.dao.members_dao import dao_get_member_by_id
 from app.errors import InvalidRequest
-from app.models import Email, EmailToMember, APPROVED, EVENT, MAGAZINE
+from app.models import Email, EmailToMember, APPROVED, ANNOUNCEMENT, EVENT, MAGAZINE
 
 
-def _get_nearest_bi_monthly_send_date():
-    today = datetime.today()
-    month_offset = 1 if today.month % 2 == 0 else 0
-    return datetime.strptime('{}-{}-{}'.format(today.year, today.month, 1), "%Y-%m-%d") +\
+def _get_nearest_bi_monthly_send_date(created_at=None):
+    if not created_at:
+        created_at = datetime.today()
+    month_offset = 1 if created_at.month % 2 == 0 else 0
+    return datetime.strptime('{}-{}-{}'.format(created_at.year, created_at.month, 1), "%Y-%m-%d") +\
         relativedelta(months=month_offset)
 
 
@@ -25,6 +26,7 @@ def dao_create_email(email):
     if email.email_type == EVENT:
         try:
             event = dao_get_event_by_id(email.event_id)
+            email.subject = u"{}: {}".format(event.event_type.event_type, event.title)
             if not email.send_starts_at:
                 email.send_starts_at = datetime.strptime(event.get_first_event_date(), "%Y-%m-%d") - timedelta(weeks=2)
             if not email.expires:
@@ -34,7 +36,8 @@ def dao_create_email(email):
     elif email.email_type == MAGAZINE and not email.old_id:
         if email.magazine_id:
             try:
-                dao_get_magazine_by_id(email.magazine_id)
+                magazine = dao_get_magazine_by_id(email.magazine_id)
+                email.subject = u"New Acropolis bi-monthly newsletter: {}".format(magazine.title)
                 if not email.send_starts_at:
                     email.send_starts_at = _get_nearest_bi_monthly_send_date()
                     email.expires = email.send_starts_at + timedelta(weeks=2)
@@ -119,7 +122,19 @@ def dao_get_future_emails():
 
 
 def dao_get_latest_emails():
-    return Email.query.order_by(Email.created_at.desc()).limit(30).all()
+    emails = Email.query.order_by(Email.created_at.desc()).limit(30).all()
+
+    latest_emails = []
+    magazine_found = False
+    for e in emails:
+        if e.email_type not in [ANNOUNCEMENT, EVENT, MAGAZINE]:
+            continue
+        if not e.email_type == MAGAZINE or not magazine_found:
+            latest_emails.append(e)
+        if e.email_type == MAGAZINE:
+            magazine_found = True
+
+    return latest_emails
 
 
 def dao_get_approved_emails_for_sending():
