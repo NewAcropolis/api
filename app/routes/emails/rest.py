@@ -23,6 +23,7 @@ from app.dao.emails_dao import (
     dao_get_latest_emails,
     dao_add_member_sent_to_email,
     dao_get_email_by_id,
+    dao_get_email_by_magazine_id,
     dao_get_emails_for_year_starting_on,
     dao_update_email,
 )
@@ -34,7 +35,7 @@ from app.errors import register_errors, InvalidRequest
 
 from app.models import (
     Email, EmailToMember, Member,
-    ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, READY, APPROVED, REJECTED
+    ANON_REMINDER, ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, READY, APPROVED, REJECTED
 )
 from app.routes.emails.schemas import (
     post_create_email_schema, post_update_email_schema, post_import_emails_schema, post_preview_email_schema,
@@ -183,6 +184,8 @@ def import_emails():
             if int(item['eventid']) < 0:
                 if item['eventdetails'].startswith('New Acropolis'):
                     email_type = MAGAZINE
+                elif item['eventdetails'].startswith('Last chance to verify your email to restart your subscription'):
+                    email_type = ANON_REMINDER
                 else:
                     email_type = ANNOUNCEMENT
 

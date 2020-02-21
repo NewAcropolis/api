@@ -9,7 +9,9 @@ from sqlalchemy.orm.exc import NoResultFound
 from bs4 import BeautifulSoup
 from flask import json, url_for
 
-from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, APPROVED, READY, REJECTED, Email
+from app.models import (
+    ANON_REMINDER, ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, APPROVED, READY, REJECTED, Email
+)
 from app.dao.emails_dao import dao_add_member_sent_to_email
 from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
 from tests.db import create_email, create_event, create_event_date, create_magazine, create_member
@@ -46,6 +48,14 @@ def sample_old_emails():
             "id": "3",
             "eventid": "-2",
             "eventdetails": "Some announcement",
+            "extratxt": "",
+            "replaceAll": "n",
+            "timestamp": "2019-03-01 11:00:00",
+        },
+        {
+            "id": "4",
+            "eventid": "-2",
+            "eventdetails": "Last chance to verify your email to restart your subscription",
             "extratxt": "",
             "replaceAll": "n",
             "timestamp": "2019-03-01 11:00:00",
@@ -152,7 +162,7 @@ class WhenPostingImportingEmails:
         assert response.status_code == 201
 
         json_emails = json.loads(response.get_data(as_text=True))['emails']
-        email_types = [MAGAZINE, EVENT, ANNOUNCEMENT]
+        email_types = [MAGAZINE, EVENT, ANNOUNCEMENT, ANON_REMINDER]
         assert len(json_emails) == len(sample_old_emails)
 
         for i in range(0, len(sample_old_emails)):
@@ -184,7 +194,7 @@ class WhenPostingImportingEmails:
 
         json_resp = json.loads(response.get_data(as_text=True))
         json_emails = json_resp['emails']
-        email_types = [EVENT, ANNOUNCEMENT]
+        email_types = [EVENT, ANNOUNCEMENT, ANON_REMINDER]
         assert len(json_emails) == len(sample_old_emails) - 1
         for i in range(0, len(sample_old_emails) - 1):
             assert json_emails[i]['email_type'] == email_types[i]
@@ -209,7 +219,7 @@ class WhenPostingImportingEmails:
 
         json_resp = json.loads(response.get_data(as_text=True))
         json_emails = json_resp['emails']
-        email_types = [MAGAZINE, ANNOUNCEMENT]
+        email_types = [MAGAZINE, ANNOUNCEMENT, ANON_REMINDER]
         assert len(json_emails) == len(sample_old_emails) - 1
         offset = 0
         for i in range(0, len(sample_old_emails) - 1):
