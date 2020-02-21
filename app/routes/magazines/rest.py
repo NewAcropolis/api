@@ -87,7 +87,7 @@ def update_magazine(id):
         if 'pdf_data' in data:
             upload_tasks.upload_magazine.apply_async((id, data['pdf_data']))
 
-        dao_update_record(Magazine, id=id, title=magazine.title, filename=magazine.filename)
+        dao_update_record(Magazine, id=id, title=magazine.title, filename=magazine.filename, topics=magazine.topics)
 
         return jsonify(magazine.serialize()), 200
 

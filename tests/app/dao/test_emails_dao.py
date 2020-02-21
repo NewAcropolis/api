@@ -8,11 +8,12 @@ from app.dao.emails_dao import (
     dao_get_emails_for_year_starting_on,
     dao_get_email_by_id,
     dao_get_future_emails,
+    dao_get_latest_emails,
     dao_update_email,
     _get_nearest_bi_monthly_send_date
 )
 from app.errors import InvalidRequest
-from app.models import Email, EmailToMember, MAGAZINE
+from app.models import Email, EmailToMember, ANON_REMINDER, ANNOUNCEMENT, MAGAZINE
 
 from tests.db import create_email, create_magazine, create_member
 
@@ -140,6 +141,29 @@ class WhenUsingEmailsDAO(object):
         assert emails_from_db[0] == active_email
         assert emails_from_db[1] == active_email_2
         assert emails_from_db[2] == active_email_3
+
+    def it_gets_latest_announcement_event_magazine_emails(self, db_session, sample_magazine):
+        event_email = create_email()
+        magazine_email = create_email(email_type=MAGAZINE, magazine_id=sample_magazine.id)
+        announcement_email = create_email(email_type=ANNOUNCEMENT)
+        anon_reminder_email = create_email(email_type=ANON_REMINDER)
+
+        emails = dao_get_latest_emails()
+
+        assert len(emails) == 3
+        assert set([event_email, magazine_email, announcement_email]) == set(emails)
+        assert anon_reminder_email not in emails
+
+    def it_gets_latest_magazine_email_only(self, db_session, sample_magazine):
+        later_magazine = create_magazine(title='ignored magazine')
+        event_email = create_email()
+        create_email(email_type=MAGAZINE, magazine_id=sample_magazine.id)
+        later_magazine_email = create_email(email_type=MAGAZINE, magazine_id=later_magazine.id)
+
+        emails = dao_get_latest_emails()
+
+        assert len(emails) == 2
+        assert set([event_email, later_magazine_email]) == set(emails)
 
 
 class WhenGettingNearestBimonthlyDate:

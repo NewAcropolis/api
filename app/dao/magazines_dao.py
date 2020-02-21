@@ -13,3 +13,7 @@ def dao_get_magazine_by_id(id):
 
 def dao_get_magazine_by_old_id(old_id):
     return Magazine.query.filter_by(old_id=old_id).first()
+
+
+def dao_get_magazine_by_title(title):
+    return Magazine.query.filter_by(title=title).first()

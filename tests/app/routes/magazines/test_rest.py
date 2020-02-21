@@ -107,7 +107,7 @@ class WhenPostingMagazines(object):
         data = {
             'title': 'new title',
             'filename': 'Magazine Issue 1.pdf',
-            'topics': ''
+            'topics': 'philosophy: new world'
         }
 
         response = client.post(
@@ -118,6 +118,7 @@ class WhenPostingMagazines(object):
         assert response.status_code == 200
         assert response.json['id'] == str(magazine.id)
         assert response.json['title'] == data['title']
+        assert response.json['topics'] == data['topics']
         assert not mocker_upload.called
 
     def it_doesnt_update_a_magazine_if_filename_not_matched(self, client, db_session):
