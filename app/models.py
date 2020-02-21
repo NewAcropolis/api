@@ -1,4 +1,5 @@
 import datetime
+from flask import current_app
 import uuid
 import re
 
@@ -7,7 +8,6 @@ from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
-
 
 ANON_PROCESS = 'anon_process'
 ANON_REMINDER = 'anon_reminder'
@@ -99,6 +99,7 @@ class Email(db.Model):
     magazine_id = db.Column(UUID(as_uuid=True), db.ForeignKey('magazines.id'), nullable=True)
     old_id = db.Column(db.Integer)
     old_event_id = db.Column(db.Integer)
+    subject = db.Column(db.String)
     details = db.Column(db.String)
     extra_txt = db.Column(db.String)
     replace_all = db.Column(db.Boolean)
@@ -133,6 +134,22 @@ class Email(db.Model):
 
             event = dao_get_event_by_id(str(self.event_id))
             return u"{}: {}".format(event.event_type.event_type, event.title)
+        elif self.email_type == MAGAZINE:
+            if self.magazine_id:
+                from app.dao.magazines_dao import dao_get_magazine_by_id
+                magazine = dao_get_magazine_by_id(str(self.magazine_id))
+            else:
+                from app.dao.magazines_dao import dao_get_magazine_by_title
+                issue_no = self.details.split(' ')[-1]
+                magazine = dao_get_magazine_by_title('Issue ' + issue_no)
+
+            if magazine:
+                current_app.logger.info('magazine found %s' % magazine.title)
+                return u"New Acropolis bi-monthly newsletter: {}".format(magazine.title)
+
+            current_app.logger.error('No magazine found')
+            return "Magazine not found"
+
         return 'No email type'
 
     def get_expired_date(self):
@@ -141,6 +158,11 @@ class Email(db.Model):
 
             event = dao_get_event_by_id(str(self.event_id))
             return event.get_last_event_date()
+        elif self.email_type == MAGAZINE:
+            from app.dao.emails_dao import _get_nearest_bi_monthly_send_date
+
+            send_start = _get_nearest_bi_monthly_send_date(created_at=self.created_at)
+            return (send_start + datetime.timedelta(weeks=2)).strftime('%Y-%m-%d')
 
     def get_emails_sent_counts(self):
         return {
@@ -155,8 +177,9 @@ class Email(db.Model):
     def serialize(self):
         return {
             'id': str(self.id),
-            'subject': self.get_subject(),
+            'subject': self.subject or self.get_subject(),
             'event_id': str(self.event_id) if self.event_id else None,
+            'magazine_id': str(self.magazine_id) if self.magazine_id else None,
             'old_id': self.old_id,
             'old_event_id': self.old_event_id,
             'details': self.details,

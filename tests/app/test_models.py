@@ -1,6 +1,6 @@
 from freezegun import freeze_time
 
-from app.models import Event, Fee, Speaker
+from app.models import MAGAZINE, Event, Fee, Speaker
 from tests.db import create_article, create_event, create_email, create_fee, create_speaker
 
 
@@ -113,6 +113,7 @@ class WhenUsingEmailModel:
             'id': str(email.id),
             'subject': 'workshop: test title',
             'event_id': str(email.event_id),
+            'magazine_id': None,
             'old_id': email.old_id,
             'old_event_id': email.old_event_id,
             'created_at': '2019-06-01 10:00',
@@ -124,6 +125,35 @@ class WhenUsingEmailModel:
             'send_starts_at': '2019-06-02',
             'expires': '2019-06-21',
             'send_after': '2019-06-02 12:00',
+            'emails_sent_counts': {
+                'success': 0,
+                'failed': 0,
+                'total_active_members': 0
+            }
+        }
+
+    def it_shows_magazine_email_json_on_serialize(self, db, db_session, sample_magazine):
+        email = create_email(
+            email_type=MAGAZINE, magazine_id=sample_magazine.id,
+            old_event_id=None,
+            created_at='2019-06-30T10:00:00', send_starts_at='2019-07-01T11:00:00')
+
+        assert email.serialize() == {
+            'id': str(email.id),
+            'subject': u'New Acropolis bi-monthly newsletter: Test magazine',
+            'event_id': None,
+            'magazine_id': str(sample_magazine.id),
+            'old_id': email.old_id,
+            'old_event_id': None,
+            'created_at': '2019-06-30 10:00',
+            'extra_txt': u'test extra text',
+            'details': u'test event details',
+            'replace_all': False,
+            'email_type': u'magazine',
+            'email_state': u'draft',
+            'send_starts_at': '2019-07-01',
+            'expires': '2019-07-15',
+            'send_after': None,
             'emails_sent_counts': {
                 'success': 0,
                 'failed': 0,
