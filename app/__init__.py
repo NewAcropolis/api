@@ -176,10 +176,24 @@ def setup_gce_logging(gunicorn_access_logger, gunicorn_error_logger):  # pragma:
     if application.config['SQLALCHEMY_DATABASE_URI'][:22] in ['postgresql://localhost', 'db://localhost/test_db']:
         return
 
+    from google.api_core.exceptions import ServiceUnavailable
+    from google.api_core.gapic_v1.method import wrap_method
+    from google.api_core import retry
     import google.cloud.logging
     from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
+    from google.cloud.logging_v2 import LoggingServiceV2Client
 
-    client = google.cloud.logging.Client()
+    # client = google.cloud.logging.Client()
+    client = LoggingServiceV2Client()
+    predicate = retry.if_exception(ServiceUnavailable)
+    wle_retry = retry.Retry(predicate, inital=5, deadline=5)
+    client._inner_api_calls['write_log_entries'] = wrap_method(
+        client.transport.write_log_entries,
+        default_retry=wle_retry,
+        default_timeout=client._method_configs["WriteLogEntries"].timeout,
+        client_info=client._client_info,
+    )
+
     handler = CloudLoggingHandler(client, name=get_env())
     setup_logging(handler)
 
