@@ -1,5 +1,3 @@
-import pytest
-
 from flask import json, url_for
 
 
@@ -23,3 +21,13 @@ class WhenAccessingSiteInfo(object):
         json_resp = json.loads(response.get_data(as_text=True))['info']
         assert response.status_code == 200
         assert json_resp == 'Database error, check logs'
+
+    def it_shows_info_without_db(self, app, client):
+        response = client.get(
+            url_for('.get_info_without_db')
+        )
+        assert response.status_code == 200
+        assert response.json == {
+            'environment': 'test',
+            'commit': app.config['TRAVIS_COMMIT']
+        }
