@@ -36,7 +36,7 @@ eval "celery -A run_celery.celery worker -n worker-$ENV --loglevel=INFO --concur
 eval "celery -A run_celery.celery beat"$logoutput
 
 # kill celery flower
-FLOWER_PID=lsof -i :$FLOWER_PORT  | awk '{if(NR>1)print $2}'
+FLOWER_PID=`lsof -i :$FLOWER_PORT  | awk '{if(NR>1)print $2}'`
 
 if [ -z "$FLOWER_PID" -o "$RESTART_FLOWER" ]; then
   if [ ! -z "$FLOWER_PID" ]; then
