@@ -26,3 +26,17 @@ def get_info():
     if current_app.config.get('EMAIL_RESTRICT'):  # pragma: no cover
         resp['email_restrict'] = True
     return jsonify(resp)
+
+
+@base_blueprint.route('/info')
+def get_info_without_db():
+    current_app.logger.info('get_info_without_db')
+
+    resp = {
+        'environment': current_app.config['ENVIRONMENT'],
+        'commit': current_app.config['TRAVIS_COMMIT'],
+    }
+
+    if current_app.config.get('EMAIL_RESTRICT'):  # pragma: no cover
+        resp['email_restrict'] = True
+    return jsonify(resp)
