@@ -62,6 +62,6 @@ def extract_topics(pdf_binary):
                 break
 
         if topic_heading:
-            topic_headings += '{}: {}\n'.format(topic, topic_heading[:-1])
+            topic_headings += '{}: {}\n'.format(topic, topic_heading.encode("utf8")[:-1])
 
     return topic_headings[:-1] if topic_headings else ''
