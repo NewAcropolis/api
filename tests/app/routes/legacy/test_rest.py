@@ -27,6 +27,16 @@ class WhenGettingLegacyImages:
         assert response.status_code == 200
         assert mock_get_blob.call_args[0][0] == 'thumbnail/2019/test.jpg'
 
+    def it_gets_a_pdf_image(self, client, mocker, mock_storage):
+        mock_get_blob = mocker.patch("app.utils.storage.Storage.get_blob", return_value='Test data')
+
+        response = client.get(
+            url_for('legacy.image_handler', imagefile='Bi_Monthly_Issue 1.pdf')
+        )
+
+        assert response.status_code == 200
+        assert mock_get_blob.call_args[0][0] == 'standard/pdfs/bi_monthly_issue_1.pdf.png'
+
 
 class WhenGettingLegacyEvent:
     def it_gets_event_with_old_id(self, client, db_session, sample_event):
