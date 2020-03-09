@@ -4,6 +4,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app.dao.events_dao import dao_get_event_by_old_id
 from app.errors import register_errors, InvalidRequest
+from app.routes.magazines import get_magazine_filename
 from app.utils.storage import Storage
 
 legacy_blueprint = Blueprint('legacy', __name__)
@@ -12,8 +13,12 @@ register_errors(legacy_blueprint)
 
 @legacy_blueprint.route('/legacy/image_handler', methods=['GET'])
 def image_handler():
-    # ignore leading events part for event images
-    imagefile = '/'.join(request.args.get('imagefile').split('/')[1:])
+    if request.args.get('imagefile').endswith('.pdf'):
+        magazine_filename = get_magazine_filename(request.args.get('imagefile'))
+        imagefile = 'pdfs/{}.png'.format(magazine_filename)
+    else:
+        # ignore leading events part for event images
+        imagefile = '/'.join(request.args.get('imagefile').split('/')[1:])
 
     if 'w' not in request.args.keys() and 'h' not in request.args.keys():
         image_size = 'standard/'
