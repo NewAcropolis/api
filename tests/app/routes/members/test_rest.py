@@ -21,6 +21,18 @@ class WhenGettingMembers:
         assert response.json[0] == jsonify(sample_member.serialize()).json
         assert response.json[1] == jsonify(member.serialize()).json
 
+    def it_gets_member_from_unsubcode(self, app, client, db_session, sample_member):
+        unsubcode = encrypt(
+            "{}={}".format(app.config['EMAIL_TOKENS']['member_id'], str(sample_member.id)),
+            app.config['EMAIL_UNSUB_SALT']
+        )
+
+        response = client.get(
+            url_for('members.get_member_from_unsubcode', unsubcode=unsubcode),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.json['id'] == str(sample_member.id)
+
 
 class WhenPostingMembers:
 
@@ -78,6 +90,28 @@ class WhenPostingMembers:
 
         assert not sample_member.active
         assert response.json == {'message': '{} unsubscribed'.format(sample_member.name)}
+
+    def it_updates_member(self, app, client, db_session, sample_member):
+        unsubcode = encrypt(
+            "{}={}".format(app.config['EMAIL_TOKENS']['member_id'], str(sample_member.id)),
+            app.config['EMAIL_UNSUB_SALT']
+        )
+        old_name = sample_member.name
+
+        data = {
+            'name': 'New test member',
+            'email': 'new_email@test.com',
+        }
+
+        response = client.post(
+            url_for('members.update_member', unsubcode=unsubcode),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        member = Member.query.one()
+        assert response.json['message'] == '{} updated'.format(old_name)
+        assert member.name == data['name']
+        assert member.email == data['email']
 
     def it_imports_members(self, client, db, db_session, sample_marketing):
         data = [
