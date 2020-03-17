@@ -5,6 +5,7 @@ import re
 import requests
 from flask_script import Manager, Server
 from app import create_app, db
+from app.comms.encryption import decrypt, encrypt, get_tokens
 from app.dao.magazines_dao import dao_get_magazine_by_old_id
 from app.routes.magazines import get_magazine_filename, MAGAZINE_PATTERN
 from app.utils.pdf import extract_topics as _extract_topics
@@ -33,6 +34,15 @@ def generate_web_images(year=None):
     application.logger.info('Generate web images')
     storage = Storage(application.config['STORAGE'])
     storage.generate_web_images(year)
+
+
+@manager.command
+def get_unsubcode(member_id):
+    unsubcode = encrypt(
+        "{}={}".format(application.config['EMAIL_TOKENS']['member_id'], member_id),
+        application.config['EMAIL_UNSUB_SALT']
+    )
+    print(unsubcode)
 
 
 @manager.command

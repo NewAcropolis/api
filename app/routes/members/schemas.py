@@ -43,3 +43,14 @@ post_subscribe_member_schema = {
     },
     "required": ["name", "email", "marketing_id"]
 }
+
+post_update_member_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for update member",
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "email": {"format": "email", "type": "string"},
+    },
+    "required": ["name", "email"]
+}

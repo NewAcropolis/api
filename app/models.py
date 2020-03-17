@@ -249,13 +249,13 @@ class Member(db.Model):
 
     def serialize(self):
         return {
-            'id': self.id,
+            'id': str(self.id),
             'old_id': self.old_id,
             'name': self.name,
             'email': self.email,
             'active': self.active,
             'created_at': self.created_at,
-            'marketing_id': self.marketing_id,
+            'marketing_id': str(self.marketing_id),
             'old_marketing_id': self.old_marketing_id,
             'is_course_member': self.is_course_member,
             'last_updated': self.last_updated
@@ -363,10 +363,10 @@ class Event(db.Model):
             return reject_reasons
 
         return {
-            'id': self.id,
+            'id': str(self.id),
             'old_id': self.old_id,
             'event_type': self.event_type.event_type,
-            'event_type_id': self.event_type.id,
+            'event_type_id': str(self.event_type.id),
             'title': self.title,
             'sub_title': self.sub_title,
             'description': self.description,

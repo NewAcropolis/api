@@ -22,7 +22,9 @@ from app.comms.encryption import decrypt, get_tokens
 from app.errors import register_errors, InvalidRequest
 
 from app.models import Marketing, Member, BASIC
-from app.routes.members.schemas import post_import_members_schema, post_subscribe_member_schema
+from app.routes.members.schemas import (
+    post_import_members_schema, post_subscribe_member_schema, post_update_member_schema
+)
 from app.schema_validation import validate
 
 members_blueprint = Blueprint('members', __name__)
@@ -63,14 +65,43 @@ def subscribe_member():
     return jsonify(member.serialize())
 
 
+def _get_member_from_unsubcode(unsubcode):
+    tokens = get_tokens(decrypt(unsubcode, current_app.config['EMAIL_UNSUB_SALT']))
+    member_id = tokens[current_app.config['EMAIL_TOKENS']['member_id']]
+    member = dao_get_member_by_id(member_id)
+
+    return member
+
+
 @members_blueprint.route('/member/unsubscribe/<unsubcode>', methods=['POST'])
 @jwt_required
 def unsubscribe_member(unsubcode):
-    tokens = get_tokens(decrypt(unsubcode, current_app.config['EMAIL_UNSUB_SALT']))
-    member = dao_get_member_by_id(tokens[current_app.config['EMAIL_TOKENS']['member_id']])
+    member = _get_member_from_unsubcode(unsubcode)
     dao_update_member(member.id, active=False)
 
     return jsonify({'message': '{} unsubscribed'.format(member.name)})
+
+
+@members_blueprint.route('/member/<unsubcode>', methods=['GET'])
+@jwt_required
+def get_member_from_unsubcode(unsubcode):
+    member = _get_member_from_unsubcode(unsubcode)
+
+    return jsonify(member.serialize())
+
+
+@members_blueprint.route('/member/update/<unsubcode>', methods=['POST'])
+@jwt_required
+def update_member(unsubcode):
+    data = request.get_json(force=True)
+
+    validate(data, post_update_member_schema)
+
+    member = _get_member_from_unsubcode(unsubcode)
+    old_name = member.name
+    dao_update_member(member.id, name=data['name'], email=data['email'])
+
+    return jsonify({'message': '{} updated'.format(old_name)})
 
 
 @members_blueprint.route('/members', methods=['GET'])
