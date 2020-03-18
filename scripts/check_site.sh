@@ -4,7 +4,7 @@ set -o pipefail
 echo "Checking: $1"
 
 n=0
-until [ $n -ge 5 ]
+until [ $n -ge 10 ]
 do
     commit=$(curl -s -X GET "$1" | jq -r '.commit')
     if [ ! -z "$commit" ]; then
