@@ -47,10 +47,7 @@ register_errors(events_blueprint)
 
 
 def extract_startdate(json):
-    if json['event_dates']:
-        return json['event_dates'][0]['event_datetime']
-    else:
-        return 0
+    return json['event_dates'][0]['event_datetime'] if 'event_dates' in json else 0
 
 
 @events_blueprint.route('/paypal/<item_id>', methods=['POST'])

@@ -147,7 +147,7 @@ def mock_paypal(mocker):
 
 class WhenGettingEvents:
 
-    def it_returns_all_events(self, client, sample_event, db_session):
+    def it_returns_all_events(self, client, sample_event_with_dates, db_session):
         response = client.get(
             url_for('events.get_events'),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
@@ -156,14 +156,14 @@ class WhenGettingEvents:
         data = json.loads(response.get_data(as_text=True))
         assert len(data) == 1
 
-    def it_returns_event_by_id(self, client, sample_event, db_session):
+    def it_returns_event_by_id(self, client, sample_event_with_dates, db_session):
         response = client.get(
-            url_for('events.get_event_by_id', event_id=sample_event.id),
+            url_for('events.get_event_by_id', event_id=sample_event_with_dates.id),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
         data = json.loads(response.get_data(as_text=True))
-        assert data['id'] == str(sample_event.id)
+        assert data['id'] == str(sample_event_with_dates.id)
 
     @freeze_time("2018-01-10T19:00:00")
     def it_returns_all_future_events(self, client, sample_event_with_dates, sample_event_type, db_session):
@@ -188,6 +188,8 @@ class WhenGettingEvents:
         assert len(data) == 2
         assert data[0]['id'] == str(event_1.id)
         assert data[1]['id'] == str(event_2.id)
+        assert not data[0]['has_expired']
+        assert not data[1]['has_expired']
 
     @freeze_time("2018-01-10T19:00:00")
     def it_returns_past_year_events(self, client, sample_event_with_dates, sample_event_type, db_session):
@@ -211,6 +213,7 @@ class WhenGettingEvents:
         assert Event.query.count() == 3
         assert len(data) == 1
         assert data[0]['id'] == str(sample_event_with_dates.id)
+        assert data[0]['has_expired']
 
     def it_returns_events_in_year(self, client, sample_event_with_dates, sample_event_type, db_session):
         event_2 = create_event(
@@ -879,6 +882,7 @@ class WhenPostingUpdatingAnEvent:
         assert json_events["event_dates"][0]["speakers"][0]['id'] == (
             sample_req_event_data_with_event['speaker'].serialize()['id'])
         assert json_events["event_dates"][0]['end_time'] == "20:00"
+        assert json_events['booking_code'] == 'test booking code'
         assert json_events['event_state'] == READY
 
         event_dates = EventDate.query.all()

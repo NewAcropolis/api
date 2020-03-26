@@ -39,12 +39,12 @@ class WhenGettingLegacyImages:
 
 
 class WhenGettingLegacyEvent:
-    def it_gets_event_with_old_id(self, client, db_session, sample_event):
+    def it_gets_event_with_old_id(self, client, db_session, sample_event_with_dates):
         response = client.get(
-            url_for('legacy.event_handler', eventid=sample_event.old_id)
+            url_for('legacy.event_handler', eventid=sample_event_with_dates.old_id)
         )
 
-        assert response.json['id'] == str(sample_event.id)
+        assert response.json['id'] == str(sample_event_with_dates.id)
 
     def it_raises_a_404_if_not_found(self, client):
         response = client.get(
