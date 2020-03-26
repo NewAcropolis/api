@@ -362,6 +362,12 @@ class Event(db.Model):
             reject_reasons.sort(key=lambda k: k['resolved'])
             return reject_reasons
 
+        def has_expired(_sorted_event_dates):
+            return datetime.date.today().strftime(
+                '%Y-%m-%d %H:%M') > _sorted_event_dates[-1]['event_datetime']
+
+        _sorted_event_dates = sorted_event_dates()
+
         return {
             'id': str(self.id),
             'old_id': self.old_id,
@@ -379,7 +385,8 @@ class Event(db.Model):
             'venue': self.venue.serialize() if self.venue else None,
             'event_dates': sorted_event_dates(),
             'event_state': self.event_state,
-            'reject_reasons': serlialized_reject_reasons()
+            'reject_reasons': serlialized_reject_reasons(),
+            'has_expired': has_expired(_sorted_event_dates)
         }
 
     def __repr__(self):
