@@ -1,1 +1,1 @@
-watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A run_celery.celery worker -n worker-dev --loglevel=INFO --concurrency=1
+watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A run_celery.celery worker -n worker-development --loglevel=INFO --concurrency=1
