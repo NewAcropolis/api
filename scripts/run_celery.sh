@@ -49,4 +49,7 @@ fi
 num_workers=$(( $(ps auxww | grep "celery worker -n worker-$ENV" | wc -l) -1))
 echo "Running $num_workers workers"
 
-[ $num_workers == 2 ] && echo 'celery running with correct number of workers' || echo 'ERROR: incorrect number of celery workers'
+num_beat_workers=$(( $(ps auxww | grep "celery beat" | wc -l) -1))
+echo "Running $num_beat_workers beat workers"
+
+[ $num_workers > 0 -a $num_beat_workers > 0 ] && echo 'celery running with correct number of workers' || echo 'ERROR: incorrect number of celery workers'

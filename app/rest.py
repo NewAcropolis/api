@@ -1,3 +1,6 @@
+import threading
+from Queue import Queue
+from celery.task.control import inspect
 from flask import Blueprint, jsonify, current_app
 
 from app import db
@@ -7,8 +10,22 @@ base_blueprint = Blueprint('', __name__)
 register_errors(base_blueprint)
 
 
+def are_celery_workers_running():
+    def worker(q):
+        i = inspect()
+        q.put(i.stats())
+
+    q = Queue()
+    threading.Thread(target=worker, args=(q,)).start()
+    result = q.get()
+    if result:
+        return 'celery@worker-{}'.format(current_app.config.get('ENVIRONMENT')) in result
+
+
 @base_blueprint.route('/')
 def get_info():
+    workers_running = are_celery_workers_running()
+
     current_app.logger.info('get_info')
     query = 'SELECT version_num FROM alembic_version'
     try:
@@ -21,6 +38,7 @@ def get_info():
         'environment': current_app.config['ENVIRONMENT'],
         'info': full_name,
         'commit': current_app.config['TRAVIS_COMMIT'],
+        'workers': 'Running' if workers_running else 'Not running'
     }
 
     if current_app.config.get('EMAIL_RESTRICT'):  # pragma: no cover

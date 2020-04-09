@@ -6,9 +6,15 @@ echo "Checking: $1"
 n=0
 until [ $n -ge 10 ]
 do
-    commit=$(curl -s -X GET "$1" | jq -r '.commit')
-    if [ ! -z "$commit" ]; then
-        break
+    json=$(curl -s -X GET "$1")
+    if [ ! -z "$json" ]; then
+        commit=$(echo $json | jq -r '.commit')
+        if [ "$commit" = $TRAVIS_COMMIT ]; then
+            workers=$(echo $json | jq -r '.workers')
+            if [ "$workers" = "Running" ]; then
+                break
+            fi
+        fi
     fi
 
     n=$[$n+1]
@@ -21,5 +27,10 @@ if [ -z "$commit" -o "$commit" != $TRAVIS_COMMIT ]; then
     echo 'failed '$commit
     exit 1
 else
+    if [ "$workers" != "Running" ]; then
+        echo "workers not running"
+        exit 1
+    fi
+
     echo 'success '$commit
 fi
