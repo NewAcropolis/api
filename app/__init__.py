@@ -137,7 +137,8 @@ def configure_logging():
     ch.setFormatter(f)
     application.logger.addHandler(ch)
 
-    rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=3)
+    # set max log file size to 10mb and 3 file backups
+    rfh = RotatingFileHandler('logs/app.log', maxBytes=10240000, backupCount=3)
     rfh.setLevel(logging.DEBUG)
     rfh.setFormatter(f)
 
