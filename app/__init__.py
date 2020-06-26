@@ -64,6 +64,7 @@ def register_blueprint():
     from app.routes.articles.rest import article_blueprint, articles_blueprint
     from app.routes.authentication.rest import auth_blueprint
     from app.routes.emails.rest import emails_blueprint
+    from app.routes.email_providers.rest import email_providers_blueprint
     from app.routes.events.rest import events_blueprint
     from app.routes.fees.rest import fees_blueprint, fee_blueprint
     from app.routes.event_dates.rest import event_dates_blueprint, event_date_blueprint
@@ -81,6 +82,7 @@ def register_blueprint():
     application.register_blueprint(article_blueprint)
     application.register_blueprint(articles_blueprint)
     application.register_blueprint(emails_blueprint)
+    application.register_blueprint(email_providers_blueprint)
     application.register_blueprint(events_blueprint)
     application.register_blueprint(event_date_blueprint)
     application.register_blueprint(event_dates_blueprint)
