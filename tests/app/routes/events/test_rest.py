@@ -803,8 +803,6 @@ class WhenPostingUpdatingAnEvent:
             'ENVIRONMENT': 'live',
             'EMAIL_RESTRICT': None,
             'EMAIL_DOMAIN': 'test.com',
-            'EMAIL_PROVIDER_URL': 'http://emailprovider',
-            'EMAIL_PROVIDER_APIKEY': 'apikey',
             'FRONTEND_ADMIN_URL': 'https://frontend/test'
         }
 
