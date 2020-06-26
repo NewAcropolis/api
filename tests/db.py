@@ -1,9 +1,12 @@
+from datetime import datetime
+import json
 from app import db
 
 from app.dao import dao_create_record
 from app.dao.articles_dao import dao_create_article
 from app.dao.blacklist_dao import store_token
 from app.dao.emails_dao import dao_create_email, dao_create_email_to_member
+from app.dao.email_providers_dao import dao_create_email_provider
 from app.dao.events_dao import dao_create_event, dao_get_event_by_old_id
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_create_event_type
@@ -15,9 +18,9 @@ from app.dao.speakers_dao import dao_create_speaker
 from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
 from app.models import (
-    Article, Email, EmailToMember, Event, EventDate, EventType, Fee, Magazine, Marketing,
+    Article, Email, EmailToMember, EmailProvider, Event, EventDate, EventType, Fee, Magazine, Marketing,
     Member, RejectReason, Speaker, Ticket, User, Venue,
-    EVENT, TICKET_STATUS_UNUSED, DRAFT
+    EVENT, TICKET_STATUS_UNUSED, DRAFT, PROVIDER_MG
 )
 
 
@@ -324,23 +327,31 @@ def create_member(
     return member
 
 
-def create_email_to_member(email_id=None, member_id=None, status_code=200):
+def create_email_to_member(email_id=None, member_id=None, status_code=200, emailed_by=None, created_at=None):
     if not email_id:
         email = create_email()
         email_id = email.id
     if not member_id:
         member = create_member()
         member_id = member.id
+    if not emailed_by:
+        emailed_by = PROVIDER_MG
+    if not created_at:
+        created_at = datetime.now()
 
     data = {
+        'created_at': created_at,
         'email_id': email_id,
         'member_id': member_id,
-        'status_code': status_code
+        'status_code': status_code,
+        'emailed_by': emailed_by
     }
 
     member_to_email = EmailToMember(**data)
 
     dao_create_email_to_member(member_to_email)
+
+    return member_to_email
 
 
 def create_user(email='test@example.com', name='First Mid Last-name', access_area=',email,event,report,article,'):
@@ -396,3 +407,26 @@ def create_ticket(
     dao_create_record(ticket)
 
     return ticket
+
+
+def create_email_provider(
+    name='Test Email Provider', daily_limit=25, api_key='apikey', api_url='http://alt-api-url.com', pos=1,
+    data_struct={
+        "from": "<<from>>",
+        "to": "<<to>>",
+        "subject": "<<subject>>",
+        "message": "<<message>>"
+    }
+):
+    data = {
+        'name': name,
+        'daily_limit': daily_limit,
+        'api_key': api_key,
+        'api_url': api_url,
+        'data_struct': json.dumps(data_struct),
+        'pos': pos,
+    }
+
+    email_provider = EmailProvider(**data)
+    dao_create_email_provider(email_provider)
+    return email_provider

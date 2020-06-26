@@ -32,6 +32,10 @@ EMAIL_STATES = EVENT_STATES = [
     DRAFT, READY, APPROVED, REJECTED
 ]
 
+PROVIDER_MG = 'mg'
+PROVIDER_SB = 'sb'
+EMAIL_PROVIDERS = [PROVIDER_SB, PROVIDER_MG]
+
 
 class Article(db.Model):
     __tablename__ = 'articles'
@@ -83,12 +87,36 @@ class EmailToMember(db.Model):
     member_id = db.Column(UUID(as_uuid=True), db.ForeignKey('members.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     status_code = db.Column(db.Integer)
+    emailed_by = db.Column(db.String)
 
     def serialize(self):
         return {
             'email_id': str(self.email_id),
             'member_id': str(self.member_id),
             'created_at': str(self.created_at),
+            'emailed_by': self.emailed_by
+        }
+
+
+class EmailProvider(db.Model):
+    __tablename__ = 'email_providers'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = db.Column(db.String, unique=True)
+    daily_limit = db.Column(db.Integer)
+    api_key = db.Column(db.String)
+    api_url = db.Column(db.String)
+    data_struct = db.Column(db.String)
+    pos = db.Column(db.Integer, unique=True)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'name': self.name,
+            'daily_limit': self.daily_limit,
+            'api_key': self.api_key,
+            'api_url': self.api_url,
+            'data_struct': self.data_struct,
+            'pos': self.pos
         }
 
 
