@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from dateutils import relativedelta
 from flask import current_app
+from pytz import timezone
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -69,7 +70,7 @@ def dao_update_email(email_id, **kwargs):
 
 
 @transactional
-def dao_add_member_sent_to_email(email_id, member_id, status_code=200, created_at=None):
+def dao_add_member_sent_to_email(email_id, member_id, status_code=200, emailed_by=None, created_at=None):
     if not created_at:
         created_at = datetime.strftime(datetime.now(), "%Y-%m-%d")
 
@@ -84,6 +85,7 @@ def dao_add_member_sent_to_email(email_id, member_id, status_code=200, created_a
     email_to_member = EmailToMember.query.filter_by(email_id=email.id, member_id=member.id).first()
     email_to_member.created_at = created_at
     email_to_member.status_code = status_code
+    email_to_member.emailed_by = emailed_by
 
 
 @transactional
@@ -145,3 +147,14 @@ def dao_get_approved_emails_for_sending():
         Email.send_after <= now,
         Email.email_state == APPROVED
     ).all()
+
+
+def dao_get_todays_email_count_for_provider(provider):
+    now = datetime.now(timezone('Europe/London'))
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    return EmailToMember.query.filter(
+        EmailToMember.created_at > today,
+        EmailToMember.created_at < today + timedelta(days=1),
+        EmailToMember.emailed_by == provider
+    ).count()

@@ -17,6 +17,7 @@ from app.models import EVENT
 from tests.db import (
     create_article,
     create_email,
+    create_email_provider,
     create_event,
     create_event_date,
     create_event_type,
@@ -41,6 +42,7 @@ def app():
         'TESTING': True,
         'ENVIRONMENT': 'test',
         'SQLALCHEMY_DATABASE_URI': TEST_DATABASE_URI,
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
         'PREFERRED_URL_SCHEME': 'http',
         'ADMIN_CLIENT_ID': 'testadmin',
         'ADMIN_CLIENT_SECRET': 'testsecret',
@@ -122,6 +124,14 @@ def sample_email(db):
         details='<strong>Fees:</strong> 10, <strong>Concessions:</strong> 5',
         created_at='2019-06-01',
         expires='2019-07-01'
+    )
+
+
+@pytest.fixture(scope='function')
+def sample_email_provider(db):
+    return create_email_provider(
+        name='Sample Email Provider', daily_limit=25,
+        api_key='sample-api-key', api_url='http://sample-api-url.com', pos=0,
     )
 
 

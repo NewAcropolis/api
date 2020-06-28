@@ -261,7 +261,6 @@ def update_event(event_id):
     if event_dates:
         event_data['event_dates'] = event_dates
     elif data_event_dates == []:
-        error = 'event needs to have a date'
         raise InvalidRequest('{} needs an event date'.format(event_id), 400)
 
     if event_data.get('fee'):

@@ -29,7 +29,12 @@ class WhenProcessingSendEmailsTask:
             'total_active_members': 1
         }
 
-    def it_only_sends_to_3_emails_if_not_live_environment(self, mocker, db, db_session, sample_email, sample_member):
+    def it_only_sends_to_3_emails_if_not_live_environment(self, mocker, db_session, sample_email, sample_member):
+        mocker.patch.dict('app.application.config', {
+            'ENVIRONMENT': 'test',
+            'EMAIL_RESTRICT': None
+        })
+
         member_1 = create_member(name='Test 1', email='test1@example.com')
         member_2 = create_member(name='Test 2', email='test2@example.com')
         create_member(name='Test 3', email='test3@example.com')
@@ -64,6 +69,11 @@ class WhenProcessingSendEmailsTask:
     def it_only_sends_to_unsent_members_and_shows_failed_stat(
         self, mocker, db, db_session, sample_email, sample_member
     ):
+        mocker.patch.dict('app.application.config', {
+            'ENVIRONMENT': 'test',
+            'EMAIL_RESTRICT': None
+        })
+
         member_1 = create_member(name='Test 1', email='test1@example.com')
         member_2 = create_member(name='Test 2', email='test2@example.com')
         create_member(name='Test 2', email='test3@example.com', active=False)
