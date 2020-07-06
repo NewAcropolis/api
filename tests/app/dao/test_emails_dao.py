@@ -16,7 +16,7 @@ from app.dao.emails_dao import (
 from app.errors import InvalidRequest
 from app.models import Email, EmailToMember, ANON_REMINDER, ANNOUNCEMENT, MAGAZINE
 
-from tests.db import create_email, create_email_to_member, create_magazine, create_member
+from tests.db import create_email, create_email_provider, create_email_to_member, create_magazine, create_member
 
 
 class WhenUsingEmailsDAO(object):
@@ -170,7 +170,7 @@ class WhenUsingEmailsDAO(object):
     def it_get_todays_emails_count(self, db_session):
         email_to_member = create_email_to_member()
 
-        assert dao_get_todays_email_count_for_provider(email_to_member.emailed_by) == 1
+        assert dao_get_todays_email_count_for_provider(email_to_member.email_provider_id) == 1
 
     @freeze_time("2020-04-14T20:30:00 BST+0100")
     def it_gets_emails_count_only_for_today_only(self, db, db_session):
@@ -181,17 +181,18 @@ class WhenUsingEmailsDAO(object):
 
         email_to_member = create_email_to_member()
 
-        assert dao_get_todays_email_count_for_provider(email_to_member.emailed_by) == 1
+        assert dao_get_todays_email_count_for_provider(email_to_member.email_provider_id) == 1
 
     @freeze_time("2020-04-14T20:30:00 BST+0100")
     def it_gets_emails_count_only_for_chosen_provider(self, db, db_session):
         email = create_email()
         member = create_member(email='test1@example.com', name='Test1')
-        create_email_to_member(email_id=email.id, member_id=member.id, emailed_by='other')
+        create_email_to_member(email_id=email.id, member_id=member.id)
 
-        email_to_member = create_email_to_member()
+        email_provider = create_email_provider(name='another', pos=2)
+        email_to_member = create_email_to_member(email_provider_id=email_provider.id)
 
-        assert dao_get_todays_email_count_for_provider(email_to_member.emailed_by) == 1
+        assert dao_get_todays_email_count_for_provider(email_to_member.email_provider_id) == 1
 
     @freeze_time("2020-04-14T20:30:00 BST+0100")
     def it_gets_all_emails_count_for_chosen_provider(self, db, db_session):
@@ -201,7 +202,7 @@ class WhenUsingEmailsDAO(object):
 
         email_to_member = create_email_to_member()
 
-        assert dao_get_todays_email_count_for_provider(email_to_member.emailed_by) == 2
+        assert dao_get_todays_email_count_for_provider(email_to_member.email_provider_id) == 2
 
 
 class WhenGettingNearestBimonthlyDate:

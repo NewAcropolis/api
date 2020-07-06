@@ -1,5 +1,6 @@
 from flask import current_app, jsonify, render_template
 import json
+import re
 import requests
 from HTMLParser import HTMLParser
 
@@ -7,9 +8,9 @@ from na_common.dates import get_nice_event_dates
 
 from app.comms.encryption import encrypt
 from app.errors import InvalidRequest
-from app.models import BASIC, EVENT, MAGAZINE, PROVIDER_MG, PROVIDER_SB
+from app.models import BASIC, EVENT, MAGAZINE
 from app.dao.events_dao import dao_get_event_by_id
-from app.dao.emails_dao import dao_get_todays_email_count_for_provider
+from app.dao.emails_dao import dao_get_past_hour_email_count_for_provider, dao_get_todays_email_count_for_provider
 from app.dao.email_providers_dao import dao_get_first_email_provider, dao_get_next_email_provider
 from app.dao.magazines_dao import dao_get_magazine_by_id
 
@@ -58,43 +59,84 @@ def get_email_html(email_type, **kwargs):
         )
 
 
-def get_email_data(data_struct, to, subject, message, _from=None):
+def get_email_data(data_map, to, subject, message, from_email, from_name):
+    data_struct = {}
     if isinstance(to, list):
         to = ','.join(to)
 
-    data_struct = data_struct.replace("<<to>>", to)
-    data_struct = data_struct.replace("<<subject>>", subject)
-    data_struct = data_struct.replace("<<message>>", message.replace("\"", "\\\""))
-    if _from:
-        data_struct = data_struct.replace("<<from>>", _from)
+    def set_data(_map, val):
+        elements = _map.split(",")
 
-    return json.loads(data_struct)
+        if len(elements) == 2:
+            match = re.match(r"\[(?P<list_element>.+)\]", elements[1])
+            if match:
+                data_struct[elements[0]] = []
+
+                for item in val.split(','):
+                    data_struct[elements[0]].append({
+                        match.group('list_element'): item
+                    })
+            else:
+                if data_struct.get(elements[0]):
+                    data_struct[elements[0]][elements[1]] = val
+                else:
+                    data_struct[elements[0]] = {elements[1]: val}
+        else:
+            data_struct[elements[0]] = val
+
+    set_data(data_map['to'], to)
+    set_data(data_map['subject'], subject)
+    set_data(data_map['from'], from_email)
+    if 'from_name' in data_map.keys():
+        set_data(data_map['from_name'], from_name)
+    set_data(data_map['message'], message)
+
+    return data_struct
 
 
-def send_email(to, subject, message, _from=None, override=False):
+def send_email(to, subject, message, from_email=None, from_name=None, override=False):
     if current_app.config['ENVIRONMENT'] != 'live' or current_app.config.get('EMAIL_RESTRICT'):
         message = message.replace('<body>', '<body><div>Test email, intended for {}</div>'.format(to))
         to = current_app.config['TEST_EMAIL']
 
-    if not _from:
-        _from = 'noreply@{}'.format(current_app.config['EMAIL_DOMAIN'])
+    if not from_email:
+        from_email = 'noreply@{}'.format(current_app.config['EMAIL_DOMAIN'])
+    if not from_name:
+        from_name = 'New Acropolis'
 
     email_provider = dao_get_first_email_provider()
 
     if email_provider:
-        if (dao_get_todays_email_count_for_provider(email_provider.name) >
-                email_provider.daily_limit - EMAIL_BUFFER):
+        if (dao_get_past_hour_email_count_for_provider(email_provider.id) > email_provider.hourly_limit or
+            (dao_get_todays_email_count_for_provider(email_provider.id) >
+                email_provider.daily_limit - EMAIL_BUFFER)):
+
+            if (not override and email_provider.hourly_limit > 0 and
+                dao_get_past_hour_email_count_for_provider(email_provider.id) > email_provider.hourly_limit and
+                (dao_get_todays_email_count_for_provider(email_provider.id) <
+                    email_provider.daily_limit - EMAIL_BUFFER)):
+                raise InvalidRequest('Hourly limit reached', 429)
+
             next_email_provider = dao_get_next_email_provider(email_provider.pos)
             email_provider = next_email_provider if next_email_provider else email_provider
 
             if (not email_provider and not override) or ((dao_get_todays_email_count_for_provider(
-                    email_provider.name) > email_provider.daily_limit - EMAIL_BUFFER) and not override):
+                    email_provider.id) > email_provider.daily_limit - EMAIL_BUFFER) and not override):
                 raise InvalidRequest('Daily limit reached', 429)
 
-        data = get_email_data(email_provider.data_struct, to, subject, message, _from)
+        data = get_email_data(email_provider.data_map, to, subject, message, from_email, from_name)
+        data = data if email_provider.as_json else json.dumps(data)
+
+        headers = {
+            'api-key': email_provider.api_key,
+            'accept': 'application/json',
+            'content-type': 'application/json'
+        } if email_provider.headers else None
+
         response = requests.post(
             email_provider.api_url,
             auth=('api', email_provider.api_key),
+            headers=headers,
             data=data,
         )
 
@@ -109,7 +151,8 @@ def send_email(to, subject, message, _from=None, override=False):
     else:
         data = {
             'to': to,
-            'from': _from,
+            'from_email': from_email,
+            'from_name': from_name,
             'subject': subject,
             'message': message
         }

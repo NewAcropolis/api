@@ -20,7 +20,7 @@ from app.dao.venues_dao import dao_create_venue
 from app.models import (
     Article, Email, EmailToMember, EmailProvider, Event, EventDate, EventType, Fee, Magazine, Marketing,
     Member, RejectReason, Speaker, Ticket, User, Venue,
-    EVENT, TICKET_STATUS_UNUSED, DRAFT, PROVIDER_MG
+    EVENT, TICKET_STATUS_UNUSED, DRAFT
 )
 
 
@@ -327,15 +327,18 @@ def create_member(
     return member
 
 
-def create_email_to_member(email_id=None, member_id=None, status_code=200, emailed_by=None, created_at=None):
+def create_email_to_member(email_id=None, member_id=None, status_code=200, email_provider_id=None, created_at=None):
     if not email_id:
         email = create_email()
         email_id = email.id
     if not member_id:
         member = create_member()
         member_id = member.id
-    if not emailed_by:
-        emailed_by = PROVIDER_MG
+    if not email_provider_id:
+        email_provider = EmailProvider.query.first()
+        if not email_provider:
+            email_provider = create_email_provider()
+        email_provider_id = email_provider.id
     if not created_at:
         created_at = datetime.now()
 
@@ -344,7 +347,7 @@ def create_email_to_member(email_id=None, member_id=None, status_code=200, email
         'email_id': email_id,
         'member_id': member_id,
         'status_code': status_code,
-        'emailed_by': emailed_by
+        'email_provider_id': email_provider_id
     }
 
     member_to_email = EmailToMember(**data)
@@ -409,21 +412,28 @@ def create_ticket(
     return ticket
 
 
+DATA_MAP = {
+    "from": "from",
+    "to": "to",
+    "subject": "subject",
+    "message": "text"
+}
+
+
 def create_email_provider(
-    name='Test Email Provider', daily_limit=25, api_key='apikey', api_url='http://alt-api-url.com', pos=1,
-    data_struct={
-        "from": "<<from>>",
-        "to": "<<to>>",
-        "subject": "<<subject>>",
-        "message": "<<message>>"
-    }
+    name='Test Email Provider', daily_limit=25, hourly_limit=5,
+    api_key='apikey', api_url='http://alt-api-url.com', pos=1,
+    headers=True, as_json=False, data_map=DATA_MAP
 ):
     data = {
         'name': name,
         'daily_limit': daily_limit,
+        'hourly_limit': hourly_limit,
         'api_key': api_key,
         'api_url': api_url,
-        'data_struct': json.dumps(data_struct),
+        'data_map': json.dumps(data_map),
+        'headers': headers,
+        'as_json': as_json,
         'pos': pos,
     }
 

@@ -1,16 +1,24 @@
+import json
+
 from app import db
 from app.dao.decorators import transactional
+from app.dao.emails_dao import dao_get_past_hour_email_count_for_provider, dao_get_todays_email_count_for_provider
 from app.models import EmailProvider
 
 
 @transactional
 def dao_create_email_provider(email_provider):
+    email_provider.data_map = json.loads(email_provider.data_map)
+
     db.session.add(email_provider)
 
 
 @transactional
 def dao_update_email_provider(email_provider_id, **kwargs):
     email_provider_query = EmailProvider.query.filter_by(id=email_provider_id)
+    if kwargs.get("data_map"):
+        kwargs["data_map"] = json.loads(kwargs["data_map"])
+
     return email_provider_query.update(kwargs)
 
 
