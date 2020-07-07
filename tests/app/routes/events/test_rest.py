@@ -11,7 +11,7 @@ from app.errors import PaypalException
 from app.models import Event, EventDate, RejectReason, APPROVED, DRAFT, READY, REJECTED
 
 from tests.conftest import create_authorization_header, TEST_ADMIN_USER
-from tests.db import create_event, create_event_date, create_event_type, create_speaker
+from tests.db import create_event, create_event_date, create_event_type, create_speaker, DATA_MAP
 
 base64img = (
     'iVBORw0KGgoAAAANSUhEUgAAADgAAAAsCAYAAAAwwXuTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEMElEQVRoge2ZTUxcVRTH'
@@ -890,19 +890,21 @@ class WhenPostingUpdatingAnEvent:
         assert len(event_dates) == 1
         # use existing event date
         assert event_dates[0].id != old_event_date_id
-        self.mock_send_email.assert_called_with(
-            sample_email_provider.api_url,
-            auth=('api', sample_email_provider.api_key),
-            data={
-                'to': TEST_ADMIN_USER,
-                'message': 'Please review this event for publishing <a href="{}/events/{}">{}</a>'.format(
-                    self.mock_config['FRONTEND_ADMIN_URL'],
-                    sample_req_event_data_with_event['event'].id,
-                    sample_req_event_data_with_event['event'].title),
-                'from': 'noreply@{}'.format(self.mock_config['EMAIL_DOMAIN']),
-                'subject': '{} is ready for review'.format(sample_req_event_data_with_event['event'].title)
-            }
-        )
+        args, kwargs = self.mock_send_email.call_args
+        assert args[0] == sample_email_provider.api_url
+        assert kwargs['auth'] == ('api', sample_email_provider.api_key)
+        assert kwargs['headers'] == {
+            'accept': 'application/json', 'api-key': u'sample-api-key', 'content-type': 'application/json'
+        }
+        assert json.loads(kwargs['data']) == {
+            DATA_MAP['to']: TEST_ADMIN_USER,
+            DATA_MAP['message']: 'Please review this event for publishing <a href="{}/events/{}">{}</a>'.format(
+                self.mock_config['FRONTEND_ADMIN_URL'],
+                sample_req_event_data_with_event['event'].id,
+                sample_req_event_data_with_event['event'].title),
+            DATA_MAP['from']: 'noreply@{}'.format(self.mock_config['EMAIL_DOMAIN']),
+            DATA_MAP['subject']: '{} is ready for review'.format(sample_req_event_data_with_event['event'].title)
+        }
 
     def it_rejects_invalid_event_states(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_paypal
@@ -979,22 +981,26 @@ class WhenPostingUpdatingAnEvent:
         assert reject_reasons[0].reason == data['reject_reasons'][0]['reason']
         assert reject_reasons[0].resolved == data['reject_reasons'][0]['resolved']
         assert str(reject_reasons[0].created_by) == data['reject_reasons'][0]['created_by']
-        self.mock_send_email.assert_called_with(
-            sample_email_provider.api_url,
-            auth=('api', sample_email_provider.api_key),
-            data={
-                'to': sample_user.email,
-                'message': '<div>Please correct this event <a href="{admin_url}/events/{event_id}">'
-                           '{event_title}</a></div><ol><li>{reject_reason}</li></ol>'.format(
-                               admin_url=self.mock_config['FRONTEND_ADMIN_URL'],
-                               event_id=sample_req_event_data_with_event['event'].id,
-                               event_title=sample_req_event_data_with_event['event'].title,
-                               reject_reason=data['reject_reasons'][0]['reason']
-                           ),
-                'from': 'noreply@{}'.format(self.mock_config['EMAIL_DOMAIN']),
-                'subject': '{} event needs to be corrected'.format(sample_req_event_data_with_event['event'].title)
-            }
-        )
+
+        args, kwargs = self.mock_send_email.call_args
+        assert args[0] == sample_email_provider.api_url
+        assert kwargs['auth'] == ('api', sample_email_provider.api_key)
+        assert kwargs['headers'] == {
+            'accept': 'application/json', 'api-key': u'sample-api-key', 'content-type': 'application/json'
+        }
+        assert json.loads(kwargs['data']) == {
+            DATA_MAP['to']: sample_user.email,
+            DATA_MAP['message']: '<div>Please correct this event <a href="{admin_url}/events/{event_id}">'
+            '{event_title}</a></div><ol><li>{reject_reason}</li></ol>'.format(
+                admin_url=self.mock_config['FRONTEND_ADMIN_URL'],
+                event_id=sample_req_event_data_with_event['event'].id,
+                event_title=sample_req_event_data_with_event['event'].title,
+                reject_reason=data['reject_reasons'][0]['reason']
+            ),
+            DATA_MAP['from']: 'noreply@{}'.format(self.mock_config['EMAIL_DOMAIN']),
+            DATA_MAP['subject']: '{} event needs to be corrected'.format(
+                sample_req_event_data_with_event['event'].title)
+        }
 
     def it_updates_an_event_to_reject_resolved(
         self, mocker, client, db_session,

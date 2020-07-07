@@ -9,11 +9,11 @@ from tests.conftest import create_authorization_header
 class WhenPostingEmailProvider(object):
 
     def it_creates_an_email_provider(self, client, db_session):
-        data_struct = {
-            "to": "<<to>>",
-            "to": "<<to>>",
-            "subject": "<<subject>>",
-            "message": "<<message>>"
+        data_map = {
+            "to": "to",
+            "from": "from",
+            "subject": "subject",
+            "message": "message"
         }
 
         data = {
@@ -21,7 +21,7 @@ class WhenPostingEmailProvider(object):
             "daily_limit": 100,
             "api_key": "api-key",
             "api_url": "http://api-url.com",
-            "data_struct": json.dumps(data_struct),
+            "data_map": json.dumps(data_map),
             "pos": 0,
         }
         response = client.post(
@@ -33,14 +33,25 @@ class WhenPostingEmailProvider(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         for key in data.keys():
-            assert data[key] == json_resp[key]
+            if key == 'data_map':
+                assert json.loads(data[key]) == json_resp[key]
+            else:
+                assert data[key] == json_resp[key]
 
     def it_updates_an_email_provider_on_valid_post_data(self, client, db_session, sample_email_provider):
+        data_map = {
+            "to": "to",
+            "from": "from",
+            "subject": "subject",
+            "message": "text"
+        }
+
         data = {
             "daily_limit": 200,
             "api_key": "new-api-key",
             "api_url": "http://new-api-url.com",
             "pos": 1,
+            "data_map": json.dumps(data_map),
         }
         response = client.post(
             url_for('email_provider.update_email_provider', email_provider_id=sample_email_provider.id),
@@ -51,4 +62,7 @@ class WhenPostingEmailProvider(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         for key in data.keys():
-            assert data[key] == json_resp[key]
+            if key == 'data_map':
+                assert json.loads(data[key]) == json_resp[key]
+            else:
+                assert data[key] == json_resp[key]

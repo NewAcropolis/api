@@ -518,6 +518,46 @@ function CreateEmail {
     -d "$email"
 }
 
+email_provider=$(cat  << EOF
+    {
+        "name": "$EMAIL_PROVIDER_NAME",
+        "daily_limit": $EMAIL_PROVIDER_DAILY_LIMIT,
+        "hourly_limit": $EMAIL_PROVIDER_HOURLY_LIMIT,
+        "api_key": "$EMAIL_PROVIDER_API_KEY",
+        "api_url": "$EMAIL_PROVIDER_API_URL",
+        "data_map": "$EMAIL_PROVIDER_DATA_MAP",
+        "pos": $EMAIL_PROVIDER_POS,
+        "headers": $EMAIL_PROVIDER_HEADERS,
+        "as_json": $EMAIL_PROVIDER_AS_JSON
+    }
+EOF
+)
+
+update_email_provider=$(cat  << EOF
+    {
+        "pos": $EMAIL_PROVIDER_POS
+    }
+EOF
+)
+
+function CreateEmailProvider {
+    echo "*** Create email provider ***"
+
+    curl -X POST $api_server'/email_provider' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$email_provider"
+}
+
+function UpdateEmailProvider {
+    echo "*** Update email provider ***"
+
+    curl -X POST $api_server"/email_provider/$EMAIL_PROVIDER_ID" \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$update_email_provider"
+}
+
 function UpdateEmailToReady {
     echo "*** Update email to ready ***"
 
@@ -786,6 +826,14 @@ case "$arg" in
 
         -uema)
             UpdateEmailToApproved
+        ;;
+
+        -cep)
+            CreateEmailProvider
+        ;;
+
+        -uep)
+            UpdateEmailProvider
         ;;
 
         -setup)

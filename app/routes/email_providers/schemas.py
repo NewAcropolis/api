@@ -7,10 +7,10 @@ post_create_email_provider_schema = {
         "daily_limit": {"type": "integer"},
         "api_key": {"type": "string"},
         "api_url": {"type": "string"},
-        "data_struct": {"type": "string"},
+        "data_map": {"type": "string"},
         "pos": {"type": "integer"},
     },
-    "required": ["name", "daily_limit", "api_key", "api_url", "data_struct", "pos"]
+    "required": ["name", "daily_limit", "api_key", "api_url", "data_map", "pos"]
 }
 
 
@@ -23,7 +23,7 @@ post_update_email_provider_schema = {
         "daily_limit": {"type": "integer"},
         "api_key": {"type": "string"},
         "api_url": {"type": "string"},
-        "data_struct": {"type": "string"},
+        "data_map": {"type": "string"},
         "pos": {"type": "integer"},
     },
 }

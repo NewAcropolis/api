@@ -70,7 +70,7 @@ def dao_update_email(email_id, **kwargs):
 
 
 @transactional
-def dao_add_member_sent_to_email(email_id, member_id, status_code=200, emailed_by=None, created_at=None):
+def dao_add_member_sent_to_email(email_id, member_id, status_code=200, email_provider_id=None, created_at=None):
     if not created_at:
         created_at = datetime.strftime(datetime.now(), "%Y-%m-%d")
 
@@ -85,7 +85,7 @@ def dao_add_member_sent_to_email(email_id, member_id, status_code=200, emailed_b
     email_to_member = EmailToMember.query.filter_by(email_id=email.id, member_id=member.id).first()
     email_to_member.created_at = created_at
     email_to_member.status_code = status_code
-    email_to_member.emailed_by = emailed_by
+    email_to_member.email_provider_id = email_provider_id
 
 
 @transactional
@@ -149,12 +149,23 @@ def dao_get_approved_emails_for_sending():
     ).all()
 
 
-def dao_get_todays_email_count_for_provider(provider):
+def dao_get_todays_email_count_for_provider(email_provider_id):
     now = datetime.now(timezone('Europe/London'))
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     return EmailToMember.query.filter(
         EmailToMember.created_at > today,
         EmailToMember.created_at < today + timedelta(days=1),
-        EmailToMember.emailed_by == provider
+        EmailToMember.email_provider_id == email_provider_id
+    ).count()
+
+
+def dao_get_past_hour_email_count_for_provider(email_provider_id):
+    now = datetime.now(timezone('Europe/London'))
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    return EmailToMember.query.filter(
+        EmailToMember.created_at > today,
+        EmailToMember.created_at < today + timedelta(hours=1),
+        EmailToMember.email_provider_id == email_provider_id
     ).count()
