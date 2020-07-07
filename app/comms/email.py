@@ -15,7 +15,44 @@ from app.dao.email_providers_dao import dao_get_first_email_provider, dao_get_ne
 from app.dao.magazines_dao import dao_get_magazine_by_id
 
 h = HTMLParser()
-EMAIL_BUFFER = 5
+
+
+def get_email_provider(override=False, email_provider=None):
+    if not email_provider:
+        email_provider = dao_get_first_email_provider()
+        if not email_provider:
+            return None
+
+    daily_email_count = dao_get_todays_email_count_for_provider(email_provider.id)
+    hourly_email_count = 0
+
+    if email_provider.hourly_limit > 0:
+        hourly_email_count = dao_get_past_hour_email_count_for_provider(email_provider.id)
+
+    if daily_email_count > email_provider.daily_limit:
+        if override:
+            next_email_provider = dao_get_next_email_provider(email_provider.pos)
+
+            if next_email_provider:
+                return get_email_provider(override, next_email_provider)
+        else:
+            email_provider.limit = 0
+            email_provider.daily_limit_reached = True
+        return email_provider
+
+    if hourly_email_count > email_provider.hourly_limit:
+        if override:
+            next_email_provider = dao_get_next_email_provider(email_provider.pos)
+            if next_email_provider:
+                return get_email_provider(override, next_email_provider)
+        email_provider.limit = 0
+        email_provider.hourly_limit_reached = True
+
+    if email_provider.hourly_limit > 0:
+        email_provider.limit = email_provider.hourly_limit - hourly_email_count
+
+    email_provider.limit = email_provider.daily_limit - daily_email_count
+    return email_provider
 
 
 def get_email_html(email_type, **kwargs):
@@ -104,25 +141,13 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
     if not from_name:
         from_name = 'New Acropolis'
 
-    email_provider = dao_get_first_email_provider()
+    email_provider = get_email_provider(override)
 
     if email_provider:
-        if (dao_get_past_hour_email_count_for_provider(email_provider.id) > email_provider.hourly_limit or
-            (dao_get_todays_email_count_for_provider(email_provider.id) >
-                email_provider.daily_limit - EMAIL_BUFFER)):
-
-            if (not override and email_provider.hourly_limit > 0 and
-                dao_get_past_hour_email_count_for_provider(email_provider.id) > email_provider.hourly_limit and
-                (dao_get_todays_email_count_for_provider(email_provider.id) <
-                    email_provider.daily_limit - EMAIL_BUFFER)):
-                raise InvalidRequest('Hourly limit reached', 429)
-
-            next_email_provider = dao_get_next_email_provider(email_provider.pos)
-            email_provider = next_email_provider if next_email_provider else email_provider
-
-            if (not email_provider and not override) or ((dao_get_todays_email_count_for_provider(
-                    email_provider.id) > email_provider.daily_limit - EMAIL_BUFFER) and not override):
-                raise InvalidRequest('Daily limit reached', 429)
+        if hasattr(email_provider, "hourly_limit_reached"):
+            raise InvalidRequest('Hourly limit reached', 429)
+        elif hasattr(email_provider, "daily_limit_reached"):
+            raise InvalidRequest('Daily limit reached', 429)
 
         data = get_email_data(email_provider.data_map, to, subject, message, from_email, from_name)
         data = data if email_provider.as_json else json.dumps(data)

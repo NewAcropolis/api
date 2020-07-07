@@ -1,12 +1,14 @@
 from bs4 import BeautifulSoup
 from flask import current_app
 from freezegun import freeze_time
+import pytest
 
 from app.na_celery.email_tasks import send_emails, send_periodic_emails
 from app.comms.encryption import decrypt, get_tokens
+from app.errors import InvalidRequest
 from app.models import APPROVED
 
-from tests.db import create_email, create_member, create_email_to_member
+from tests.db import create_email, create_member, create_email_to_member, create_email_provider
 
 
 class WhenProcessingSendEmailsTask:
@@ -109,8 +111,48 @@ class WhenProcessingSendEmailsTask:
         assert mock_send_emails.call_count == 1
         assert mock_send_emails.call_args_list[0][0][0] == approved_email.id
 
-    def it_sends_an_email_to_members_up_to_email_limit(self):
-        pass
+    def it_sends_an_email_to_members_up_to_email_limit(self, mocker, db_session, sample_email, sample_member):
+        mocker.patch.dict('app.application.config', {
+            'ENVIRONMENT': 'live',
+            'EMAIL_RESTRICT': None
+        })
+        create_email_provider(daily_limit=2)
+
+        member_1 = create_member(name='Test 1', email='test1@example.com')
+        create_member(name='Test 2', email='test2@example.com')
+
+        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+        send_emails(sample_email.id)
+
+        assert mock_send_email.call_count == 2
+        assert mock_send_email.call_args_list[0][0][0] == sample_member.email
+        assert mock_send_email.call_args_list[1][0][0] == member_1.email
+        assert sample_email.serialize()['emails_sent_counts'] == {
+            'success': 2,
+            'failed': 0,
+            'total_active_members': 3
+        }
+
+    def it_logs_429_status_code_response(self, mocker, db_session, sample_email, sample_member):
+        mocker.patch(
+            'app.na_celery.email_tasks.send_email',
+            side_effect=InvalidRequest('Daily limit reached', 429)
+        )
+        mock_logger_error = mocker.patch('app.na_celery.email_tasks.current_app.logger.error')
+        send_emails(sample_email.id)
+        assert mock_logger_error.called
+        args = mock_logger_error.call_args[0]
+        assert args[0] == 'Email limit reached: %r'
+        assert args[1] == 'Daily limit reached'
+
+    def it_reraises_if_not_429_status_code_response(self, mocker, db_session, sample_email, sample_member):
+        mocker.patch(
+            'app.na_celery.email_tasks.send_email',
+            side_effect=InvalidRequest('Unknown', 400)
+        )
+
+        with pytest.raises(InvalidRequest):
+            send_emails(sample_email.id)
 
     def it_does_not_send_an_email_if_not_between_start_and_expiry(self):
         pass

@@ -6,7 +6,7 @@ from urllib import urlencode
 
 from tests.conftest import TEST_DATABASE_URI
 from app.comms.email import get_email_html, send_email, get_email_data
-from app.dao.email_providers_dao import dao_update_email_provider
+from app.dao.email_providers_dao import dao_update_email_provider, dao_get_email_provider_by_id
 from tests.db import create_email_provider
 from app.errors import InvalidRequest
 from app.models import MAGAZINE, EmailProvider, Email
@@ -29,6 +29,14 @@ def mock_config_restricted(app):
     yield
 
     app.config = old_config
+
+
+def mock_get_email_count_for_provider_over_first_limit(email_provider_id):
+    email_provider = dao_get_email_provider_by_id(email_provider_id)
+    if email_provider.pos == 0:
+        return email_provider.daily_limit + 1
+    else:
+        return 0
 
 
 class WhenSendingAnEmail:
@@ -93,13 +101,13 @@ class WhenSendingAnEmail:
         with pytest.raises(expected_exception=InvalidRequest):
             send_email('someone@example.com', 'test subject', 'test message')
 
-    def it_uses_the_next_email_provider_if_available(self, mocker, db_session, sample_email_provider):
+    def it_uses_the_next_email_provider_if_available_with_override(self, mocker, db_session, sample_email_provider):
         mocker.patch('app.comms.email.dao_get_todays_email_count_for_provider', return_value=30)
         next_email_provider = create_email_provider(name='Next email provider', daily_limit=100)
 
         with requests_mock.mock() as r:
             r.post(next_email_provider.api_url, text='OK')
-            resp = send_email('someone@example.com', 'test subject', 'test message')
+            resp = send_email('someone@example.com', 'test subject', 'test message', override=True)
 
             assert resp == 200
 
@@ -118,15 +126,23 @@ class WhenSendingAnEmail:
             assert resp == 200
 
     def it_sends_the_email_with_override_for_hourly_limit_reached(self, mocker, db_session, sample_email_provider):
-        mocker.patch('app.comms.email.dao_get_past_hour_email_count_for_provider', return_value=30)
+        mocker.patch(
+            'app.comms.email.dao_get_past_hour_email_count_for_provider',
+            mock_get_email_count_for_provider_over_first_limit
+        )
+
+        next_provider = create_email_provider(name='next provider', pos=2)
         with requests_mock.mock() as r:
-            r.post(sample_email_provider.api_url, text='OK')
+            r.post(next_provider.api_url, text='OK')
             resp = send_email('someone@example.com', 'test subject', 'test message', override=True)
 
             assert resp == 200
 
     def it_sends_the_email_using_next_provider_with_override(self, mocker, db_session, sample_email_provider):
-        mocker.patch('app.comms.email.dao_get_todays_email_count_for_provider', return_value=30)
+        mocker.patch(
+            'app.comms.email.dao_get_todays_email_count_for_provider',
+            mock_get_email_count_for_provider_over_first_limit
+        )
         next_email_provider = create_email_provider(name='Next email provider', daily_limit=30)
         with requests_mock.mock() as r:
             r.post(next_email_provider.api_url, text='OK')
