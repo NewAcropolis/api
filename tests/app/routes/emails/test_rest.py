@@ -233,9 +233,9 @@ class WhenPostingImportingEmails:
             assert str(json_emails[i]['old_event_id']) == sample_old_emails[i + offset]['eventid']
             assert json_emails[i]['replace_all'] == (
                 True if sample_old_emails[i + offset]['replaceAll'] == 'y' else False)
-        json_errors = json_resp['errors']
-        assert json_errors == ['event not found: {}'.format(
-            {k.decode('utf8'): v.decode('utf8') for k, v in sample_old_emails[1].items()})]
+        json_errors = json.loads(json_resp['errors'][0][len('event not found: '):].replace('\'', '"'))
+        assert json_resp['errors'][0].startswith('event not found: ')
+        assert json_errors == sample_old_emails[1]
 
 
 class WhenPreviewingEmails:

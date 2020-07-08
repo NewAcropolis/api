@@ -2,7 +2,7 @@ from flask import current_app, jsonify, render_template
 import json
 import re
 import requests
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
 from na_common.dates import get_nice_event_dates
 

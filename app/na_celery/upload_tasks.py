@@ -58,4 +58,4 @@ def upload_magazine(magazine_id, pdf_data):
         if response != 200:
             current_app.logger.error('Error sending review email {}, for {}'.format(email.id, magazine.id))
     except Exception as e:
-        current_app.logger.error('Task error uploading magazine: {}'.format(e.message))
+        current_app.logger.error('Task error uploading magazine: {}'.format(str(e)))

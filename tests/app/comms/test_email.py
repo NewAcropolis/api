@@ -2,7 +2,7 @@ from mock import call
 import json
 import pytest
 import requests_mock
-from urllib import urlencode
+from urllib.parse import urlencode
 
 from tests.conftest import TEST_DATABASE_URI
 from app.comms.email import get_email_html, send_email, get_email_data
@@ -49,8 +49,8 @@ class WhenSendingAnEmail:
 
         assert mock_logger.call_args == call(
             "No email providers configured, email would have sent: {'to': 'test@example.com', "
-            "'message': 'test message', 'from_name': 'New Acropolis', 'subject': 'test subject', "
-            "'from_email': 'noreply@example.com'}")
+            "'from_email': 'noreply@example.com', 'from_name': 'New Acropolis', 'subject': 'test subject', "
+            "'message': 'test message'}")
 
     def it_logs_the_email_if_no_email_config_and_sets_real_email_in_live(
         self, app, db_session, mocker, mock_config_live
@@ -60,8 +60,8 @@ class WhenSendingAnEmail:
 
         assert mock_logger.call_args == call(
             "No email providers configured, email would have sent: {'to': 'someone@example.com', "
-            "'message': 'test message', 'from_name': 'New Acropolis', 'subject': 'test subject', "
-            "'from_email': 'noreply@example.com'}")
+            "'from_email': 'noreply@example.com', 'from_name': 'New Acropolis', 'subject': 'test subject', "
+            "'message': 'test message'}")
 
     def it_sends_email_to_test_email_if_email_restricted(self, mocker, db_session, mock_config_restricted):
         mock_logger = mocker.patch('app.comms.email.current_app.logger.info')
@@ -70,8 +70,8 @@ class WhenSendingAnEmail:
 
         assert mock_logger.call_args == call(
             "No email providers configured, email would have sent: {'to': 'test@example.com', "
-            "'message': 'test message', 'from_name': 'New Acropolis', 'subject': 'test subject', "
-            "'from_email': 'noreply@example.com'}")
+            "'from_email': 'noreply@example.com', 'from_name': 'New Acropolis', 'subject': 'test subject', "
+            "'message': 'test message'}")
 
     def it_sends_email_to_provider(self, mocker, db_session, sample_email_provider):
         with requests_mock.mock() as r:

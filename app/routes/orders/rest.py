@@ -3,7 +3,7 @@ import json
 import io
 import pyqrcode
 import sys
-from urllib import unquote
+from urllib.parse import unquote
 import requests
 from datetime import datetime
 from flask import (

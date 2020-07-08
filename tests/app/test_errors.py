@@ -41,7 +41,7 @@ class WhenAnErrorOccurs(object):
 
         @error_blueprint.route('/token-not-found')
         def token_not_found():
-            raise TokenNotFound()
+            raise TokenNotFound("Token not found")
 
         @error_blueprint.route('/revoked-token')
         def revoked_token():

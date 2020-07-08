@@ -8,11 +8,11 @@ from flask import (
     render_template,
     request
 )
-import urlparse
+from urllib.parse import unquote
 
 from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
 from app.na_celery import email_tasks, revoke_task
 from app.comms.email import get_email_html, send_email
@@ -49,7 +49,7 @@ register_errors(emails_blueprint)
 
 @emails_blueprint.route('/email/preview', methods=['GET'])
 def email_preview():
-    data = json.loads(urlparse.unquote(request.args.get('data')))
+    data = json.loads(unquote(request.args.get('data')))
 
     validate(data, post_preview_email_schema)
 

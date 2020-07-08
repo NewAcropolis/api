@@ -412,6 +412,7 @@ def extract_speakers():
     for item in data:
         speakers.append(item['Speaker'])
 
+    # python 3 update code?
     sorted_speakers = [{"name": s} for s in sorted(set(speakers))]
 
     return jsonify(sorted_speakers), 200

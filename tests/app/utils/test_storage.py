@@ -288,7 +288,7 @@ class WhenUsingStorage:
         store = Storage('test-store')
 
         # expected upload is pdf first page preview, thumbnail then finally pdf upload
-        with open(os.path.join('tests', 'test_files', 'simple.pdf')) as f:
+        with open(os.path.join('tests', 'test_files', 'simple.pdf'), "rb") as f:
             pdf = f.read()
             store.upload_blob_from_base64string(
                 'simple.pdf', 'simple.pdf', base64.b64encode(pdf), content_type='application/pdf')
@@ -298,7 +298,7 @@ class WhenUsingStorage:
 
         # to compare the preview image extracted from the PDF use average hash rather than checking the binary
         # as faster, binary can be different even though the output is same
-        with open(os.path.join('tests', 'test_files', 'simple.pdf.png')) as f:
+        with open(os.path.join('tests', 'test_files', 'simple.pdf.png'), "rb") as f:
             expected_image = Image.open(f)
             expected_hash = imagehash.average_hash(expected_image)
 

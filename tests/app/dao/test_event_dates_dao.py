@@ -68,8 +68,8 @@ class WhenUsingEventDatesDAO(object):
         event_dates_from_db = EventDate.query.all()
         event_dates_from_db_json = [e.serialize() for e in event_dates_from_db]
 
-        assert sorted([e.values() for e in event_dates_json]) == \
-            sorted([e.values() for e in event_dates_from_db_json])
+        assert sorted(event_dates_json, key=lambda e: e['id']) == \
+            sorted(event_dates_from_db_json, key=lambda e: e['id'])
 
     def it_gets_an_event_date(self, db, db_session, sample_event_date):
         event_date = dao_get_event_date_by_id(str(sample_event_date.id))

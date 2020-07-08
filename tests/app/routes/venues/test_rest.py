@@ -57,13 +57,14 @@ class WhenPostingVenues(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert len(json_resp) == len(data)
-        assert sorted(data) == sorted([
+        # python 3 udpate code?
+        assert sorted(data, key=lambda k: k['name']) == sorted([
             {
                 'name': j['name'],
                 'address': j['address'],
                 'directions': j['directions'],
                 'default': j['default']
-            } for j in json_resp])
+            } for j in json_resp], key=lambda k: k['name'])
 
     def it_creates_venues_for_imported_venues(self, client, db_session):
         data = [

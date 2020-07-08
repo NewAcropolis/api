@@ -2,7 +2,7 @@
 
 argh==0.26.2
 flake8==3.6.0
-freezegun==0.3.9
+freezegun==0.3.15
 mock==2.0.0
 pycodestyle==2.4.0
 pytest==3.5

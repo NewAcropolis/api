@@ -1,5 +1,5 @@
 import threading
-from Queue import Queue
+from queue import Queue
 from celery.task.control import inspect
 from flask import Blueprint, jsonify, current_app
 
