@@ -110,7 +110,7 @@ sudo systemctl restart na-api.service
 
 cd www-live
 set -a
-. ./venv/bin/activate && . ./na-api.env && ./scripts/run_celery.sh live $celery_output_params
+. ./env/bin/activate && . ./na-api.env && ./scripts/run_celery.sh live $celery_output_params
 set +a
         """
     else

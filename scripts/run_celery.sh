@@ -13,9 +13,9 @@ else
     FLOWER_PORT=5555
 fi
 
-if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
-  echo 'activate venv for celery'
-  source ./venv/bin/activate
+if [ -z "$VIRTUAL_ENV" ] && [ -d env ]; then
+  echo 'activate env for celery'
+  source ./env/bin/activate
 fi
 
 logoutput=" >>/var/log/na-api/celery-$ENV.log 2>&1 &"
