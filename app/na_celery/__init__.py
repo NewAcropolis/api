@@ -13,7 +13,7 @@ class NewAcropolisCelery(Celery):  # pragma: no cover
             app.logger.info('Celery broker URL not set')
             return
 
-        super(NewAcropolisCelery, self).__init__(
+        super().__init__(
             app.import_name,
             broker=app.config['CELERY_BROKER_URL'],
         )

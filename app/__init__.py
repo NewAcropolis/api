@@ -178,4 +178,4 @@ class LogTruncatingFormatter(logging.Formatter):
         START_LOG = '127.0.0.1 - - ['
         if 'msg' in dir(record) and record.msg[:15] == START_LOG:
             record.msg = record.msg[42:]
-        return super(LogTruncatingFormatter, self).format(record)
+        return super().format(record)

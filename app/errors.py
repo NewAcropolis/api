@@ -26,7 +26,7 @@ class InvalidRequest(Exception):
     fields = []
 
     def __init__(self, message, status_code):
-        super(InvalidRequest, self).__init__()
+        super()
         self.message = message
         self.status_code = status_code
 
