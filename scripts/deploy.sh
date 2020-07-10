@@ -21,6 +21,11 @@ else
         GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_live"
         deploy_host="$deploy_host_live"
         user="$user_live"
+    elif [ $environment = 'development' ]; then
+        echo $TRAVIS_KEY_development | base64 --decode > travis_rsa
+        GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_development"
+        deploy_host="$deploy_host_development"
+        user="$user_development"
     else
         echo $TRAVIS_KEY_preview | base64 --decode > travis_rsa
     fi
@@ -69,9 +74,9 @@ if [ $port != 'No environment' ]; then
     eval "RESTART_CELERY=\$RESTART_CELERY"
     
     echo starting app $environment on port $port
-    if [ $environment = 'live' ]; then
+    if [ $environment = 'live' -o $environment = 'development' ]; then
         ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
-cat >/home/$user/www-live/na-api.env << \EOL
+cat >/home/$user/www-$environment/na-api.env << \EOL
 ENVIRONMENT=$environment
 DATABASE_URL_$environment=$DATABASE_URL_ENV
 ADMIN_CLIENT_ID=$ADMIN_CLIENT_ID
@@ -108,9 +113,9 @@ EOL
 sudo systemctl daemon-reload
 sudo systemctl restart na-api.service
 
-cd www-live
+cd www-$environment
 set -a
-. ./env/bin/activate && . ./na-api.env && ./scripts/run_celery.sh live $celery_output_params
+. ./env/bin/activate && . ./na-api.env && ./scripts/run_celery.sh $environment $celery_output_params
 set +a
         """
     else
