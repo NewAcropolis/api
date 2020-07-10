@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ ! -d "env" ]; then
-    python3 -m venv env
+    virtualenv -p python3 env
 fi
 
 if [ -z "$VIRTUAL_ENV" ] && [ -d env ]; then
