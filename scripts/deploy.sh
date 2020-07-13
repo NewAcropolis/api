@@ -17,18 +17,28 @@ else
     src="$TRAVIS_BUILD_DIR"
 
     if [ $environment = 'live' ]; then
-        echo $TRAVIS_KEY_live | base64 --decode > travis_rsa
+        # echo $TRAVIS_KEY_live | base64 --decode > travis_rsa
         GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_live"
-        deploy_host="$deploy_host_live"
-        user="$user_live"
-    elif [ $environment = 'development' ]; then
-        echo $TRAVIS_KEY_development | base64 --decode > travis_rsa
-        GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_development"
-        deploy_host="$deploy_host_development"
-        user="$user_development"
-    else
-        echo $TRAVIS_KEY_preview | base64 --decode > travis_rsa
+        # deploy_host="$deploy_host_live"
+        # user="$user_live"
+    # elif [ $environment = 'development' ]; then
+        # echo $TRAVIS_KEY_development | base64 --decode > travis_rsa
+        # GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_development"
+        # deploy_host="$deploy_host_development"
+        # user="$user_development"
+    # elif [ $environment = 'preview' ]; then
+    #     echo $TRAVIS_KEY_preview | base64 --decode > travis_rsa
+    #     GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_preview"
+    #     deploy_host="$deploy_host_preview"
+    #     user="$user_preview"
     fi
+
+    eval "TRAVIS_KEY=\${TRAVIS_KEY_$environment}"
+    eval "deploy_host=\${deploy_host_$environment}"
+    eval "user=\${user_$environment}"
+
+    echo $TRAVIS_KEY | base64 --decode > travis_rsa
+
     eval "$(ssh-agent)"
     chmod 600 travis_rsa
     ssh-add travis_rsa
@@ -74,7 +84,7 @@ if [ $port != 'No environment' ]; then
     eval "RESTART_CELERY=\$RESTART_CELERY"
     
     echo starting app $environment on port $port
-    if [ $environment = 'live' -o $environment = 'development' ]; then
+    if [ $environment = 'live' -o $environment = 'development' -o $environment = 'preview' ]; then
         ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
 cat >/home/$user/www-$environment/na-api.env << \EOL
 ENVIRONMENT=$environment
