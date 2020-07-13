@@ -17,20 +17,7 @@ else
     src="$TRAVIS_BUILD_DIR"
 
     if [ $environment = 'live' ]; then
-        # echo $TRAVIS_KEY_live | base64 --decode > travis_rsa
         GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_live"
-        # deploy_host="$deploy_host_live"
-        # user="$user_live"
-    # elif [ $environment = 'development' ]; then
-        # echo $TRAVIS_KEY_development | base64 --decode > travis_rsa
-        # GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_development"
-        # deploy_host="$deploy_host_development"
-        # user="$user_development"
-    # elif [ $environment = 'preview' ]; then
-    #     echo $TRAVIS_KEY_preview | base64 --decode > travis_rsa
-    #     GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_preview"
-    #     deploy_host="$deploy_host_preview"
-    #     user="$user_preview"
     fi
 
     eval "TRAVIS_KEY=\${TRAVIS_KEY_$environment}"
@@ -84,7 +71,7 @@ if [ $port != 'No environment' ]; then
     eval "RESTART_CELERY=\$RESTART_CELERY"
     
     echo starting app $environment on port $port
-    if [ $environment = 'live' -o $environment = 'development' -o $environment = 'preview' ]; then
+    if [ $environment = 'live' -o $environment = 'preview' ]; then
         ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
 cat >/home/$user/www-$environment/na-api.env << \EOL
 ENVIRONMENT=$environment
@@ -157,15 +144,10 @@ set +a
         export API_BASE_URL=$API_BASE_URL
         export FRONTEND_URL=$FRONTEND_URL
         export IMAGES_URL=$IMAGES_URL
-        # export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
         export TRAVIS_COMMIT=$TRAVIS_COMMIT
         export CELERY_BROKER_URL=$CELERY_BROKER_URL
         export RESTART_FLOWER=$RESTART_FLOWER
         export RESTART_CELERY=$RESTART_CELERY
-
-        # if [ ! -z $GOOGLE_AUTH_USER ]; then
-        #     gcloud auth activate-service-account $GOOGLE_AUTH_USER --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-        # fi
 
         ./scripts/bootstrap.sh
         if [ -z "$RESTART_CELERY" ]; then
