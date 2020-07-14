@@ -37,8 +37,8 @@ class WhenUsingEventTypesDAO(object):
         event_types_from_db = EventType.query.all()
         event_types_from_db_json = [e.serialize() for e in event_types_from_db]
 
-        assert sorted([e.values() for e in event_types_json]) == \
-            sorted([e.values() for e in event_types_from_db_json])
+        assert sorted(event_types_json, key=lambda e: e['id']) == \
+            sorted(event_types_from_db_json, key=lambda e: e['id'])
 
     def it_gets_an_event_type(self, db, db_session, sample_event_type):
         event_type = dao_get_event_type_by_id(str(sample_event_type.id))

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from flask import current_app
 import json
 import requests
-from urlparse import parse_qs
+from urllib.parse import parse_qs
 
 from app.errors import PaypalException
 

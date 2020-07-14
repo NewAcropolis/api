@@ -17,13 +17,15 @@ else
     src="$TRAVIS_BUILD_DIR"
 
     if [ $environment = 'live' ]; then
-        echo $TRAVIS_KEY_live | base64 --decode > travis_rsa
         GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_live"
-        deploy_host="$deploy_host_live"
-        user="$user_live"
-    else
-        echo $TRAVIS_KEY_preview | base64 --decode > travis_rsa
     fi
+
+    eval "TRAVIS_KEY=\${TRAVIS_KEY_$environment}"
+    eval "deploy_host=\${deploy_host_$environment}"
+    eval "user=\${user_$environment}"
+
+    echo $TRAVIS_KEY | base64 --decode > travis_rsa
+
     eval "$(ssh-agent)"
     chmod 600 travis_rsa
     ssh-add travis_rsa
@@ -69,9 +71,9 @@ if [ $port != 'No environment' ]; then
     eval "RESTART_CELERY=\$RESTART_CELERY"
     
     echo starting app $environment on port $port
-    if [ $environment = 'live' ]; then
+    if [ $environment = 'live' -o $environment = 'preview' ]; then
         ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
-cat >/home/$user/www-live/na-api.env << \EOL
+cat >/home/$user/www-$environment/na-api.env << \EOL
 ENVIRONMENT=$environment
 DATABASE_URL_$environment=$DATABASE_URL_ENV
 ADMIN_CLIENT_ID=$ADMIN_CLIENT_ID
@@ -108,9 +110,9 @@ EOL
 sudo systemctl daemon-reload
 sudo systemctl restart na-api.service
 
-cd www-live
+cd www-$environment
 set -a
-. ./venv/bin/activate && . ./na-api.env && ./scripts/run_celery.sh live $celery_output_params
+. ./env/bin/activate && . ./na-api.env && ./scripts/run_celery.sh $environment $celery_output_params
 set +a
         """
     else
@@ -142,15 +144,10 @@ set +a
         export API_BASE_URL=$API_BASE_URL
         export FRONTEND_URL=$FRONTEND_URL
         export IMAGES_URL=$IMAGES_URL
-        # export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
         export TRAVIS_COMMIT=$TRAVIS_COMMIT
         export CELERY_BROKER_URL=$CELERY_BROKER_URL
         export RESTART_FLOWER=$RESTART_FLOWER
         export RESTART_CELERY=$RESTART_CELERY
-
-        # if [ ! -z $GOOGLE_AUTH_USER ]; then
-        #     gcloud auth activate-service-account $GOOGLE_AUTH_USER --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-        # fi
 
         ./scripts/bootstrap.sh
         if [ -z "$RESTART_CELERY" ]; then

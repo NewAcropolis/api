@@ -173,7 +173,7 @@ class WhenAccessingAProtectedEndpoint(object):
         )
 
         assert response.status_code == 200
-        assert response.data == 'unprotected'
+        assert response.data == b'unprotected'
 
     def it_show_page_if_valid_auth_token_provided(self, auth_app):
         response = auth_app.get(
@@ -182,7 +182,7 @@ class WhenAccessingAProtectedEndpoint(object):
         )
 
         assert response.status_code == 200
-        assert response.data == 'protected'
+        assert response.data == b'protected'
 
     def it_raises_401_if_no_auth_token_provided(self, auth_app):
         response = auth_app.get(

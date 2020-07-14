@@ -246,7 +246,7 @@ def create_test_db_if_does_not_exist(db):
         conn.close()
 
     except sqlalchemy.exc.OperationalError as e:
-        if 'database "{}" does not exist'.format(TEST_DATABASE_URI.split('/')[-1:][0]) in e.message:
+        if 'database "{}" does not exist'.format(TEST_DATABASE_URI.split('/')[-1:][0]) in str(e):
             db_url = sqlalchemy.engine.url.make_url(TEST_DATABASE_URI)
             dbname = db_url.database
 

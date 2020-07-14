@@ -74,6 +74,7 @@ class WhenFormattingLogs(object):
     ])
     def it_truncates_start_of_logs_matching_pattern(self, app, mocker, log_string, expected):
         class mock_record(object):
+            stack_info = False
 
             def __init__(self):
                 self._msg = log_string

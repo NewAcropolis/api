@@ -57,7 +57,7 @@ class WhenProcessingRequests(object):
         with pytest.raises(expected_exception=ValidationError) as e:
             validate(data, test_number_schema)
 
-        json_err = json.loads(e.value[0])
+        json_err = json.loads(str(e.value))
 
         assert {
             "message": "id x is not valid under any of the given schemas",

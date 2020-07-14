@@ -1,5 +1,5 @@
 from flask import request
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 
 def is_running_locally():

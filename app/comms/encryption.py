@@ -1,13 +1,16 @@
 import base64
 from flask import current_app
 
+# ENCODING = 'utf-16'  # 'utf-8'
+ENCODING = 'utf-8'
+
 
 def encrypt(plain, key):
-    return base64.b64encode(simpleXor(plain, key))
+    return base64.b64encode(simpleXor(plain, key)).decode(ENCODING)
 
 
 def decrypt(scrambled, key):
-    return simpleXor(base64.b64decode(scrambled), key)
+    return simpleXor(base64.b64decode(scrambled).decode(ENCODING), key).decode(ENCODING)
 
 
 def simpleXor(in_string, key):
@@ -24,7 +27,7 @@ def simpleXor(in_string, key):
         #  XOR the two, get the character from the result
         # % is MOD (modulus), ^ is XOR
         output += chr(ord(in_string[i]) ^ (key_list[i % len(key)]))
-    return output
+    return output.encode()
 
 
 def get_tokens(decrypted_string):

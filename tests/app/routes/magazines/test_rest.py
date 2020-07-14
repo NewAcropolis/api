@@ -30,8 +30,8 @@ class WhenPostingMagazines(object):
     def it_creates_a_magazine_and_uploads_it_to_storage(self, mocker, client, db_session):
         mocker_upload = mocker.patch('app.routes.magazines.rest.upload_tasks.upload_magazine.apply_async')
 
-        with open(os.path.join('tests', 'test_files', 'test_magazine.pdf')) as f:
-            pdf_data = base64.b64encode(f.read())
+        with open(os.path.join('tests', 'test_files', 'test_magazine.pdf'), encoding='mac_roman', newline='') as f:
+            pdf_data = base64.b64encode(f.read().encode('utf-8')).decode('utf-8')
 
         data = {
             'title': 'title',

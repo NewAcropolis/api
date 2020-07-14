@@ -1,5 +1,5 @@
 import pdftotext
-from PIL import Image
+# from PIL import Image
 from wand.image import Image
 import os
 import io
@@ -62,6 +62,6 @@ def extract_topics(pdf_binary):
                 break
 
         if topic_heading:
-            topic_headings += '{}: {}\n'.format(topic, topic_heading.encode("utf8")[:-1])
+            topic_headings += '{}: {}\n'.format(topic, topic_heading[:-1])
 
     return topic_headings[:-1] if topic_headings else ''

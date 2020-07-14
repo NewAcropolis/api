@@ -36,7 +36,9 @@ class WhenPostingSpeakers(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert len(json_resp) == len(data)
-        assert sorted(data) == sorted([{'title': j['title'], 'name': j['name']} for j in json_resp])
+        # python 3 update code
+        assert sorted(data, key=lambda k: k['title']) == \
+            sorted([{'title': j['title'], 'name': j['name']} for j in json_resp], key=lambda k: k['title'])
 
     def it_doesnt_create_speaker_with_same_name(self, client, db_session, sample_speaker):
         data = [

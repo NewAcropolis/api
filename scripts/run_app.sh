@@ -1,9 +1,9 @@
 #!/bin/bash
 set +ex
 
-if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
-  echo 'activate venv'
-  source ./venv/bin/activate
+if [ -z "$VIRTUAL_ENV" ] && [ -d env ]; then
+  echo 'activate env'
+  source ./env/bin/activate
 fi
 
 ENV=development
