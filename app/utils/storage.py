@@ -20,7 +20,7 @@ class Storage(object):
             current_app.logger.info('Google credentials not available')
             return
 
-        if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
+        if not current_app.config["GOOGLE_APPLICATION_CREDENTIALS"]:
             credentials = compute_engine.Credentials()
             self.storage_client = storage.Client(credentials=credentials, project=current_app.config['PROJECT'])
         else:
