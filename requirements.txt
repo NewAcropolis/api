@@ -17,7 +17,7 @@ jsonschema==2.6.0
 kombu==4.5.0
 pdftotext==2.1.4
 pillow==6.2.2
-psycopg2-binary==2.7.5
+psycopg2-binary==2.8.5
 pyOpenSSL==18.0.0
 pypng==0.0.20
 pyqrcode==1.2.1
