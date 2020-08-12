@@ -2,6 +2,7 @@ import copy
 from datetime import timedelta
 import pytest
 from flask import json, url_for
+from uuid import UUID
 from mock import Mock, call
 
 from freezegun import freeze_time
@@ -143,6 +144,11 @@ def sample_req_event_data_with_event(db_session, sample_req_event_data, sample_e
 @pytest.fixture
 def mock_paypal(mocker):
     return mocker.patch("app.routes.events.rest.PayPal.create_update_paypal_button", return_value='test booking code')
+
+
+@pytest.fixture
+def mock_paypal_task(mocker):
+    return mocker.patch('app.routes.events.rest.paypal_tasks.create_update_paypal_button_task.apply_async')
 
 
 class WhenGettingEvents:
@@ -490,7 +496,7 @@ class WhenPostingCreatingAnEvent:
                     'test_img.png', '2019/{}'.format(str(event.id)), base64img)
 
     def it_creates_an_event_via_rest(
-        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
     ):
         mocker.patch("app.utils.storage.Storage.blob_exists", return_value=True)
 
@@ -534,17 +540,7 @@ class WhenPostingCreatingAnEvent:
 
         json_events = json.loads(response.get_data(as_text=True))
 
-        assert mock_paypal.call_args == call(
-            json_events['id'],
-            data['title'],
-            data['fee'],
-            data['conc_fee'],
-            None,
-            None,
-            False
-        )
         assert json_events["title"] == data["title"]
-        assert json_events["booking_code"] == 'test booking code'
         assert len(json_events["event_dates"]) == 2
         assert len(json_events["event_dates"][0]["speakers"]) == 1
         assert len(json_events["event_dates"][1]["speakers"]) == 2
@@ -562,7 +558,7 @@ class WhenPostingCreatingAnEvent:
         assert event.event_dates[1].end_time.strftime('%H:%M') == '21:00'
 
     def it_creates_an_event_without_speakers_via_rest(
-        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
     ):
         mocker.patch("app.utils.storage.Storage.blob_exists", return_value=True)
         data = {
@@ -841,7 +837,7 @@ class WhenPostingUpdatingAnEvent:
 
     def it_updates_an_event_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage,
-        mock_paypal, sample_admin_user, sample_email_provider
+        mock_paypal_task, sample_admin_user, sample_email_provider
     ):
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
@@ -875,6 +871,7 @@ class WhenPostingUpdatingAnEvent:
         assert response.status_code == 200
 
         json_events = json.loads(response.get_data(as_text=True))
+        assert mock_paypal_task.call_args == call((json_events['id'],))
         assert json_events["title"] == data["title"]
         assert json_events["image_filename"] == data["image_filename"]
         assert len(json_events["event_dates"]) == 1
@@ -882,7 +879,6 @@ class WhenPostingUpdatingAnEvent:
         assert json_events["event_dates"][0]["speakers"][0]['id'] == (
             sample_req_event_data_with_event['speaker'].serialize()['id'])
         assert json_events["event_dates"][0]['end_time'] == "20:00"
-        assert json_events['booking_code'] == 'test booking code'
         assert json_events['event_state'] == READY
 
         event_dates = EventDate.query.all()
@@ -907,7 +903,7 @@ class WhenPostingUpdatingAnEvent:
         }
 
     def it_rejects_invalid_event_states(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data_with_event
     ):
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
@@ -940,7 +936,7 @@ class WhenPostingUpdatingAnEvent:
 
     def it_updates_an_event_to_reject_with_reason(
         self, mocker, client, db, db_session,
-        sample_email_provider, sample_req_event_data_with_event, mock_storage, mock_paypal, sample_user
+        sample_email_provider, sample_req_event_data_with_event, mock_storage, sample_user
     ):
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
@@ -1004,7 +1000,7 @@ class WhenPostingUpdatingAnEvent:
 
     def it_updates_an_event_to_reject_resolved(
         self, mocker, client, db_session,
-        sample_req_event_data_with_event, mock_storage, mock_paypal, sample_reject_reason, sample_user
+        sample_req_event_data_with_event, mock_storage, sample_reject_reason, sample_user
     ):
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
@@ -1162,7 +1158,7 @@ class WhenPostingUpdatingAnEvent:
         assert json_resp['message'] == '{} needs an event date'.format(sample_req_event_data_with_event['event'].id)
 
     def it_updates_an_event_remove_speakers_via_rest(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage
     ):
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
@@ -1206,7 +1202,7 @@ class WhenPostingUpdatingAnEvent:
         assert event_dates[0].id == old_event_date_id
 
     def it_updates_an_event_remove_a_speaker_via_rest(
-        self, mocker, client, db_session, mock_storage, mock_paypal
+        self, mocker, client, db_session, mock_storage
     ):
         speakers = [
             create_speaker(name='John Red'),
@@ -1278,7 +1274,7 @@ class WhenPostingUpdatingAnEvent:
         assert event_dates[0].id == old_event_date_id
 
     def it_updates_an_event_add_speakers_via_rest(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload
     ):
         speaker = create_speaker(name='Julie White')
 
@@ -1329,7 +1325,7 @@ class WhenPostingUpdatingAnEvent:
         assert event_dates[0].id == old_event_date_id
 
     def it_updates_an_event_add_event_dates_via_rest(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload
     ):
         event_datetime = sample_req_event_data_with_event['event'].event_dates[0].event_datetime
         data = {
@@ -1382,61 +1378,8 @@ class WhenPostingUpdatingAnEvent:
         # use existing event date
         assert event_dates[0].id == old_event_date_id
 
-    def it_updates_an_event_handles_exceptions_via_rest(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload
-    ):
-        event_datetime = sample_req_event_data_with_event['event'].event_dates[0].event_datetime
-        mocker.patch(
-            "app.routes.events.rest.PayPal.create_update_paypal_button",
-            side_effect=PaypalException('Paypal error'))
-        data = {
-            "event_type_id": sample_req_event_data_with_event['event_type'].id,
-            "title": "Test title new",
-            "sub_title": "Test sub title",
-            "description": "Test description",
-            "image_filename": "test_img.png",
-            "image_data": base64img,
-            "event_dates": [
-                {
-                    "event_date": event_datetime.strftime('%Y-%m-%d %H:%M'),
-                    "speakers": [
-                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
-                    ]
-                },
-                {
-                    "event_date": (event_datetime + timedelta(days=1)).strftime('%Y-%m-%d %H:%M'),
-                    "speakers": [
-                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
-                    ]
-                },
-            ],
-            "venue_id": sample_req_event_data_with_event['venue'].id,
-            "fee": 15,
-            "conc_fee": 12,
-        }
-
-        old_event_date_id = sample_req_event_data_with_event['event'].event_dates[0].id
-
-        response = client.post(
-            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
-            data=json.dumps(data),
-            headers=[('Content-Type', 'application/json'), create_authorization_header()]
-        )
-
-        assert response.status_code == 200
-
-        json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['errors'] == ['Paypal error']
-
-        event_dates = sorted(EventDate.query.all(), key=lambda k: k.event_datetime)
-
-        assert len(event_dates) == 2
-        assert len(event_dates[0].speakers) == 1
-        # use existing event date
-        assert event_dates[0].id == old_event_date_id
-
     def it_updates_an_event_adding_booking_code_if_no_fee_before_via_rest(
-        self, mocker, client, db_session, sample_req_event_data, mock_storage_upload, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data, mock_storage_upload, mock_paypal_task
     ):
         event = create_event(
             event_type_id=sample_req_event_data['event_type'].id,
@@ -1469,7 +1412,8 @@ class WhenPostingUpdatingAnEvent:
             "venue_id": sample_req_event_data['venue'].id,
             "fee": 15,
             "conc_fee": 12,
-            "booking_code": "test booking"
+            "booking_code": "test booking",
+            "event_state": READY
         }
 
         response = client.post(
@@ -1481,13 +1425,11 @@ class WhenPostingUpdatingAnEvent:
         assert response.status_code == 200
 
         json_events = json.loads(response.get_data(as_text=True))
+        assert mock_paypal_task.call_args == call((str(event.id),))
         assert json_events["title"] == data["title"]
-        assert json_events['booking_code'] == "test booking code"
-        assert mock_paypal.call_args == call(
-            event.id, u'Test title', 15, 12, None, None, False, booking_code='test booking')
 
     def it_raises_error_if_file_not_found(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_not_exist, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_not_exist
     ):
         response = client.post(
             url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
@@ -1501,7 +1443,7 @@ class WhenPostingUpdatingAnEvent:
         assert json_resp['message'] == '2019/test_img.png does not exist'
 
     def it_raises_error_if_event_not_updated(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data_with_event
     ):
         mocker.patch('app.routes.events.rest.dao_update_event', return_value=False)
 
