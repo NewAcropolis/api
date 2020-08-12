@@ -73,7 +73,7 @@ def upload_magazines(folder='data/pdfs'):
             new_filename = get_magazine_filename(filename)
             if new_filename:
                 if folder:
-                    with open(os.path.join(folder, filename)) as f:
+                    with open(os.path.join(folder, filename), "rb") as f:
                         pdf = f.read()
 
                         storage.upload_blob_from_base64string(
