@@ -16,10 +16,7 @@ if [ -z $TRAVIS_BUILD_DIR ]; then
 else 
     src="$TRAVIS_BUILD_DIR"
 
-    if [ $environment = 'live' ]; then
-        GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_APPLICATION_CREDENTIALS_live"
-    fi
-
+    eval "GOOGLE_APPLICATION_CREDENTIALS=\$GOOGLE_APPLICATION_CREDENTIALS_$environment"
     eval "TRAVIS_KEY=\${TRAVIS_KEY_$environment}"
     eval "deploy_host=\${deploy_host_$environment}"
     eval "user=\${user_$environment}"
@@ -69,6 +66,7 @@ if [ $port != 'No environment' ]; then
     eval "JWT_SECRET=\$JWT_SECRET_$environment"
     eval "RESTART_FLOWER=\$RESTART_FLOWER"
     eval "RESTART_CELERY=\$RESTART_CELERY"
+    eval "GOOGLE_APPLICATION_CREDENTIALS=\$GOOGLE_APPLICATION_CREDENTIALS_$environment"
     
     echo starting app $environment on port $port
     if [ $environment = 'live' -o $environment = 'preview' ]; then
