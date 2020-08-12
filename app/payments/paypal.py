@@ -41,7 +41,7 @@ class PayPal:
 
         response.raise_for_status()
 
-        search_resp = parse_qs(response.content)
+        search_resp = parse_qs(response.content.decode("utf-8"))
 
         if item_id:
             for key in [k for k in search_resp.keys() if k.startswith('L_HOSTEDBUTTONID')]:
@@ -59,7 +59,7 @@ class PayPal:
 
                 response.raise_for_status()
 
-                get_resp = parse_qs(response.content)
+                get_resp = parse_qs(response.content.decode('ASCII'))
 
                 _item_id = get_resp['L_BUTTONVAR6'][0].split('=')[1]
                 _item_id = _item_id[:-1]
@@ -136,7 +136,7 @@ class PayPal:
 
         response.raise_for_status()
 
-        process_resp = parse_qs(response.content)
+        process_resp = parse_qs(response.content.decode("utf-8"))
 
         if 'Success' in process_resp['ACK']:
             current_app.logger.info('Paypal success: {} - {}'.format(item_id, process_resp['HOSTEDBUTTONID'][0]))

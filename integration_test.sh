@@ -2,15 +2,15 @@
 set +e
 
 function setupURLS {
-    if [ "$1" = "dev" ]; then
+    if [ $ENVIRONMENT = "dev" ]; then
         export api_server="${API_BASE_URL}"
         export username=$ADMIN_CLIENT_ID_development
         export password=$ADMIN_CLIENT_SECRET_development
-    elif [ "$1" = "preview" ]; then
+    elif [ $ENVIRONMENT = "preview" ]; then
         export api_server="${API_BASE_URL}"
         export username=$ADMIN_CLIENT_ID_preview
         export password=$ADMIN_CLIENT_SECRET_preview
-    elif [ "$1" = "live" ]; then
+    elif [ $ENVIRONMENT = "live" ]; then
         export api_server="${API_BASE_URL}"
         export username=$ADMIN_CLIENT_ID_live
         export password=$ADMIN_CLIENT_SECRET_live
@@ -670,6 +670,17 @@ case "$arg" in
             GetVenues
             Logout
             GetFees
+        ;;
+
+        -iall) echo "Import all"
+            ImportVenues
+            ImportEventTypes
+            ImportSpeakers
+            ImportEvents
+            ImportArticles
+            ImportMarketings
+            ImportMembers
+            ImportEmails
         ;;
 
         -es)

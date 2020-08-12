@@ -62,6 +62,7 @@ class MockRequests:
             mock_response.content = mock_process_button.format(
                 button_id=mock_update_button_id, ack=self.ack, err_msg=self.err_msg)
 
+        mock_response.content = bytes(mock_response.content.encode("utf-8"))
         return mock_response
 
     def raise_for_status(self):

@@ -317,7 +317,7 @@ class Event(db.Model):
     title = db.Column(db.String(255))
     sub_title = db.Column(db.String(255))
     description = db.Column(db.String())
-    booking_code = db.Column(db.String(20))
+    booking_code = db.Column(db.String(50))
     image_filename = db.Column(db.String(255))
     fee = db.Column(db.Integer, nullable=True)
     conc_fee = db.Column(db.Integer, nullable=True)

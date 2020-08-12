@@ -176,6 +176,6 @@ def configure_logging():
 class LogTruncatingFormatter(logging.Formatter):
     def format(self, record):
         START_LOG = '127.0.0.1 - - ['
-        if 'msg' in dir(record) and record.msg[:15] == START_LOG:
+        if 'msg' in dir(record) and str(record.msg)[:15] == START_LOG:
             record.msg = record.msg[42:]
         return super().format(record)

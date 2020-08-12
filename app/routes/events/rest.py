@@ -34,6 +34,7 @@ from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 from app.errors import register_errors, InvalidRequest, PaypalException
 from app.models import Event, EventDate, RejectReason, APPROVED, DRAFT, READY, REJECTED
 
+from app.na_celery import paypal_tasks
 from app.routes import is_running_locally
 from app.routes.events.schemas import post_create_event_schema, post_update_event_schema, post_import_events_schema
 
@@ -112,17 +113,6 @@ def create_event():
         event.event_dates.append(e)
 
     dao_create_event(event)
-
-    if event.fee:
-        event_type = dao_get_event_type_by_id(event.event_type_id)
-        p = PayPal()
-        booking_code = p.create_update_paypal_button(
-            str(event.id), event.title,
-            event.fee, event.conc_fee, event.multi_day_fee, event.multi_day_conc_fee,
-            True if event_type.event_type == 'Talk' else False
-        )
-
-        dao_update_event(event.id, booking_code=booking_code)
 
     image_filename = data.get('image_filename')
 
@@ -281,18 +271,9 @@ def update_event(event_id):
 
         if update_data != db_data:
             event_type = dao_get_event_type_by_id(event_data.get('event_type_id'))
-            p = PayPal()
-            try:
-                event_data['booking_code'] = p.create_update_paypal_button(
-                    event_id, event_data.get('title'),
-                    event_data.get('fee'), event_data.get('conc_fee'),
-                    event_data.get('multi_day_fee'), event_data.get('multi_day_conc_fee'),
-                    True if event_type.event_type == 'Talk' else False,
-                    booking_code=event_data.get('booking_code')
-                )
-            except PaypalException as e:
-                current_app.logger.error(e)
-                errs.append(str(e))
+
+            if data.get('event_state') in [READY, APPROVED]:
+                paypal_tasks.create_update_paypal_button_task.apply_async((str(event_id),))
 
     res = dao_update_event(event_id, **event_data)
 
