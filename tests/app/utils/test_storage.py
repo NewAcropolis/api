@@ -101,7 +101,7 @@ class WhenUsingStorage:
     )
 
     def it_uses_gce_creds_for_storage_client_without_google_creds_envs(self, app, mocker):
-        mocker.patch.dict('os.environ', {
+        mocker.patch.dict('app.utils.storage.current_app.config', {
             'GOOGLE_APPLICATION_CREDENTIALS': '',
             'PROJECT': 'test-project'
         })
