@@ -48,3 +48,9 @@ run: ## Run app
 .PHONY: integration-test
 integration-test: ## Run integration tests
 	./scripts/integration_test.sh -a
+
+.PHONY: start-local-celery
+start-local-celery: ## Run integration tests
+	./scripts/run_local_redis.sh >> logs/redis.log &
+	./scripts/run_local_celery.sh
+
