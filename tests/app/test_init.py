@@ -18,7 +18,8 @@ class WhenInitializingApp(object):
             'SQLALCHEMY_DATABASE_URI': 'db://localhost/test_db',
             'API_BASE_URL': 'http://test',
             'FRONTEND_URL': 'http://frontend-test',
-            'ENVIRONMENT': 'test'
+            'ENVIRONMENT': 'test',
+            'IMAGES_URL': 'http://frontent-test/images'
         })
         mocker.patch("app.get_root_path", return_value=returnval)
         mocked_config = mocker.patch("app.application.config.from_object", return_value={})
