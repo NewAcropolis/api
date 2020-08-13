@@ -54,6 +54,14 @@ def extract_topics():
 
 
 @manager.command
+def upload_file(filename):
+    """Upload file."""
+    application.logger.info('Upload file')
+    storage = Storage(application.config['STORAGE'])
+    storage.upload_blob(filename, f'test/{filename}', set_public=True)
+
+
+@manager.command
 def upload_magazines(folder='data/pdfs'):
     """Upload magazines."""
     application.logger.info('Upload magazines')
