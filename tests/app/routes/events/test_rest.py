@@ -1428,6 +1428,47 @@ class WhenPostingUpdatingAnEvent:
         assert mock_paypal_task.call_args == call((str(event.id),))
         assert json_events["title"] == data["title"]
 
+    def it_updates_an_event_without_booking_code_if_no_fee(
+        self, mocker, client, db_session, sample_req_event_data, mock_storage_upload, mock_paypal_task
+    ):
+        event = create_event(
+            event_type_id=sample_req_event_data['event_type'].id,
+            event_dates=[
+                create_event_date(
+                    event_datetime='2018-01-20T19:00:00',
+                    speakers=[
+                        sample_req_event_data['speaker']
+                    ]
+                )
+            ],
+            fee=None,
+            conc_fee=None,
+            venue_id=sample_req_event_data['venue'].id
+        )
+
+        data = {
+            "event_type_id": sample_req_event_data['event_type'].id,
+            "title": "Test title",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "venue_id": sample_req_event_data['venue'].id,
+            "fee": None,
+            "conc_fee": None,
+            "event_state": READY
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=event.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        json_events = json.loads(response.get_data(as_text=True))
+        assert not mock_paypal_task.called
+        assert json_events["title"] == data["title"]
+
     def it_raises_error_if_file_not_found(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_not_exist
     ):
