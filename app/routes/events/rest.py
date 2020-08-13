@@ -253,7 +253,7 @@ def update_event(event_id):
     elif data_event_dates == []:
         raise InvalidRequest('{} needs an event date'.format(event_id), 400)
 
-    if event_data.get('fee'):
+    if event_data.get('fee') and event_data.get('fee') > 0:
         update_data = {
             'fee': event_data.get('fee'),
             'conc_fee': event_data.get('conc_fee'),
