@@ -175,3 +175,17 @@ class WhenGettingMagazine(object):
         )
         assert response.status_code == 200
         assert response.json['id'] == str(magazine.id)
+
+
+class WhenGettingLatestMagazine:
+
+    def it_gets_the_latest_magazine(self, client, db_session):
+        create_magazine(old_id='1', title='title', filename='new filename')
+        magazine = create_magazine(old_id='2', title='title 2', filename='new filename 2')
+
+        response = client.get(
+            url_for('magazines.get_latest_magazine', old_id=magazine.old_id),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+        assert response.json['id'] == str(magazine.id)

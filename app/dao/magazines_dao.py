@@ -7,6 +7,10 @@ def dao_get_magazines():
     return Magazine.query.order_by(Magazine.created_at.desc()).all()
 
 
+def dao_get_latest_magazine():
+    return Magazine.query.order_by(Magazine.created_at.desc()).first()
+
+
 def dao_get_magazine_by_id(id):
     return Magazine.query.filter_by(id=id).one()
 
