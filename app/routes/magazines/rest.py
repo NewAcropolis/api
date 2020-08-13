@@ -10,7 +10,9 @@ from flask_jwt_extended import jwt_required
 from app.na_celery import upload_tasks
 from app.dao import dao_create_record, dao_update_record
 from app.dao.emails_dao import dao_create_email
-from app.dao.magazines_dao import dao_get_magazine_by_id, dao_get_magazine_by_old_id, dao_get_magazines
+from app.dao.magazines_dao import (
+    dao_get_magazine_by_id, dao_get_magazine_by_old_id, dao_get_magazines, dao_get_latest_magazine
+)
 from app.dao.users_dao import dao_get_users
 from app.errors import register_errors, InvalidRequest
 from app.models import Email, Magazine, MAGAZINE, READY
@@ -92,6 +94,14 @@ def update_magazine(id):
         return jsonify(magazine.serialize()), 200
 
     raise InvalidRequest('Invalid filename for magazine: {}'.format(data['filename']), 400)
+
+
+@magazines_blueprint.route('/magazine/latest', methods=['GET'])
+@jwt_required
+def get_latest_magazine():
+    magazine = dao_get_latest_magazine()
+
+    return jsonify(magazine.serialize())
 
 
 @magazines_blueprint.route('/magazines', methods=['GET'])
