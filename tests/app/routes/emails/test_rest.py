@@ -387,6 +387,32 @@ class WhenPostingUpdateEmail:
 
         assert mock_send_email.call_args[0][0] == [TEST_ADMIN_USER]
 
+    def it_updates_a_magazine_email_to_ready(
+        self, mocker, client, db, db_session, sample_admin_user, sample_magazine_email
+    ):
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_email', return_value=200)
+        data = {
+            "magazine_id": str(sample_magazine_email.magazine_id),
+            "details": sample_magazine_email.details,
+            "extra_txt": '<div>New extra text</div>',
+            "replace_all": sample_magazine_email.replace_all,
+            "email_type": MAGAZINE,
+            "email_state": READY
+        }
+
+        response = client.post(
+            url_for('emails.update_email', email_id=str(sample_magazine_email.id)),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.json['extra_txt'] == data['extra_txt']
+        emails = Email.query.all()
+        assert len(emails) == 1
+        assert emails[0].extra_txt == data['extra_txt']
+
+        assert mock_send_email.call_args[0][0] == [TEST_ADMIN_USER]
+
     def it_updates_an_event_email_to_rejected(
         self, mocker, client, db, db_session, sample_admin_user, sample_email
     ):
@@ -601,3 +627,15 @@ class WhenPostingSendMessage:
             [sample_admin_user.email], 'Web message: {}'.format(data['reason']), data['message'],
             _from='{}<{}>'.format(data['name'], data['email'])
         )
+
+
+class WhenGettingDefaultDetails:
+    def it_gets_default_details(self, client, sample_event):
+        response = client.get(
+            url_for('emails.get_default_details', event_id=sample_event.id),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.json['details'] == f'<div><strong>Fees:</strong> £{sample_event.fee}, £{sample_event.conc_fee}'\
+            ' concession for students, income support & OAPs, and free for members of New Acropolis.</div>'\
+            f'<div><strong>Venue:</strong> {sample_event.venue.address}</div>'\
+            f'{sample_event.venue.directions}'
