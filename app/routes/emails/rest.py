@@ -27,7 +27,7 @@ from app.dao.emails_dao import (
     dao_get_emails_for_year_starting_on,
     dao_update_email,
 )
-
+from app.dao.magazines_dao import dao_get_magazine_by_id
 from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.dao.events_dao import dao_get_event_by_old_id, dao_get_event_by_id
 
@@ -107,11 +107,17 @@ def update_email(email_id):
 
             subject = None
             if email.email_type == EVENT:
-                event = dao_get_event_by_id(data.get('event_id'))
+                event = dao_get_event_by_id(email.event_id)
                 subject = 'Please review {}'.format(event.title)
 
                 event_html = get_email_html(**data)
                 response = send_email(emails_to, subject, review_part + event_html)
+            elif email.email_type == MAGAZINE:
+                magazine = dao_get_magazine_by_id(email.magazine_id)
+                subject = 'Please review {}'.format(magazine.title)
+
+                magazine_html = get_email_html(MAGAZINE, magazine_id=magazine.id)
+                response = send_email(emails_to, subject, review_part + magazine_html)
         elif data.get('email_state') == REJECTED:
             dao_update_email(email_id, email_state=REJECTED)
 
@@ -148,6 +154,17 @@ def update_email(email_id):
 @jwt_required
 def get_email_types():
     return jsonify([{'type': email_type} for email_type in MANAGED_EMAIL_TYPES])
+
+
+@emails_blueprint.route('/email/default_details/<uuid:event_id>', methods=['GET'])
+@jwt_required
+def get_default_details(event_id):
+    event = dao_get_event_by_id(event_id)
+    details = f"<div><strong>Fees:</strong> £{event.fee}, £{event.conc_fee} concession for students, "\
+        "income support & OAPs, and free for members of New Acropolis.</div><div><strong>Venue:</strong> "\
+        f"{event.venue.address}</div>{event.venue.directions}"
+
+    return jsonify({'details': details})
 
 
 @emails_blueprint.route('/emails/future', methods=['GET'])
