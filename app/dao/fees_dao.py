@@ -1,3 +1,6 @@
+from datetime import datetime
+from sqlalchemy import and_
+
 from app import db
 from app.dao.decorators import transactional
 from app.models import Fee
@@ -21,3 +24,13 @@ def dao_get_fees():
 
 def dao_get_fee_by_id(fee_id):
     return Fee.query.filter_by(id=fee_id).one()
+
+
+def dao_get_fee_by_event_type_id(event_type_id):
+    today = datetime.today().strftime("%Y-%m-%d")
+    return Fee.query.filter(
+        and_(
+            Fee.valid_from >= today,
+            Fee.event_type_id == event_type_id
+        )
+    ).order_by(Fee.valid_from.desc()).first()
