@@ -7,7 +7,7 @@ from app.dao.emails_dao import dao_get_email_by_id, dao_add_member_sent_to_email
 from app.dao.members_dao import dao_get_members_not_sent_to
 from app.dao.users_dao import dao_get_admin_users
 from app.errors import InvalidRequest
-from app.models import EVENT
+from app.models import EVENT, MAGAZINE
 
 
 @celery.task()
@@ -44,6 +44,8 @@ def send_emails(email_id):
                     extra_txt=email.extra_txt,
                     member_id=member_id
                 )
+            elif email.email_type == MAGAZINE:
+                message = get_email_html(MAGAZINE, magazine_id=email.magazine_id)
 
             email_status_code = send_email(email_to, subject, message)
             dao_add_member_sent_to_email(email_id, member_id, status_code=email_status_code)

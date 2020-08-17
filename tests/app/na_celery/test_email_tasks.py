@@ -6,7 +6,7 @@ import pytest
 from app.na_celery.email_tasks import send_emails, send_periodic_emails
 from app.comms.encryption import decrypt, get_tokens
 from app.errors import InvalidRequest
-from app.models import APPROVED
+from app.models import APPROVED, Magazine
 
 from tests.db import create_email, create_member, create_email_to_member, create_email_provider
 
@@ -132,6 +132,25 @@ class WhenProcessingSendEmailsTask:
             'failed': 0,
             'total_active_members': 3
         }
+
+    def it_sends_a_magazine_email(self, mocker, db_session, sample_magazine_email, sample_member):
+        mocker.patch.dict('app.application.config', {
+            'ENVIRONMENT': 'test',
+            'EMAIL_RESTRICT': 1
+        })
+
+        create_member(name='Test 1', email='test1@example.com')
+
+        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+        send_emails(sample_magazine_email.id)
+
+        magazine = Magazine.query.filter_by(id=sample_magazine_email.magazine_id).first()
+        assert magazine
+
+        assert magazine.title in mock_send_email.call_args_list[0][0][1]
+        assert magazine.filename in mock_send_email.call_args_list[0][0][2]
+        assert mock_send_email.call_count == 1
+        assert mock_send_email.call_args_list[0][0][0] == sample_member.email
 
     def it_logs_429_status_code_response(self, mocker, db_session, sample_email, sample_member):
         mocker.patch(
