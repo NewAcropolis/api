@@ -72,7 +72,7 @@ class Config(object):
     CELERYBEAT_SCHEDULE = {
         'send-periodic-emails': {
             'task': 'send_periodic_emails',
-            'schedule': crontab(minute=0, hour='*'),
+            'schedule': crontab(minute=0, hour='*') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
         },
     }
 
