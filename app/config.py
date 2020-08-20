@@ -76,7 +76,7 @@ class Config(object):
         },
     }
 
-    EMAIL_DELAY = 1  # hours
+    EMAIL_DELAY = 4 if ENVIRONMENT != 'development' else 0  # hours
     EMAIL_LIMIT = 400
     EMAIL_RESTRICT = os.environ.get('EMAIL_RESTRICT')
 
