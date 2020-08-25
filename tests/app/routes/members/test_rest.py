@@ -113,7 +113,7 @@ class WhenPostingMembers:
         assert member.name == data['name']
         assert member.email == data['email']
 
-    def it_imports_members(self, client, db, db_session, sample_marketing):
+    def it_imports_members(self, client, db_session, sample_marketing):
         data = [
             {
                 "id": "1",
@@ -146,8 +146,8 @@ class WhenPostingMembers:
         members = Member.query.all()
 
         assert len(members) == 2
-        assert members[0].old_id == int(data[0]['id'])
-        assert members[0].name == data[0]['Name']
+        assert members[0].old_id in [int(i['id']) for i in data]
+        assert members[0].name in [n['Name'] for n in data]
 
     def it_doesnt_import_exising_members(self, client, db_session, sample_marketing, sample_member):
         data = [
