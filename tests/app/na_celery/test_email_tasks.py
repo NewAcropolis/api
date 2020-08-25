@@ -8,7 +8,9 @@ from app.comms.encryption import decrypt, get_tokens
 from app.errors import InvalidRequest
 from app.models import APPROVED, Magazine
 
-from tests.db import create_email, create_member, create_email_to_member, create_email_provider
+from tests.db import (
+    create_email, create_event, create_event_date, create_member, create_email_to_member, create_email_provider
+)
 
 
 class WhenProcessingSendEmailsTask:
@@ -110,6 +112,46 @@ class WhenProcessingSendEmailsTask:
 
         assert mock_send_emails.call_count == 1
         assert mock_send_emails.call_args_list[0][0][0] == approved_email.id
+
+    @pytest.mark.parametrize('now', [
+        "2020-09-05T23:00:01",
+        "2020-09-05T07:00:00",
+    ])
+    def it_doesnt_send_email_out_of_hours(self, mocker, db_session, sample_email, sample_member, now):
+        mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails')
+
+        create_email(
+            send_starts_at='2020-06-02',
+            created_at='2020-06-01',
+            send_after='2020-06-03 9:00',
+            email_state=APPROVED
+        )
+        with freeze_time(now):
+            send_periodic_emails()
+
+        assert not mock_send_emails.called
+
+    @pytest.mark.parametrize('now', [
+        "2020-09-05T20:59:01",  # UTC london time at 21:59
+        "2020-09-05T08:00:01",
+    ])
+    def it_sends_email_in_hours(self, mocker, db_session, sample_email, sample_member, now):
+        mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails')
+        event_date = create_event_date(event_datetime='2020-09-20 19:00')
+        event = create_event(event_dates=[event_date])
+        create_email(
+            send_starts_at='2020-09-02',
+            created_at='2020-09-01',
+            send_after='2020-09-03 8:00',
+            expires=None,
+            email_state=APPROVED,
+            old_event_id=None,
+            event_id=event.id
+        )
+        with freeze_time(now):
+            send_periodic_emails()
+
+        assert mock_send_emails.called
 
     def it_sends_an_email_to_members_up_to_email_limit(self, mocker, db_session, sample_email, sample_member):
         mocker.patch.dict('app.application.config', {
