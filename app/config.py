@@ -79,6 +79,8 @@ class Config(object):
     EMAIL_DELAY = 4 if ENVIRONMENT != 'development' else 0  # hours
     EMAIL_LIMIT = 400
     EMAIL_RESTRICT = os.environ.get('EMAIL_RESTRICT')
+    EMAIL_EARLIEST_TIME = "08:00:00"
+    EMAIL_LATEST_TIME = "22:00:00"
 
 
 class Development(Config):
