@@ -112,6 +112,10 @@ def dao_get_email_by_id(email_id):
     return Email.query.filter_by(id=email_id).one()
 
 
+def dao_get_email_by_event_id(event_id):
+    return Email.query.filter_by(event_id=event_id).first()
+
+
 def dao_get_email_by_magazine_id(magazine_id):
     return Email.query.filter_by(magazine_id=magazine_id).first()
 
