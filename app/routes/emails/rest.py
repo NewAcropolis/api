@@ -313,5 +313,5 @@ def send_message():
     emails_to = [user.email for user in dao_get_admin_users()]
 
     send_email(emails_to, 'Web message: {}'.format(
-        data['reason']), data['message'], _from='{}<{}>'.format(data['name'], data['email']))
+        data['reason']), data['message'], from_email=data['email'], from_name=data['name'])
     return jsonify({'message': 'Your message was sent'})
