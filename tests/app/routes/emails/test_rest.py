@@ -625,7 +625,7 @@ class WhenPostingSendMessage:
         assert mock_send_email.called
         assert mock_send_email.call_args == call(
             [sample_admin_user.email], 'Web message: {}'.format(data['reason']), data['message'],
-            _from='{}<{}>'.format(data['name'], data['email'])
+            from_email=data['email'], from_name=data['name']
         )
 
 
