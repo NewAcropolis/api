@@ -1,8 +1,10 @@
-from io import StringIO
+from io import StringIO, BytesIO
 from flask import Blueprint, current_app, jsonify, request, send_file
 from sqlalchemy.orm.exc import NoResultFound
 
+from app.comms.encryption import decrypt, get_tokens
 from app.dao.events_dao import dao_get_event_by_old_id
+from app.dao.magazines_dao import dao_get_magazine_by_old_id
 from app.errors import register_errors, InvalidRequest
 from app.routes.magazines import get_magazine_filename
 from app.utils.storage import Storage
@@ -46,3 +48,20 @@ def event_handler():
         raise InvalidRequest('event not found for old_id: {}'.format(old_id), 404)
 
     return jsonify(event.serialize())
+
+
+@legacy_blueprint.route('/legacy/download_pdf', methods=['GET'])
+def download_pdf_handler():
+    old_magazine_id = request.args.get('id')
+    tokens = get_tokens(decrypt(request.args.get('enc'), current_app.config['EMAIL_UNSUB_SALT']))
+    member_id = tokens[current_app.config['EMAIL_TOKENS']['member_id']]
+    # next step: store member_id in statistics table
+
+    magazine = dao_get_magazine_by_old_id(old_magazine_id)
+
+    pdf_filename = 'pdfs/{}'.format(magazine.filename)
+
+    storage = Storage(current_app.config['STORAGE'])
+
+    pdf = BytesIO(storage.get_blob(pdf_filename))
+    return send_file(pdf, as_attachment=True, attachment_filename=magazine.filename, mimetype='application/pdf')

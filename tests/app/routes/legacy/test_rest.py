@@ -1,6 +1,8 @@
 from flask import json, url_for
 import pytest
 
+from app.comms.encryption import encrypt
+
 
 class WhenGettingLegacyImages:
     @pytest.fixture
@@ -69,3 +71,24 @@ class WhenGettingLegacyEvent:
 
         assert response.status_code == 400
         assert response.json['message'] == 'invalid event old_id: None'
+
+
+class WhenGettingLegacyPDFs:
+    @pytest.fixture
+    def mock_storage(self, mocker):
+        mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+
+    def it_downloads_a_pdf(self, app, db_session, client, mocker, mock_storage, sample_member, sample_magazine):
+        enc_member_id = encrypt(
+            "{}={}".format(app.config['EMAIL_TOKENS']['member_id'], str(sample_member.id)),
+            app.config['EMAIL_UNSUB_SALT']
+        )
+
+        mocker.patch("app.utils.storage.Storage.get_blob", return_value=b'Test data')
+
+        response = client.get(
+            url_for('legacy.download_pdf_handler', enc=enc_member_id, id=sample_magazine.old_id)
+        )
+
+        assert response.status_code == 200
+        assert response.headers['Content-Disposition'] == 'attachment; filename=magazine.pdf'
