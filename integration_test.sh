@@ -171,6 +171,13 @@ venues=$(cat  << EOF
             "address": "Hamilton House, 80 Stokes Croft, Bristol, BS1 3QY",
             "tube": "",
             "bus": ""
+        },
+        {
+            "id": "4",
+            "name": "Online Event",
+            "address": "Online",
+            "tube": "",
+            "bus": ""
         }
     ]
 EOF
@@ -460,7 +467,7 @@ EOF
 )
 
 preview_email="%7B%22details%22%3A%20%22%3Cdiv%3ESome%20additional%20details%3C/div%3E%22%2C%20%22email_type%22%3A%20%22event%22%2C%20%22event_id%22%3A%20%22$EVENT_ID%22%2C%20%22extra_txt%22%3A%20%22%3Cdiv%3ESome%20more%20information%20about%20the%20event%3C/div%3E%22%2C%20%22replace_all%22%3A%20false%7D"
-preview_basic_email="%7B%22email_type%22%3A%20%22basic%22%2C%20%22name%22%3A%20%22Test%20name%22%2C%20%22message%22%3A%20%22Test%20message%22%7D"
+preview_basic_email="data={\"email_type\":\"basic\",\"name\":\"Test name\",\"message\":\"<a href='http://localhost:5000'>Test message 1</a>\"}"
 
 update_email=$(cat  << EOF
     {
@@ -492,7 +499,9 @@ function PreviewEmail {
 function PreviewBasicEmail {
     echo "*** Preview basic email ***"
 
-    curl -X GET $api_server'/email/preview?data='$preview_basic_email \
+    curl --GET \
+    --data-urlencode "$preview_basic_email" \
+    $api_server'/email/preview' \
     -H "Accept: application/json" > 'data/preview_email.html'
 
     open 'data/preview_email.html'
