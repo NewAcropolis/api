@@ -87,6 +87,8 @@ class Config(object):
     EMAIL_EARLIEST_TIME = "08:00:00"
     EMAIL_LATEST_TIME = "22:00:00"
 
+    GA_ID = os.environ.get('GA_ID')
+
 
 class Development(Config):
     DEBUG = True
