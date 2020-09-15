@@ -1,9 +1,8 @@
 from flask import current_app, url_for
 from freezegun import freeze_time
 import pytest
-import requests
 import requests_mock
-from mock import call, Mock
+from mock import call
 
 from app.dao.orders_dao import dao_get_orders
 from app.dao.tickets_dao import dao_get_tickets_for_order

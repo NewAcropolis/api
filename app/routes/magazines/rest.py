@@ -3,9 +3,12 @@ from flask import (
     Blueprint,
     current_app,
     jsonify,
-    request
+    request,
+    send_file
 )
 from flask_jwt_extended import jwt_required
+from io import StringIO, BytesIO
+import requests
 
 from app.na_celery import upload_tasks
 from app.dao import dao_create_record, dao_update_record
@@ -21,6 +24,7 @@ from app.routes.magazines.schemas import (
     post_create_magazine_schema, post_import_magazine_schema, post_update_magazine_schema
 )
 from app.schema_validation import validate
+from app.utils.storage import Storage
 
 magazines_blueprint = Blueprint('magazines', __name__)
 register_errors(magazines_blueprint)
@@ -124,3 +128,27 @@ def get_magazine_by_id(id):
 def get_magazine_by_old_id(old_id):
     magazine = dao_get_magazine_by_old_id(old_id)
     return jsonify(magazine.serialize())
+
+
+@magazines_blueprint.route('/magazine/download_pdf/<uuid:magazine_id>', methods=['GET'])
+def download_pdf(magazine_id, category="magazine_download"):
+    magazine = dao_get_magazine_by_id(magazine_id)
+
+    payload = {
+        'v': 1,
+        'tid': current_app.config['GA_ID'],
+        'cid': 888,
+        't': 'event',
+        'ec': category,
+        'ea': 'download',
+        'el': magazine.title
+    }
+    r = requests.post("http://www.google-analytics.com/collect", data=payload)
+    if r.status_code != 200:
+        current_app.logger.info(f"Failed to track magazine download: {category} - {magazine.title}")
+
+    pdf_filename = 'pdfs/{}'.format(magazine.filename)
+    storage = Storage(current_app.config['STORAGE'])
+
+    pdf = BytesIO(storage.get_blob(pdf_filename))
+    return send_file(pdf, as_attachment=True, attachment_filename=magazine.filename, mimetype='application/pdf')

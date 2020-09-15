@@ -1,5 +1,6 @@
 from flask import json, url_for
 import pytest
+import requests_mock
 
 from app.comms.encryption import encrypt
 
@@ -86,9 +87,13 @@ class WhenGettingLegacyPDFs:
 
         mocker.patch("app.utils.storage.Storage.get_blob", return_value=b'Test data')
 
-        response = client.get(
-            url_for('legacy.download_pdf_handler', enc=enc_member_id, id=sample_magazine.old_id)
-        )
+        with requests_mock.mock() as r:
+            r.post("http://www.google-analytics.com/collect")
+
+            response = client.get(
+                url_for('legacy.download_pdf_handler', enc=enc_member_id, id=sample_magazine.old_id)
+            )
+            assert r.last_request.text == "v=1&cid=888&t=event&ec=legacy_magazine_email&ea=download&el=Test+magazine"
 
         assert response.status_code == 200
         assert response.headers['Content-Disposition'] == 'attachment; filename=magazine.pdf'

@@ -2,6 +2,8 @@ import base64
 import os
 from flask import json, url_for
 from mock import Mock, call
+import pytest
+import requests_mock
 
 from tests.conftest import create_authorization_header
 from tests.db import create_magazine
@@ -189,3 +191,44 @@ class WhenGettingLatestMagazine:
         )
         assert response.status_code == 200
         assert response.json['id'] == str(magazine.id)
+
+
+class WhenDownloadingMagazine:
+    @pytest.fixture
+    def mock_storage(self, mocker):
+        mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+
+    def it_downloads_a_pdf(self, app, db_session, client, mocker, mock_storage, sample_magazine):
+        mocker.patch("app.utils.storage.Storage.get_blob", return_value=b'Test data')
+
+        with requests_mock.mock() as r:
+            r.post("http://www.google-analytics.com/collect")
+
+            response = client.get(
+                url_for('magazines.download_pdf', magazine_id=sample_magazine.id)
+            )
+
+            assert r.last_request.text == "v=1&cid=888&t=event&ec=magazine_download&ea=download&el=Test+magazine"
+
+        assert response.status_code == 200
+        assert response.headers['Content-Disposition'] == 'attachment; filename=magazine.pdf'
+
+    def it_logs_missing_tracking_if_ga_response_not_200(
+        self, app, db_session, client, mocker, mock_storage, sample_magazine
+    ):
+        mocker.patch("app.utils.storage.Storage.get_blob", return_value=b'Test data')
+        mock_logger = mocker.patch("app.routes.magazines.rest.current_app.logger.info")
+
+        with requests_mock.mock() as r:
+            r.post("http://www.google-analytics.com/collect", status_code=503)
+
+            response = client.get(
+                url_for('magazines.download_pdf', magazine_id=sample_magazine.id)
+            )
+
+            assert r.last_request.text == "v=1&cid=888&t=event&ec=magazine_download&ea=download&el=Test+magazine"
+
+        assert response.status_code == 200
+        assert response.headers['Content-Disposition'] == 'attachment; filename=magazine.pdf'
+        assert mock_logger.called
+        assert mock_logger.call_args[0][0] == "Failed to track magazine download: magazine_download - Test magazine"

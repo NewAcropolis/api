@@ -64,6 +64,7 @@ if [ $port != 'No environment' ]; then
     eval "PROJECT=\$PROJECT_$environment"
     eval "GOOGLE_AUTH_USER=\$GOOGLE_AUTH_USER_$environment"
     eval "JWT_SECRET=\$JWT_SECRET_$environment"
+    eval "GA_ID=\$GA_ID_$environment"
     eval "RESTART_FLOWER=\$RESTART_FLOWER"
     eval "RESTART_CELERY=\$RESTART_CELERY"
     eval "GOOGLE_APPLICATION_CREDENTIALS=\$GOOGLE_APPLICATION_CREDENTIALS_$environment"
@@ -103,6 +104,7 @@ TRAVIS_COMMIT=$TRAVIS_COMMIT
 CELERY_BROKER_URL=$CELERY_BROKER_URL
 RESTART_FLOWER=$RESTART_FLOWER
 RESTART_CELERY=$RESTART_CELERY
+GA_ID=$GA_ID
 EOL
 
 sudo systemctl daemon-reload
