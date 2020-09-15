@@ -8,7 +8,7 @@ from app.dao.emails_dao import dao_get_email_by_id, dao_add_member_sent_to_email
 from app.dao.members_dao import dao_get_members_not_sent_to
 from app.dao.users_dao import dao_get_admin_users
 from app.errors import InvalidRequest
-from app.models import EVENT, MAGAZINE
+from app.models import EVENT, MAGAZINE, APPROVED
 
 
 @celery.task()
@@ -33,7 +33,9 @@ def send_emails(email_id):
 
     try:
         for index, (member_id, email_to) in enumerate(members_not_sent_to):
-            if limit and index > limit - 1:
+            if limit and index > limit - 1 or email.email_state != APPROVED:
+                current_app.logger.info("Email stopped - {}".format(
+                    "not approved" if email.email_state != APPROVED else "limit reached"))
                 break
             subject = email.get_subject()
             message = None
