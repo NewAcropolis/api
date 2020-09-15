@@ -13,7 +13,7 @@ import sqlalchemy
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from app import create_app, db as _db, get_env
-from app.models import EVENT, MAGAZINE
+from app.models import APPROVED, EVENT, MAGAZINE
 from tests.db import (
     create_article,
     create_email,
@@ -123,7 +123,8 @@ def sample_email(db):
     return create_email(
         details='<strong>Fees:</strong> 10, <strong>Concessions:</strong> 5',
         created_at='2019-06-01',
-        expires='2019-07-01'
+        expires='2019-07-01',
+        email_state=APPROVED
     )
 
 
@@ -135,7 +136,8 @@ def sample_magazine_email(db):
         details='<strong>Fees:</strong> 10, <strong>Concessions:</strong> 5',
         created_at='2019-06-01',
         expires='2019-07-01',
-        email_type=MAGAZINE
+        email_type=MAGAZINE,
+        email_state=APPROVED
     )
 
 

@@ -6,7 +6,7 @@ import pytest
 from app.na_celery.email_tasks import send_emails, send_periodic_emails
 from app.comms.encryption import decrypt, get_tokens
 from app.errors import InvalidRequest
-from app.models import APPROVED, Magazine
+from app.models import APPROVED, DRAFT, Magazine
 
 from tests.db import (
     create_email, create_event, create_event_date, create_member, create_email_to_member, create_email_provider
@@ -70,6 +70,22 @@ class WhenProcessingSendEmailsTask:
         assert mock_send_email.call_count == 1
         assert mock_send_email.call_args_list[0][0][0] == sample_member.email
 
+    def it_doesnt_send_unapproved_emails(self, mocker, db, db_session, sample_email, sample_member):
+        mocker.patch.dict('app.application.config', {
+            'ENVIRONMENT': 'test',
+            'EMAIL_RESTRICT': 1
+        })
+        sample_email.email_state = DRAFT
+
+        create_member(name='Test 1', email='test1@example.com')
+
+        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+        mock_logger = mocker.patch('app.na_celery.email_tasks.current_app.logger.info')
+        send_emails(sample_email.id)
+
+        assert not mock_send_email.called
+        assert mock_logger.called
+
     def it_only_sends_to_unsent_members_and_shows_failed_stat(
         self, mocker, db, db_session, sample_email, sample_member
     ):
@@ -97,7 +113,7 @@ class WhenProcessingSendEmailsTask:
         }
 
     @freeze_time("2019-06-03T10:00:00")
-    def it_only_sends_approved_emails(self, mocker, db, db_session, sample_email, sample_member):
+    def it_only_sends_approved_emails_periodically(self, mocker, db, db_session, sample_email, sample_member):
         mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails')
         create_email(send_starts_at='2019-06-07', created_at='2019-06-01', send_after='2019-06-07 9:00')
         create_email(send_starts_at='2019-08-08', created_at='2019-06-01', send_after='2019-07-14 9:00')
