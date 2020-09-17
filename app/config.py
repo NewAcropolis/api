@@ -86,6 +86,7 @@ class Config(object):
     EMAIL_RESTRICT = os.environ.get('EMAIL_RESTRICT')
     EMAIL_EARLIEST_TIME = "08:00:00"
     EMAIL_LATEST_TIME = "22:00:00"
+    EMAIL_DISABLED = os.environ.get('EMAIL_DISABLED')
 
     GA_ID = os.environ.get('GA_ID')
 

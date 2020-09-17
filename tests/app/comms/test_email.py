@@ -31,6 +31,15 @@ def mock_config_restricted(app):
     app.config = old_config
 
 
+@pytest.fixture
+def mock_config_disabled(app):
+    old_config = app.config
+    app.config['EMAIL_DISABLED'] = 1
+    yield
+
+    app.config = old_config
+
+
 def mock_get_email_count_for_provider_over_first_limit(email_provider_id):
     email_provider = dao_get_email_provider_by_id(email_provider_id)
     if email_provider.pos == 0:
@@ -149,6 +158,13 @@ class WhenSendingAnEmail:
             resp = send_email('someone@example.com', 'test subject', 'test message', override=True)
 
             assert resp == 200
+
+    def it_doesnt_send_email_if_disabled(self, mocker, mock_config_disabled):
+        mock_logger = mocker.patch('app.comms.email.current_app.logger.info')
+
+        send_email('someone@example.com', 'test subject', 'test message')
+
+        assert mock_logger.call_args == call("Emails disabled, unset EMAIL_DISABLED env var to re-enable")
 
 
 class WhenGettingEmailData:
