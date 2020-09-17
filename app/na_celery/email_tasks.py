@@ -4,6 +4,7 @@ import pytz
 
 from app import celery
 from app.comms.email import send_email, get_email_html, get_email_provider
+from app.comms.stats import send_ga_event
 from app.dao.emails_dao import dao_get_email_by_id, dao_add_member_sent_to_email, dao_get_approved_emails_for_sending
 from app.dao.members_dao import dao_get_members_not_sent_to
 from app.dao.users_dao import dao_get_admin_users
@@ -52,6 +53,12 @@ def send_emails(email_id):
 
             email_status_code = send_email(email_to, subject, message)
             dao_add_member_sent_to_email(email_id, member_id, status_code=email_status_code)
+
+            send_ga_event(
+                f"Sent {email.email_type} email, {subject} - {str(email.id)}",
+                "email",
+                "send success" if email_status_code == 200 else "send failed",
+                f"{subject} - {email.id}")
     except InvalidRequest as e:
         if e.status_code == 429:
             current_app.logger.error("Email limit reached: %r", e.message)

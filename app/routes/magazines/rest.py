@@ -11,6 +11,7 @@ from io import StringIO, BytesIO
 import requests
 
 from app.na_celery import upload_tasks
+from app.comms.stats import send_ga_event
 from app.dao import dao_create_record, dao_update_record
 from app.dao.emails_dao import dao_create_email
 from app.dao.magazines_dao import (
@@ -134,18 +135,7 @@ def get_magazine_by_old_id(old_id):
 def download_pdf(magazine_id, category="magazine_download"):
     magazine = dao_get_magazine_by_id(magazine_id)
 
-    payload = {
-        'v': 1,
-        'tid': current_app.config['GA_ID'],
-        'cid': 888,
-        't': 'event',
-        'ec': category,
-        'ea': 'download',
-        'el': magazine.title
-    }
-    r = requests.post("http://www.google-analytics.com/collect", data=payload)
-    if r.status_code != 200:
-        current_app.logger.info(f"Failed to track magazine download: {category} - {magazine.title}")
+    send_ga_event("magazine download", category, "download", magazine.title)
 
     pdf_filename = 'pdfs/{}'.format(magazine.filename)
     storage = Storage(current_app.config['STORAGE'])
