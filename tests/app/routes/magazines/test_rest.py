@@ -208,7 +208,7 @@ class WhenDownloadingMagazine:
                 url_for('magazines.download_pdf', magazine_id=sample_magazine.id)
             )
 
-            assert r.last_request.text == "v=1&cid=888&t=event&ec=magazine_download&ea=download&el=Test+magazine"
+            assert r.last_request.text == "v=1&tid=1&cid=888&t=event&ec=magazine_download&ea=download&el=Test+magazine"
 
         assert response.status_code == 200
         assert response.headers['Content-Disposition'] == 'attachment; filename=magazine.pdf'
@@ -226,7 +226,7 @@ class WhenDownloadingMagazine:
                 url_for('magazines.download_pdf', magazine_id=sample_magazine.id)
             )
 
-            assert r.last_request.text == "v=1&cid=888&t=event&ec=magazine_download&ea=download&el=Test+magazine"
+            assert r.last_request.text == "v=1&tid=1&cid=888&t=event&ec=magazine_download&ea=download&el=Test+magazine"
 
         assert response.status_code == 200
         assert response.headers['Content-Disposition'] == 'attachment; filename=magazine.pdf'

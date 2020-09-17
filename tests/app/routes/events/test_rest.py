@@ -799,7 +799,8 @@ class WhenPostingUpdatingAnEvent:
             'ENVIRONMENT': 'live',
             'EMAIL_RESTRICT': None,
             'EMAIL_DOMAIN': 'test.com',
-            'FRONTEND_ADMIN_URL': 'https://frontend/test'
+            'FRONTEND_ADMIN_URL': 'https://frontend/test',
+            'EMAIL_DISABLED': None
         }
 
         mocker.patch.dict(
@@ -978,6 +979,7 @@ class WhenPostingUpdatingAnEvent:
         assert reject_reasons[0].resolved == data['reject_reasons'][0]['resolved']
         assert str(reject_reasons[0].created_by) == data['reject_reasons'][0]['created_by']
 
+        print(self.mock_send_email.call_args)
         args, kwargs = self.mock_send_email.call_args
         assert args[0] == sample_email_provider.api_url
         assert kwargs['auth'] == ('api', sample_email_provider.api_key)

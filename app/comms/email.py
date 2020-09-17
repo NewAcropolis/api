@@ -1,5 +1,6 @@
 from flask import current_app, jsonify, render_template
 import json
+import os
 import re
 import requests
 from html.parser import HTMLParser
@@ -132,6 +133,9 @@ def get_email_data(data_map, to, subject, message, from_email, from_name):
 
 
 def send_email(to, subject, message, from_email=None, from_name=None, override=False):
+    if current_app.config['EMAIL_DISABLED']:
+        current_app.logger.info("Emails disabled, unset EMAIL_DISABLED env var to re-enable")
+        return 200
     if current_app.config['ENVIRONMENT'] != 'live' or current_app.config.get('EMAIL_RESTRICT'):
         message = message.replace('<body>', '<body><div>Test email, intended for {}</div>'.format(to))
         to = current_app.config['TEST_EMAIL']
