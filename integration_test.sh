@@ -439,6 +439,25 @@ function GetUsers {
     -H "Authorization: Bearer $TKN" 
 }
 
+new_user=$(cat  << EOF
+{
+    "email": "$NEW_USER_EMAIL",
+    "name": "$NEW_USER_NAME",
+    "active": true,
+    "access_area": "$NEW_USER_ACCESS"
+}
+EOF
+)
+
+function CreateUser {
+    echo "*** Create user ***"
+
+    curl -X POST $api_server'/user' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$new_user"
+}
+
 function GetMembers {
     echo "*** Get members ***"
 
@@ -830,6 +849,10 @@ case "$arg" in
 
         -cm)
             CreateMagazine
+        ;;
+
+        -cu)
+            CreateUser
         ;;
 
         -pay)
