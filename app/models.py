@@ -41,6 +41,7 @@ class Article(db.Model):
     old_id = db.Column(db.Integer)
     title = db.Column(db.String(255))
     author = db.Column(db.String(255))
+    image_filename = db.Column(db.String(255))
     content = db.Column(db.Text())
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -51,6 +52,7 @@ class Article(db.Model):
             'title': self.title,
             'author': self.author,
             'content': self.content,
+            'image_filename': self.image_filename,
             'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
         }
 
@@ -72,6 +74,7 @@ class Article(db.Model):
             'author': self.author,
             'short_content': get_short_content(num_words=110),
             'very_short_content': get_short_content(num_words=30),
+            'image_filename': self.image_filename,
         }
 
 

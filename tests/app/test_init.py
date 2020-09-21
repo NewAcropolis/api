@@ -61,6 +61,7 @@ class WhenInitializingApp(object):
         mocker.patch('app.report_missing_config')
         mocker.patch('app.init_app')
         mocker.patch('app.SQLAlchemy.__init__')
+        mocker.patch('os.environ.get', return_value="development")
         mock_celery = mocker.patch('app.celery.init_app')
 
         create_app(is_celery=True)
