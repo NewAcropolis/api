@@ -13,11 +13,13 @@ from app.dao.articles_dao import (
     dao_create_article,
     dao_get_articles,
     dao_update_article,
-    dao_get_article_by_id
+    dao_get_article_by_id,
+    dao_get_article_by_old_id,
+    dao_get_articles_with_images
 )
 from app.errors import register_errors
 
-from app.routes.articles.schemas import post_import_articles_schema
+from app.routes.articles.schemas import post_import_articles_schema, post_update_article_schema
 
 from app.models import Article
 from app.schema_validation import validate
@@ -36,18 +38,32 @@ def get_articles():
     return jsonify(articles)
 
 
+@article_blueprint.route('/article/<int:old_id>', methods=['POST'])
+@jwt_required
+def update_article_by_old_id(old_id):
+    data = request.get_json(force=True)
+
+    validate(data, post_update_article_schema)
+
+    article = dao_get_article_by_old_id(old_id)
+
+    dao_update_article(article.id, **data)
+
+    return jsonify(article.serialize()), 200
+
+
 @articles_blueprint.route('/articles/summary')
 @articles_blueprint.route('/articles/summary/<string:ids>')
 @jwt_required
 def get_articles_summary(ids=None):
     if not ids:
-        current_app.logger.info('Limit articles summary to 4')
-        articles = dao_get_articles()
+        current_app.logger.info('Limit articles summary to 5')
+        articles = dao_get_articles_with_images()
         len_articles = len(articles)
 
         ids = []
 
-        end = 4 if len_articles > 3 else len_articles
+        end = 5 if len_articles > 4 else len_articles
 
         while len(ids) < end:
             index = randint(0, len(articles) - 1)

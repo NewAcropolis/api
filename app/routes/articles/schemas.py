@@ -30,3 +30,15 @@ post_import_articles_schema = {
         "article": post_import_article_schema
     }
 }
+
+post_update_article_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for updating article",
+    "type": "object",
+    "properties": {
+        'title': {"type": "string"},
+        'author': {"type": "string"},
+        'content': {"type": "string"},
+        'image_filename': {"type": "string"},
+    },
+}

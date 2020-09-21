@@ -195,12 +195,14 @@ def create_article(
         title='Egyptians',
         author='Mrs Black',
         content='Some info about Egypt\r\n\"Something in quotes\"',
+        image_filename='article.jpg'
 ):
     data = {
         'old_id': old_id,
         'title': title,
         'author': author,
         'content': content,
+        'image_filename': image_filename
     }
     article = Article(**data)
 

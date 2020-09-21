@@ -22,5 +22,14 @@ def dao_get_articles(article_ids=None):
         return Article.query.filter(Article.id.in_(article_ids)).order_by(Article.old_id).all()
 
 
+def dao_get_articles_with_images():
+    return Article.query.filter(
+        Article.image_filename != None).all()  # noqa E711 SqlAlchemy syntax
+
+
 def dao_get_article_by_id(article_id):
     return Article.query.filter_by(id=article_id).one()
+
+
+def dao_get_article_by_old_id(old_id):
+    return Article.query.filter_by(old_id=old_id).one()

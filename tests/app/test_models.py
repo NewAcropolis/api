@@ -57,6 +57,7 @@ class WhenUsingArticleModel(object):
             'title': article.title,
             'short_content': article.content,
             'very_short_content': article.content,
+            'image_filename': 'article.jpg'
         }
 
     def it_shows_shortened_content_article_summary_json_on_serialize_long_content(self, db_session):
@@ -77,7 +78,8 @@ class WhenUsingArticleModel(object):
             'author': article.author,
             'title': article.title,
             'short_content': long_content[:short_content_length] + '...',
-            'very_short_content': long_content[:very_short_content_length] + '...'
+            'very_short_content': long_content[:very_short_content_length] + '...',
+            'image_filename': 'article.jpg'
         }
 
     def it_removes_html_tags_on_article_summary(self, db_session):
@@ -101,6 +103,7 @@ class WhenUsingArticleModel(object):
             'title': article.title,
             'short_content': clean_long_content[:clean_short_content_length] + '...',
             'very_short_content': clean_long_content[:clean_very_short_content_length] + '...',
+            'image_filename': 'article.jpg'
         }
 
 

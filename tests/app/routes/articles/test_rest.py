@@ -67,7 +67,7 @@ class WhenGettingArticles:
 
         data = json.loads(response.get_data(as_text=True))
 
-        assert len(data) == 4
+        assert len(data) == 5
 
     def it_returns_selected_article_summary(self, client, sample_article, db_session):
         article_1 = create_article(title='test 1')
@@ -145,3 +145,19 @@ class WhenPostingImportArticles(object):
             assert json_articles[i]["author"] == sample_articles[i]["author"]
             assert json_articles[i]["content"] == sample_articles[i]["content"]
             assert json_articles[i]["created_at"] == sample_articles[i]["entrydate"]
+
+
+class WhenPostingUpdateArticle:
+
+    def it_updates_an_article(self, client, db_session, sample_article):
+        data = {
+            'title': 'Updated',
+            'image_filename': 'new_filename.jpg'
+        }
+        response = client.post(
+            url_for('article.update_article_by_old_id', old_id=sample_article.old_id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+        assert response.json['image_filename'] == data['image_filename']
