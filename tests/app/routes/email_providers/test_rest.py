@@ -4,9 +4,21 @@ import uuid
 
 from flask import json, url_for
 from tests.conftest import create_authorization_header
+from tests.db import create_email_provider
 
 
 class WhenPostingEmailProvider(object):
+
+    def it_gets_current_email_provider(self, client, db_session, sample_email_provider):
+        create_email_provider(name='Next email provider', pos=2)
+
+        response = client.get(
+            url_for('email_provider.get_email_provider'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+        assert response.json['id'] == str(sample_email_provider.id)
+        assert response.json['shortened_api_key'] == sample_email_provider.api_key[-10:]
 
     def it_creates_an_email_provider(self, client, db_session):
         data_map = {
