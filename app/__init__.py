@@ -109,7 +109,8 @@ def get_env():
     elif 'www-live' in get_root_path():
         return 'live'
     else:
-        return os.environ.get('ENVIRONMENT', 'development')
+        env = os.environ.get('ENVIRONMENT', 'development')
+        return 'development' if env == 'dev' else env
 
 
 def get_root_path():
