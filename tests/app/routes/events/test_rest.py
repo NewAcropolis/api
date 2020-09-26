@@ -151,6 +151,18 @@ def mock_paypal_task(mocker):
     return mocker.patch('app.routes.events.rest.paypal_tasks.create_update_paypal_button_task.apply_async')
 
 
+@pytest.fixture
+def mock_storage_without_asserts(mocker):
+    mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+    mocker.patch("app.utils.storage.Storage.blob_exists", return_value=True)
+    mocker.patch("app.utils.storage.Storage.upload_blob")
+    mock_storage_rename = mocker.patch("app.utils.storage.Storage.rename_image")
+
+    return {
+        'mock_storage_rename': mock_storage_rename
+    }
+
+
 class WhenGettingEvents:
 
     def it_returns_all_events(self, client, sample_event_with_dates, db_session):
@@ -834,7 +846,7 @@ class WhenPostingUpdatingAnEvent:
         for event in Event.query.all():
             if event.image_filename:
                 mock_storage_blob_upload.assert_called_with(
-                    'test_img.png', '2018/{}'.format(str(event.id)), base64img)
+                    'test_img.png', '2018/{}-temp'.format(str(event.id)), base64img)
 
     def it_updates_an_event_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage,
@@ -979,7 +991,6 @@ class WhenPostingUpdatingAnEvent:
         assert reject_reasons[0].resolved == data['reject_reasons'][0]['resolved']
         assert str(reject_reasons[0].created_by) == data['reject_reasons'][0]['created_by']
 
-        print(self.mock_send_email.call_args)
         args, kwargs = self.mock_send_email.call_args
         assert args[0] == sample_email_provider.api_url
         assert kwargs['auth'] == ('api', sample_email_provider.api_key)
@@ -1132,6 +1143,77 @@ class WhenPostingUpdatingAnEvent:
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == 'approved event should not have any reject reasons'
+
+    def it_renames_temp_image_file_when_approved(
+        self, mocker, client, db_session, sample_req_event_data_with_event,
+        mock_storage_without_asserts
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/XX-temp?111",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": APPROVED,
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        assert mock_storage_without_asserts['mock_storage_rename'].called
+        assert mock_storage_without_asserts['mock_storage_rename'].call_args == call('2019/XX-temp', '2019/XX')
+        assert response.json['image_filename'] == '2019/XX'
+
+    def it_logs_warning_if_no_temp_image_file_when_approved(
+        self, mocker, client, db_session, sample_req_event_data_with_event,
+        mock_storage_without_asserts
+    ):
+        mock_logger = mocker.patch('app.routes.events.rest.current_app.logger.warn')
+
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/XX?111",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": APPROVED,
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        assert not mock_storage_without_asserts['mock_storage_rename'].called
+        assert mock_logger.called
 
     def it_raises_an_error_if_no_event_dates(
         self, mocker, client, db_session,
@@ -1314,7 +1396,7 @@ class WhenPostingUpdatingAnEvent:
 
         json_events = json.loads(response.get_data(as_text=True))
         assert json_events["title"] == data["title"]
-        assert json_events["image_filename"].split('?')[0] == '2018/{}'.format(
+        assert json_events["image_filename"].split('?')[0] == '2018/{}-temp'.format(
             sample_req_event_data_with_event['event'].id)
         assert len(json_events["event_dates"]) == 1
         assert len(json_events["event_dates"][0]["speakers"]) == 2
@@ -1368,7 +1450,7 @@ class WhenPostingUpdatingAnEvent:
 
         json_events = json.loads(response.get_data(as_text=True))
         assert json_events["title"] == data["title"]
-        assert json_events["image_filename"].split('?')[0] == '2018/{}'.format(
+        assert json_events["image_filename"].split('?')[0] == '2018/{}-temp'.format(
             sample_req_event_data_with_event['event'].id)
         assert len(json_events["event_dates"]) == 2
         assert len(json_events["event_dates"][0]["speakers"]) == 1

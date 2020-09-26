@@ -98,6 +98,15 @@ class Storage(object):
         blobs = self.bucket.list_blobs(prefix=prefix, delimiter=delimiter)
         return any(True for _ in blobs)
 
+    def rename_image(self, source_name, target_name):  # pragma: no cover
+        image_blob = self.bucket.get_blob(source_name)
+        standard_blob = self.bucket.get_blob("standard/" + source_name)
+        thumbnail_blob = self.bucket.get_blob("thumbnail/" + source_name)
+        self.bucket.rename_blob(image_blob, target_name)
+        self.bucket.rename_blob(standard_blob, "standard/" + target_name)
+        self.bucket.rename_blob(thumbnail_blob, "thumbnail/" + target_name)
+        current_app.logger.info(f"Object renamed: {source_name} to {target_name}")
+
     def get_blob(self, image_filename):  # pragma: no cover
         blob = self.bucket.get_blob(image_filename)
         current_app.logger.info('Getting %s', image_filename)

@@ -287,6 +287,9 @@ def update_event(event_id):
             event_year = str(event.event_dates[0].event_datetime).split('-')[0]
             target_image_filename = '{}/{}'.format(event_year, str(event_id))
 
+            if data.get('event_state') != APPROVED:
+                target_image_filename += '-temp'
+
             storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
 
             unix_time = time.time()
@@ -295,6 +298,14 @@ def update_event(event_id):
             image_filename_without_cache_buster = image_filename.split('?')[0]
             if not storage.blob_exists(image_filename_without_cache_buster):
                 raise InvalidRequest('{} does not exist'.format(image_filename_without_cache_buster), 400)
+
+        if data.get('event_state') == APPROVED:
+            if '-temp' in image_filename:
+                q_pos = image_filename.index('-temp?')
+                image_filename = image_filename[0:q_pos]
+                storage.rename_image(image_filename + '-temp', image_filename)
+            else:
+                current_app.logger.warn(f"No temp file to rename: {image_filename}")
 
         event.image_filename = image_filename
         dao_update_event(event.id, image_filename=image_filename)
@@ -324,7 +335,6 @@ def update_event(event_id):
             message += '</ol>'
 
             send_email(emails_to, '{} event needs to be corrected'.format(event.title), message)
-
         return jsonify(json_event), 200
 
     raise InvalidRequest('{} did not update event'.format(event_id), 400)
