@@ -2,7 +2,7 @@
 set +e
 
 function setupURLS {
-    if [ $ENVIRONMENT = "dev" ]; then
+    if [ $ENVIRONMENT = "development" ]; then
         export api_server="${API_BASE_URL}"
         export username=$ADMIN_CLIENT_ID_development
         export password=$ADMIN_CLIENT_SECRET_development
@@ -399,6 +399,115 @@ function GetArticlesSummary {
     -H "Authorization: Bearer $TKN"
 }
 
+# CommunicateFeelings.jpg
+# 22
+
+article_1=$(cat  << EOF
+{
+    "image_filename": "CommunicateFeelings.jpg"
+}
+EOF
+)
+
+# Eclecticism.jpg
+# 24
+article_2=$(cat  << EOF
+{
+    "image_filename": "Eclecticism.jpg"
+}
+EOF
+)
+
+# Victor Schauberger.jpg
+# 19
+
+article_3=$(cat  << EOF
+{
+    "image_filename": "Victor_Schauberger.jpg"
+}
+EOF
+)
+
+# AlchemistsGold.jpg
+# 8
+
+article_4=$(cat  << EOF
+{
+    "image_filename": "AlchemistsGold.jpg"
+}
+EOF
+)
+
+# Modern Myth.jpg
+# 2
+
+article_5=$(cat  << EOF
+{
+    "image_filename": "Modern_Myth.jpg"
+}
+EOF
+)
+
+# Play Chess.jpg
+# 18
+
+article_6=$(cat  << EOF
+{
+    "image_filename": "Play_Chess.jpg"
+}
+EOF
+)
+
+# Unending Progress.jpg
+# 26
+
+article_7=$(cat  << EOF
+{
+    "image_filename": "Unending_Progress.jpg"
+}
+EOF
+)
+
+
+function UpdateArticleByOldId {
+    echo "*** Update Article by Old ID ***"
+    curl -X POST $api_server'/article/22' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$article_1"
+
+    curl -X POST $api_server'/article/24' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$article_2"
+
+    curl -X POST $api_server'/article/19' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$article_3"
+
+    curl -X POST $api_server'/article/8' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$article_4"
+
+    curl -X POST $api_server'/article/2' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$article_5"
+
+    curl -X POST $api_server'/article/18' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$article_6"
+
+    curl -X POST $api_server'/article/26' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$article_7"
+}
+
+
 admin_user=$(cat  << EOF
     {"email":"$ADMIN_USER","access_area":",email,","name":"Admin","active":true}
 EOF
@@ -586,6 +695,15 @@ function UpdateEmailProvider {
     -d "$update_email_provider"
 }
 
+function GetEmailProvider {
+    echo "*** Get current email provider ***"
+
+    curl -X GET $api_server"/email_provider" \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$update_email_provider"
+}
+
 function UpdateEmailToReady {
     echo "*** Update email to ready ***"
 
@@ -667,16 +785,7 @@ function Logout {
     -H "Authorization: Bearer $TKN" | jq .
 }
 
-# setup 
-if [ -z $2 ]; then
-    if [ ! -z $ENVIRONMENT ]; then
-        env=$ENVIRONMENT
-    fi
-else
-    env=$2
-fi
-
-setupURLS "$env"
+setupURLS
 setupAccessToken
 
 if [ -z $1 ]; then
@@ -792,7 +901,7 @@ case "$arg" in
         ;;
 
         -ie2m)
-            ImportEmailToMembers $3
+            ImportEmailToMembers $2
         ;;
 
         -ga)
@@ -809,6 +918,10 @@ case "$arg" in
 
         -gas)
             GetArticlesSummary
+        ;;
+
+        -uao)
+            UpdateArticleByOldId
         ;;
 
         -gv)
@@ -877,6 +990,10 @@ case "$arg" in
 
         -uep)
             UpdateEmailProvider
+        ;;
+
+        -gep)
+            GetEmailProvider
         ;;
 
         -setup)
