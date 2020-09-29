@@ -33,7 +33,6 @@ register_errors(article_blueprint)
 @articles_blueprint.route('/articles')
 @jwt_required
 def get_articles():
-    current_app.logger.info('get_articles')
     articles = [a.serialize() if a else None for a in dao_get_articles()]
     return jsonify(articles)
 
@@ -79,7 +78,6 @@ def get_articles_summary(ids=None):
 @article_blueprint.route('/article/<uuid:article_id>', methods=['GET'])
 @jwt_required
 def get_article_by_id(article_id):
-    current_app.logger.info('get_article: {}'.format(article_id))
     article = dao_get_article_by_id(article_id)
     return jsonify(article.serialize())
 
