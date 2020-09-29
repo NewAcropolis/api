@@ -1,7 +1,7 @@
 from freezegun import freeze_time
 
 from app.models import MAGAZINE, Event, Fee, Speaker
-from tests.db import create_article, create_event, create_email, create_fee, create_speaker
+from tests.db import create_article, create_book, create_event, create_email, create_fee, create_speaker
 
 
 class WhenUsingEventModel(object):
@@ -104,6 +104,24 @@ class WhenUsingArticleModel(object):
             'short_content': clean_long_content[:clean_short_content_length] + '...',
             'very_short_content': clean_long_content[:clean_very_short_content_length] + '...',
             'image_filename': 'article.jpg'
+        }
+
+
+class WhenUsingBookModel(object):
+
+    def it_shows_book_json_on_serialize(self, db_session):
+        book = create_book()
+
+        assert book.serialize() == {
+            'id': str(book.id),
+            'old_id': book.old_id,
+            'price': str(book.price),
+            'author': book.author,
+            'title': book.title,
+            'description': book.description,
+            'long_description': book.long_description,
+            'image_filename': book.image_filename,
+            'created_at': book.created_at.strftime('%Y-%m-%d')
         }
 
 

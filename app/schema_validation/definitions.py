@@ -22,6 +22,12 @@ time = {
     "validationMessage": "is not a time in format HH:MM(:SS)?",
 }
 
+money = {
+    "type": "string",
+    "pattern": "^(0|([1-9]+[0-9]*))(.[0-9]{1,2})?$",
+    "description": "A Monetary Amount",
+}
+
 number = {
     "type": "string",
     "pattern": "^[0-9]+$",
