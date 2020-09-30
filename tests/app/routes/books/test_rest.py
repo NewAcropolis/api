@@ -2,7 +2,7 @@ from flask import json, url_for
 from tests.conftest import create_authorization_header
 
 
-sample_books = [{
+sample_books_for_import = [{
     "id": "1",
     "FormatId": "1",
     "Title": "The Alchemist",
@@ -46,17 +46,17 @@ class WhenPostingImportBooks(object):
     def it_creates_books_for_imported_books(self, client, db_session):
         response = client.post(
             url_for('books.import_books'),
-            data=json.dumps(sample_books),
+            data=json.dumps(sample_books_for_import),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 201
 
         json_books = json.loads(response.get_data(as_text=True))['books']
-        assert len(json_books) == len(sample_books)
-        for i in range(0, len(sample_books) - 1):
-            assert json_books[i]["old_id"] == int(sample_books[i]["id"])
-            assert json_books[i]["title"] == sample_books[i]["Title"]
-            assert json_books[i]["author"] == sample_books[i]["Author"]
+        assert len(json_books) == len(sample_books_for_import)
+        for i in range(0, len(sample_books_for_import) - 1):
+            assert json_books[i]["old_id"] == int(sample_books_for_import[i]["id"])
+            assert json_books[i]["title"] == sample_books_for_import[i]["Title"]
+            assert json_books[i]["author"] == sample_books_for_import[i]["Author"]
 
     def it_does_not_create_book_for_imported_books_with_duplicates(self, client, db_session):
         duplicate_book = {
@@ -71,18 +71,43 @@ class WhenPostingImportBooks(object):
             "Active": "y"
         },
 
-        sample_books.extend(duplicate_book)
+        sample_books_for_import.extend(duplicate_book)
 
         response = client.post(
             url_for('books.import_books'),
-            data=json.dumps(sample_books),
+            data=json.dumps(sample_books_for_import),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 201
 
         json_books = json.loads(response.get_data(as_text=True))['books']
-        assert len(json_books) == len(sample_books) - 1  # don't add in duplicate book
-        for i in range(0, len(sample_books) - 1):
-            assert json_books[i]["old_id"] == int(sample_books[i]["id"])
-            assert json_books[i]["title"] == sample_books[i]["Title"]
-            assert json_books[i]["author"] == sample_books[i]["Author"]
+        assert len(json_books) == len(sample_books_for_import) - 1  # don't add in duplicate book
+        for i in range(0, len(sample_books_for_import) - 1):
+            assert json_books[i]["old_id"] == int(sample_books_for_import[i]["id"])
+            assert json_books[i]["title"] == sample_books_for_import[i]["Title"]
+            assert json_books[i]["author"] == sample_books_for_import[i]["Author"]
+
+
+class WhenGettingBooks:
+
+    def it_returns_all_books(self, client, db_session, sample_book):
+        response = client.get(
+            url_for('books.get_books'),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        assert len(response.json) == 1
+        assert response.json[0]['id'] == str(sample_book.id)
+
+
+class WhenGettingBookByID:
+
+    def it_returns_correct_book(self, client, sample_book, db_session):
+        response = client.get(
+            url_for('book.get_book_by_id', book_id=str(sample_book.id)),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        assert response.json['id'] == str(sample_book.id)

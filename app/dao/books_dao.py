@@ -15,9 +15,9 @@ def dao_create_book(book):
 #     )
 
 
-# def dao_get_books():
-#     return Book.query.order_by(Book.title).all()
+def dao_get_books():
+    return Book.query.order_by(Book.title).all()
 
 
-# def dao_get_book_by_id(book_id):
-#     return Book.query.filter_by(id=book_id).one()
+def dao_get_book_by_id(book_id):
+    return Book.query.filter_by(id=book_id).one()

@@ -16,6 +16,7 @@ from app import create_app, db as _db, get_env
 from app.models import APPROVED, EVENT, MAGAZINE
 from tests.db import (
     create_article,
+    create_book,
     create_email,
     create_email_provider,
     create_event,
@@ -118,6 +119,11 @@ def db_session(db):
 @pytest.fixture(scope='function')
 def sample_article(db):
     return create_article(title='Ancient Greece')
+
+
+@pytest.fixture(scope='function')
+def sample_book(db):
+    return create_book(title='The Spirits of Nature')
 
 
 @pytest.fixture(scope='function')
