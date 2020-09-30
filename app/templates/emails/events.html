@@ -36,7 +36,7 @@
                         <td width="100%" style="padding: 0px;">&nbsp;<br>
                             <div class='event_text'>
                                 <h4>{{ event.event_type.event_type|upper }}: {{ event.title|safe }}</h4>
-                                <div>{{ description|safe }}</div>
+                                <p>{{ description|safe }}</p>
                                 {{extra_txt|safe}}
                                 {{details|safe}}
                                 <div>Click here to <a href='{{FRONTEND_URL}}/event/{{ event.id }}'>book</a></div>
