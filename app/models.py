@@ -78,6 +78,43 @@ class Article(db.Model):
         }
 
 
+class Product:
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    price = db.Column(db.Numeric(3, 2), nullable=True)
+    buy_code = db.Column(db.String(50))
+    image_filename = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'price': str(self.price),
+            'image_filename': self.image_filename,
+            'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
+        }
+
+
+class Book(Product, db.Model):
+    __tablename__ = 'books'
+
+    old_id = db.Column(db.Integer)
+    title = db.Column(db.String(255))
+    author = db.Column(db.String(255))
+    description = db.Column(db.Text())
+    long_description = db.Column(db.Text())
+
+    def serialize(self):
+        book = super().serialize()
+        book.update(
+            old_id=self.old_id,
+            title=self.title,
+            author=self.author,
+            description=self.description,
+            long_description=self.long_description,
+        )
+        return book
+
+
 class EmailToMember(db.Model):
     __tablename__ = 'email_to_member'
     __table_args__ = (

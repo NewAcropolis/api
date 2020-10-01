@@ -4,6 +4,7 @@ from app import db
 
 from app.dao import dao_create_record
 from app.dao.articles_dao import dao_create_article
+from app.dao.books_dao import dao_create_book
 from app.dao.blacklist_dao import store_token
 from app.dao.emails_dao import dao_create_email, dao_create_email_to_member
 from app.dao.email_providers_dao import dao_create_email_provider
@@ -18,7 +19,7 @@ from app.dao.speakers_dao import dao_create_speaker
 from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
 from app.models import (
-    Article, Email, EmailToMember, EmailProvider, Event, EventDate, EventType, Fee, Magazine, Marketing,
+    Article, Book, Email, EmailToMember, EmailProvider, Event, EventDate, EventType, Fee, Magazine, Marketing,
     Member, RejectReason, Speaker, Ticket, User, Venue,
     EVENT, TICKET_STATUS_UNUSED, DRAFT
 )
@@ -208,6 +209,28 @@ def create_article(
 
     dao_create_article(article)
     return article
+
+
+def create_book(
+        old_id=1,
+        title='Alchemist',
+        author='Mrs Blue',
+        description='Some info about Alchemy\r\n\"Something in quotes\"',
+        long_description='Some info about Alchemy\r\n\"Something in quotes\"',
+        image_filename='alchemist.jpg'
+):
+    data = {
+        'old_id': old_id,
+        'title': title,
+        'author': author,
+        'description': description,
+        'long_description': long_description,
+        'image_filename': image_filename
+    }
+    book = Book(**data)
+
+    dao_create_book(book)
+    return book
 
 
 def create_email(

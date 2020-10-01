@@ -508,6 +508,15 @@ function UpdateArticleByOldId {
 }
 
 
+function ImportBooks {
+    echo "*** Import books ***"
+
+    curl -X POST $api_server'/books/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/books.json
+}
+
 admin_user=$(cat  << EOF
     {"email":"$ADMIN_USER","access_area":",email,","name":"Admin","active":true}
 EOF
@@ -890,6 +899,10 @@ case "$arg" in
 
         -ia)
             ImportArticles
+        ;;
+
+        -ib)
+            ImportBooks
         ;;
 
         -ima)
