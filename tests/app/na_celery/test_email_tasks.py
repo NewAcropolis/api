@@ -116,7 +116,7 @@ class WhenProcessingSendEmailsTask:
 
     @freeze_time("2019-06-03T10:00:00")
     def it_only_sends_approved_emails_periodically(self, mocker, db, db_session, sample_email, sample_member):
-        mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails')
+        mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails.apply_async')
         create_email(send_starts_at='2019-06-07', created_at='2019-06-01', send_after='2019-06-07 9:00')
         create_email(send_starts_at='2019-08-08', created_at='2019-06-01', send_after='2019-07-14 9:00')
 
@@ -154,7 +154,7 @@ class WhenProcessingSendEmailsTask:
         "2020-09-05T08:00:01",
     ])
     def it_sends_email_in_hours(self, mocker, db_session, sample_email, sample_member, now):
-        mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails')
+        mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails.apply_async')
         event_date = create_event_date(event_datetime='2020-09-20 19:00')
         event = create_event(event_dates=[event_date])
         create_email(
