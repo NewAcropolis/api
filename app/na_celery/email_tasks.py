@@ -12,7 +12,6 @@ from app.errors import InvalidRequest
 from app.models import EVENT, MAGAZINE, APPROVED
 
 
-@celery.task()
 def send_emails(email_id):
     members_not_sent_to = dao_get_members_not_sent_to(email_id)
 
@@ -82,5 +81,4 @@ def send_periodic_emails():
         ", ".join([str(e.id) for e in emails]) if emails else 'no emails to send'))
 
     for email in emails:
-        current_app.logger.info(f"Sending email:{email.serialize()}")
         send_emails(email.id)
