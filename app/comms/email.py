@@ -153,6 +153,9 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
         elif hasattr(email_provider, "daily_limit_reached"):
             raise InvalidRequest('Daily limit reached', 429)
 
+        # temp log to investigate emails
+        current_app.logger.info(f"Sending email to: {to[:10]}")
+
         data = get_email_data(email_provider.data_map, to, subject, message, from_email, from_name)
         data = data if email_provider.as_json else json.dumps(data)
 
