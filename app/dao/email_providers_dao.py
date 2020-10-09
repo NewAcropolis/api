@@ -26,6 +26,10 @@ def dao_get_first_email_provider():
     return EmailProvider.query.order_by(EmailProvider.pos).first()
 
 
+def dao_get_email_providers():
+    return EmailProvider.query.order_by(EmailProvider.pos).all()
+
+
 def dao_get_next_email_provider(pos):
     return EmailProvider.query.filter(EmailProvider.pos > pos).order_by(EmailProvider.pos).first()
 

@@ -7,18 +7,25 @@ from tests.conftest import create_authorization_header
 from tests.db import create_email_provider
 
 
-class WhenPostingEmailProvider(object):
-
-    def it_gets_current_email_provider(self, client, db_session, sample_email_provider):
-        create_email_provider(name='Next email provider', pos=2)
+class WhenGettingEmailProviders:
+    def it_gets_email_providers_in_order(self, client, db, db_session, sample_email_provider):
+        next_email_provider = create_email_provider(name='Next email provider', pos=2)
 
         response = client.get(
-            url_for('email_provider.get_email_provider'),
+            url_for('email_provider.get_email_providers'),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 200
-        assert response.json['id'] == str(sample_email_provider.id)
-        assert response.json['shortened_api_key'] == sample_email_provider.api_key[-10:]
+        assert len(response.json) == 2
+        assert response.json[0]['id'] == str(sample_email_provider.id)
+        assert 'api_key' not in response.json[0]
+        assert response.json[0]['shortened_api_key'] == sample_email_provider.api_key[-10:]
+        assert response.json[1]['id'] == str(next_email_provider.id)
+        assert 'api_key' not in response.json[1]
+        assert response.json[1]['shortened_api_key'] == next_email_provider.api_key[-10:]
+
+
+class WhenPostingEmailProvider:
 
     def it_creates_an_email_provider(self, client, db_session):
         data_map = {
