@@ -118,7 +118,7 @@ class WhenSendingAnEmail:
             r.post(next_email_provider.api_url, text='OK')
             resp = send_email('someone@example.com', 'test subject', 'test message', override=True)
 
-            assert resp == 200
+            assert resp == (200, next_email_provider.id)
 
     def it_triggers_429_when_next_email_provider_hits_limit(self, mocker, db_session, sample_email_provider):
         mocker.patch('app.comms.email.dao_get_todays_email_count_for_provider', return_value=30)
@@ -132,7 +132,7 @@ class WhenSendingAnEmail:
             r.post(sample_email_provider.api_url, text='OK')
             resp = send_email('someone@example.com', 'test subject', 'test message', override=True)
 
-            assert resp == 200
+            assert resp == (200, sample_email_provider.id)
 
     def it_sends_the_email_with_override_for_hourly_limit_reached(self, mocker, db_session, sample_email_provider):
         mocker.patch(
@@ -145,7 +145,7 @@ class WhenSendingAnEmail:
             r.post(next_provider.api_url, text='OK')
             resp = send_email('someone@example.com', 'test subject', 'test message', override=True)
 
-            assert resp == 200
+            assert resp == (200, next_provider.id)
 
     def it_sends_the_email_using_next_provider_with_override(self, mocker, db_session, sample_email_provider):
         mocker.patch(
@@ -157,7 +157,7 @@ class WhenSendingAnEmail:
             r.post(next_email_provider.api_url, text='OK')
             resp = send_email('someone@example.com', 'test subject', 'test message', override=True)
 
-            assert resp == 200
+            assert resp == (200, next_email_provider.id)
 
     def it_doesnt_send_email_if_disabled(self, mocker, mock_config_disabled):
         mock_logger = mocker.patch('app.comms.email.current_app.logger.info')
