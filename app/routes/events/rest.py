@@ -270,7 +270,7 @@ def update_event(event_id):
         }
 
         if update_data != db_data:
-            event_type = dao_get_event_type_by_id(event_data.get('event_type_id'))
+            # event_type = dao_get_event_type_by_id(event_data.get('event_type_id'))
 
             if data.get('event_state') in [READY, APPROVED]:
                 paypal_tasks.create_update_paypal_button_task.apply_async((str(event_id),))
