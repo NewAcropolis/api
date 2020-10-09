@@ -238,10 +238,12 @@ class Email(db.Model):
 
     def get_emails_sent_counts(self):
         return {
-            'success': EmailToMember.query.filter_by(email_id=self.id, status_code=200).count(),
+            'success': EmailToMember.query.filter(
+                EmailToMember.email_id == self.id,
+                EmailToMember.status_code.in_([200, 201])).count(),
             'failed': EmailToMember.query.filter(
                 EmailToMember.email_id == self.id,
-                EmailToMember.status_code != 200
+                EmailToMember.status_code.notin_([200, 201])
             ).count(),
             'total_active_members': Member.query.filter_by(active=True).count()
         }
@@ -311,7 +313,7 @@ class Member(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     old_id = db.Column(db.Integer)
     name = db.Column(db.String)
-    email = db.Column(db.String, unique=True)
+    email = db.Column(db.String, unique=True, nullable=False)
     active = db.Column(db.Boolean)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     marketing_id = db.Column(UUID(as_uuid=True), db.ForeignKey('marketings.id'), nullable=False)

@@ -100,7 +100,9 @@ class WhenProcessingSendEmailsTask:
 
         create_email_to_member(sample_email.id, sample_member.id, status_code=500)
 
-        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+        # respond with 201 on 2nd call
+        mock_send_email = mocker.patch(
+            'app.na_celery.email_tasks.send_email', side_effect=[200, 201])
         send_emails(sample_email.id)
 
         assert mock_send_email.call_count == 2
