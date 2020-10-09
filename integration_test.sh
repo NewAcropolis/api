@@ -1005,7 +1005,7 @@ case "$arg" in
         ;;
 
         -gep)
-            GetEmailProvider
+            GetEmailProviders
         ;;
 
         -setup)
