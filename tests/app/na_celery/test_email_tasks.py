@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from datetime import datetime
 from flask import current_app
 from freezegun import freeze_time
 import pytest
@@ -6,7 +7,7 @@ import pytest
 from app.na_celery.email_tasks import send_emails, send_periodic_emails
 from app.comms.encryption import decrypt, get_tokens
 from app.errors import InvalidRequest
-from app.models import APPROVED, DRAFT, Magazine
+from app.models import APPROVED, DRAFT, Magazine, EmailToMember
 
 from tests.db import (
     create_email, create_event, create_event_date, create_member, create_email_to_member, create_email_provider
@@ -15,8 +16,9 @@ from tests.db import (
 
 class WhenProcessingSendEmailsTask:
 
-    def it_calls_send_email_to_task(self, mocker, db, db_session, sample_email, sample_member):
-        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+    def it_calls_send_email_to_task(self, mocker, db, db_session, sample_email, sample_member, sample_email_provider):
+        mock_send_email = mocker.patch(
+            'app.na_celery.email_tasks.send_email', return_value=(200, sample_email_provider.id))
         send_emails(sample_email.id)
 
         assert mock_send_email.call_args[0][0] == sample_member.email
@@ -33,7 +35,10 @@ class WhenProcessingSendEmailsTask:
             'total_active_members': 1
         }
 
-    def it_only_sends_to_3_emails_if_not_live_environment(self, mocker, db_session, sample_email, sample_member):
+    @freeze_time("2020-10-09T19:00:00")
+    def it_only_sends_to_3_emails_if_not_live_environment(
+        self, mocker, db_session, sample_email, sample_member, sample_email_provider
+    ):
         mocker.patch.dict('app.application.config', {
             'ENVIRONMENT': 'test',
             'EMAIL_RESTRICT': None
@@ -43,7 +48,8 @@ class WhenProcessingSendEmailsTask:
         member_2 = create_member(name='Test 2', email='test2@example.com')
         create_member(name='Test 3', email='test3@example.com')
 
-        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+        mock_send_email = mocker.patch(
+            'app.na_celery.email_tasks.send_email', return_value=(200, sample_email_provider.id))
         send_emails(sample_email.id)
 
         assert mock_send_email.call_count == 3
@@ -56,7 +62,14 @@ class WhenProcessingSendEmailsTask:
             'total_active_members': 4
         }
 
-    def it_only_sends_to_1_emails_if_restrict_email(self, mocker, db, db_session, sample_email, sample_member):
+        emails_to_members = EmailToMember.query.all()
+        assert len(emails_to_members) == 3
+        assert emails_to_members[0].email_provider_id == sample_email_provider.id
+        assert emails_to_members[0].created_at == datetime.strptime("2020-10-09 19:00", "%Y-%m-%d %H:%M")
+
+    def it_only_sends_to_1_emails_if_restrict_email(
+        self, mocker, db, db_session, sample_email, sample_member, sample_email_provider
+    ):
         mocker.patch.dict('app.application.config', {
             'ENVIRONMENT': 'test',
             'EMAIL_RESTRICT': 1
@@ -64,7 +77,9 @@ class WhenProcessingSendEmailsTask:
 
         create_member(name='Test 1', email='test1@example.com')
 
-        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+        mock_send_email = mocker.patch(
+            'app.na_celery.email_tasks.send_email', return_value=(200, sample_email_provider.id)
+        )
         send_emails(sample_email.id)
 
         assert mock_send_email.call_count == 1
@@ -87,7 +102,7 @@ class WhenProcessingSendEmailsTask:
         assert mock_logger.called
 
     def it_only_sends_to_unsent_members_and_shows_failed_stat(
-        self, mocker, db, db_session, sample_email, sample_member
+        self, mocker, db, db_session, sample_email, sample_member, sample_email_provider
     ):
         mocker.patch.dict('app.application.config', {
             'ENVIRONMENT': 'test',
@@ -102,7 +117,9 @@ class WhenProcessingSendEmailsTask:
 
         # respond with 201 on 2nd call
         mock_send_email = mocker.patch(
-            'app.na_celery.email_tasks.send_email', side_effect=[200, 201])
+            'app.na_celery.email_tasks.send_email',
+            side_effect=[(200, sample_email_provider.id), (201, sample_email_provider.id)]
+        )
         send_emails(sample_email.id)
 
         assert mock_send_email.call_count == 2
@@ -171,17 +188,20 @@ class WhenProcessingSendEmailsTask:
 
         assert mock_send_emails.called
 
-    def it_sends_an_email_to_members_up_to_email_limit(self, mocker, db_session, sample_email, sample_member):
+    def it_sends_an_email_to_members_up_to_email_limit(
+        self, mocker, db_session, sample_email, sample_member
+    ):
         mocker.patch.dict('app.application.config', {
             'ENVIRONMENT': 'live',
             'EMAIL_RESTRICT': None
         })
-        create_email_provider(daily_limit=2)
+        email_provider = create_email_provider(daily_limit=2)
 
         member_1 = create_member(name='Test 1', email='test1@example.com')
         create_member(name='Test 2', email='test2@example.com')
 
-        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+        mock_send_email = mocker.patch(
+            'app.na_celery.email_tasks.send_email', return_value=(200, email_provider.id))
         send_emails(sample_email.id)
 
         assert mock_send_email.call_count == 2
@@ -193,7 +213,9 @@ class WhenProcessingSendEmailsTask:
             'total_active_members': 3
         }
 
-    def it_sends_a_magazine_email(self, mocker, db_session, sample_magazine_email, sample_member):
+    def it_sends_a_magazine_email(
+        self, mocker, db_session, sample_magazine_email, sample_member, sample_email_provider
+    ):
         mocker.patch.dict('app.application.config', {
             'ENVIRONMENT': 'test',
             'EMAIL_RESTRICT': 1
@@ -201,7 +223,8 @@ class WhenProcessingSendEmailsTask:
 
         create_member(name='Test 1', email='test1@example.com')
 
-        mock_send_email = mocker.patch('app.na_celery.email_tasks.send_email', return_value=200)
+        mock_send_email = mocker.patch(
+            'app.na_celery.email_tasks.send_email', return_value=(200, str(sample_email_provider.id)))
         send_emails(sample_magazine_email.id)
 
         magazine = Magazine.query.filter_by(id=sample_magazine_email.magazine_id).first()

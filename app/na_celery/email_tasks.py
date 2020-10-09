@@ -50,8 +50,11 @@ def send_emails(email_id):
             elif email.email_type == MAGAZINE:
                 message = get_email_html(MAGAZINE, magazine_id=email.magazine_id)
 
-            email_status_code = send_email(email_to, subject, message)
-            dao_add_member_sent_to_email(email_id, member_id, status_code=email_status_code)
+            email_status_code, email_provider_id = send_email(email_to, subject, message)
+            dao_add_member_sent_to_email(
+                email_id, member_id, status_code=email_status_code,
+                email_provider_id=email_provider_id
+            )
 
             send_ga_event(
                 f"Sent {email.email_type} email, {subject} - {str(email.id)}",

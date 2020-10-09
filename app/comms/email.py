@@ -179,7 +179,7 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
             current_app.logger.info('Email provider: {}'.format(email_provider.api_url))
             current_app.logger.info('Email key: {}'.format(email_provider.api_key[:5]))
 
-        return response.status_code
+        return response.status_code, email_provider.id
     else:
         data = {
             'to': to,
