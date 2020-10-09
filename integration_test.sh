@@ -704,13 +704,12 @@ function UpdateEmailProvider {
     -d "$update_email_provider"
 }
 
-function GetEmailProvider {
-    echo "*** Get current email provider ***"
+function GetEmailProviders {
+    echo "*** Get email providers ***"
 
-    curl -X GET $api_server"/email_provider" \
+    curl -X GET $api_server"/email_providers" \
     -H "Accept: application/json" \
-    -H "Authorization: Bearer $TKN" \
-    -d "$update_email_provider"
+    -H "Authorization: Bearer $TKN"
 }
 
 function UpdateEmailToReady {
