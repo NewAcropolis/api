@@ -852,7 +852,7 @@ class WhenPostingUpdatingAnEvent:
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage,
         mock_paypal_task, sample_admin_user, sample_email_provider
     ):
-        mock_smtp = mocker.patch('app.routes.events.rest.send_smtp_email')
+        mock_smtp = mocker.patch('app.routes.events.rest.send_admin_email')
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
             "title": "Test title new",
@@ -953,7 +953,7 @@ class WhenPostingUpdatingAnEvent:
         self, mocker, client, db, db_session,
         sample_email_provider, sample_req_event_data_with_event, mock_storage, sample_user
     ):
-        mock_smtp = mocker.patch('app.routes.events.rest.send_smtp_email')
+        mock_smtp = mocker.patch('app.routes.events.rest.send_admin_email')
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
             "title": "Test title new",
@@ -995,25 +995,6 @@ class WhenPostingUpdatingAnEvent:
         assert str(reject_reasons[0].created_by) == data['reject_reasons'][0]['created_by']
 
         assert mock_smtp.called
-        # args, kwargs = mock_smtp.call_args
-        # assert args[0] == sample_email_provider.api_url
-        # assert kwargs['auth'] == ('api', sample_email_provider.api_key)
-        # assert kwargs['headers'] == {
-        #     'accept': 'application/json', 'api-key': u'sample-api-key', 'content-type': 'application/json'
-        # }
-        # assert json.loads(kwargs['data']) == {
-        #     DATA_MAP['to']: sample_user.email,
-        #     DATA_MAP['message']: '<div>Please correct this event <a href="{admin_url}/events/{event_id}">'
-        #     '{event_title}</a></div><ol><li>{reject_reason}</li></ol>'.format(
-        #         admin_url=self.mock_config['FRONTEND_ADMIN_URL'],
-        #         event_id=sample_req_event_data_with_event['event'].id,
-        #         event_title=sample_req_event_data_with_event['event'].title,
-        #         reject_reason=data['reject_reasons'][0]['reason']
-        #     ),
-        #     DATA_MAP['from']: 'noreply@{}'.format(self.mock_config['EMAIL_DOMAIN']),
-        #     DATA_MAP['subject']: '{} event needs to be corrected'.format(
-        #         sample_req_event_data_with_event['event'].title)
-        # }
 
     def it_updates_an_event_to_reject_resolved(
         self, mocker, client, db_session,
@@ -1470,6 +1451,7 @@ class WhenPostingUpdatingAnEvent:
     def it_updates_an_event_adding_booking_code_if_no_fee_before_via_rest(
         self, mocker, client, db_session, sample_req_event_data, mock_storage_upload, mock_paypal_task
     ):
+        mocker.patch('app.routes.events.rest.send_admin_email')
         event = create_event(
             event_type_id=sample_req_event_data['event_type'].id,
             event_dates=[
@@ -1520,6 +1502,7 @@ class WhenPostingUpdatingAnEvent:
     def it_updates_an_event_without_booking_code_if_no_fee(
         self, mocker, client, db_session, sample_req_event_data, mock_storage_upload, mock_paypal_task
     ):
+        mocker.patch('app.routes.events.rest.send_admin_email')
         event = create_event(
             event_type_id=sample_req_event_data['event_type'].id,
             event_dates=[

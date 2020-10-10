@@ -68,9 +68,9 @@ if [ $port != 'No environment' ]; then
     eval "RESTART_FLOWER=\$RESTART_FLOWER"
     eval "RESTART_CELERY=\$RESTART_CELERY"
     eval "GOOGLE_APPLICATION_CREDENTIALS=\$GOOGLE_APPLICATION_CREDENTIALS_$environment"
-    eval "SMTP_SERVER=SMTP_SERVER"
-    eval "SMTP_USER=SMTP_USER_$environment"
-    eval "SMTP_PASS=SMTP_PASS_$environment"
+    eval "SMTP_SERVER=\$SMTP_SERVER"
+    eval "SMTP_USER=\$SMTP_USER_$environment"
+    eval "SMTP_PASS=\$SMTP_PASS_$environment"
     
     echo starting app $environment on port $port
     if [ $environment = 'live' -o $environment = 'preview' ]; then

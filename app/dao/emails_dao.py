@@ -150,7 +150,7 @@ def dao_get_approved_emails_for_sending():
         Email.expires >= now,
         Email.send_after <= now,
         Email.email_state == APPROVED
-    ).all()
+    ).order_by(Email.expires).all()
 
 
 def dao_get_todays_email_count_for_provider(email_provider_id):

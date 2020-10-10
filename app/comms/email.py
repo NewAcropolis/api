@@ -194,14 +194,19 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
         current_app.logger.info('No email providers configured, email would have sent: {}'.format(data))
 
 
-def send_smtp_email(to, subject, message):
+def send_admin_email(to, subject, message):  # pragma: no cover
     current_app.logger.info("Starting to send smtp")
     from_email = f"New Acropolis<noreply@{current_app.config['EMAIL_DOMAIN']}>"
+    if isinstance(to, list):
+        to = ','.join(to)
 
     email_text = f"""\
 From: {from_email}
 To: {to}
 Subject: {subject}
+Mime-Version: 1.0;
+Content-Type: text/html; charset="ISO-8859-1";
+Content-Transfer-Encoding: 7bit;
 
 {message}
 """
@@ -216,6 +221,7 @@ Subject: {subject}
             conn.login(current_app.config.get("SMTP_USER"), current_app.config.get("SMTP_PASS"))
             conn.sendmail(from_email, to, email_text)
             current_app.logger.info("Successfully sent smtp email")
-    except Exception as e:
+            return 200
+    except smtplib.SMTPAuthenticationError as e:
         current_app.logger.error("Error sending smtp email %r", e)
-        raise e
+        return e.smtp_code
