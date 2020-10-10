@@ -22,8 +22,10 @@ if [ ! -z "$1" ]; then
     port="$(python app/config.py -e $ENV)"
 fi
 
-# kill any existing services running on port
-sudo kill `sudo lsof -t -i:$port`
+if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
+  # kill any existing services running on port
+  sudo kill `sudo lsof -t -i:$port`
+fi
 
 echo "hosting on $www_dir"
 
