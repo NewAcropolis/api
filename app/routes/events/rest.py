@@ -12,7 +12,7 @@ import time
 from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.comms.email import send_email
+from app.comms.email import send_smtp_email
 from app.dao.events_dao import (
     dao_create_event,
     dao_delete_event,
@@ -270,8 +270,6 @@ def update_event(event_id):
         }
 
         if update_data != db_data:
-            # event_type = dao_get_event_type_by_id(event_data.get('event_type_id'))
-
             if data.get('event_state') in [READY, APPROVED]:
                 paypal_tasks.create_update_paypal_button_task.apply_async((str(event_id),))
 
@@ -311,7 +309,6 @@ def update_event(event_id):
         dao_update_event(event.id, image_filename=image_filename)
 
         json_event = event.serialize()
-        json_event['errors'] = errs
 
         if data.get('event_state') == READY:
             emails_to = [admin.email for admin in dao_get_admin_users()]
@@ -321,7 +318,10 @@ def update_event(event_id):
                 event.title
             )
 
-            send_email(emails_to, '{} is ready for review'.format(event.title), message)
+            try:
+                send_smtp_email(emails_to, '{} is ready for review'.format(event.title), message)
+            except Exception as e:
+                errs.append(f"Problem sending smtp emails: {str(e)}")
         elif data.get('event_state') == REJECTED:
             emails_to = [user.email for user in dao_get_users()]
 
@@ -334,7 +334,12 @@ def update_event(event_id):
                 message += '<li>{}</li>'.format(reject_reason['reason'])
             message += '</ol>'
 
-            send_email(emails_to, '{} event needs to be corrected'.format(event.title), message)
+            try:
+                send_smtp_email(emails_to, '{} event needs to be corrected'.format(event.title), message)
+            except Exception as e:
+                errs.append(f"Problem sending smtp emails: {str(e)}")
+
+        json_event['errors'] = errs
         return jsonify(json_event), 200
 
     raise InvalidRequest('{} did not update event'.format(event_id), 400)

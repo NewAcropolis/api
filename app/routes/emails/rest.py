@@ -15,7 +15,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from html.parser import HTMLParser
 
 from app.na_celery import email_tasks, revoke_task
-from app.comms.email import get_email_html, send_email
+from app.comms.email import get_email_html, send_email, send_smtp_email
 from app.dao.emails_dao import (
     dao_create_email,
     dao_create_email_to_member,
@@ -314,3 +314,12 @@ def send_message():
     send_email(emails_to, 'Web message: {}'.format(
         data['reason']), data['message'], from_email=data['email'], from_name=data['name'])
     return jsonify({'message': 'Your message was sent'})
+
+
+@emails_blueprint.route('/email/test')
+@jwt_required
+def send_test_email():  # pragma:no cover
+    current_app.logger.info('Sending test email...')
+    send_smtp_email(current_app.config.get('TEST_EMAIL'), 'Sending test email', 'Test email body')
+
+    return 'ok'
