@@ -72,7 +72,8 @@ def app():
         'CELERY_BROKER_URL': 'http://mock-celery',
         'EMAIL_DELAY': 1,
         'GA_ID': 1,
-        'EMAIL_DISABLED': None
+        'EMAIL_DISABLED': None,
+        'SMTP_SERVER': 'test.smtp.server'
     })
 
     ctx = _app.app_context()

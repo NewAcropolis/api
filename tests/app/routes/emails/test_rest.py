@@ -364,7 +364,7 @@ class WhenPostingUpdateEmail:
         assert json_resp['message'] == 'event not found: {}'.format(sample_uuid)
 
     def it_updates_an_event_email_to_ready(self, mocker, client, db, db_session, sample_admin_user, sample_email):
-        mock_send_email = mocker.patch('app.routes.emails.rest.send_email', return_value=200)
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_admin_email', return_value=200)
         data = {
             "event_id": str(sample_email.event_id),
             "details": sample_email.details,
@@ -390,7 +390,7 @@ class WhenPostingUpdateEmail:
     def it_updates_a_magazine_email_to_ready(
         self, mocker, client, db, db_session, sample_admin_user, sample_magazine_email
     ):
-        mock_send_email = mocker.patch('app.routes.emails.rest.send_email', return_value=200)
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_admin_email', return_value=200)
         data = {
             "magazine_id": str(sample_magazine_email.magazine_id),
             "details": sample_magazine_email.details,
@@ -416,7 +416,7 @@ class WhenPostingUpdateEmail:
     def it_updates_an_event_email_to_rejected(
         self, mocker, client, db, db_session, sample_admin_user, sample_email
     ):
-        mock_send_email = mocker.patch('app.routes.emails.rest.send_email', return_value=200)
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_admin_email', return_value=200)
 
         data = {
             "event_id": str(sample_email.event_id),
@@ -456,7 +456,7 @@ class WhenPostingUpdateEmail:
     def it_updates_an_event_email_to_approved(
         self, mocker, app, client, db, db_session, sample_admin_user, sample_email, now, delay
     ):
-        mock_send_email = mocker.patch('app.routes.emails.rest.send_email', return_value=200)
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_admin_email', return_value=200)
 
         with freeze_time(now):
             data = {
@@ -607,7 +607,7 @@ class WhenPostingImportingEmailsMailings:
 
 class WhenPostingSendMessage:
     def it_sends_message_to_admin_emails(self, client, mocker, db_session, sample_admin_user):
-        mock_send_email = mocker.patch('app.routes.emails.rest.send_email')
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_admin_email')
 
         data = {
             "name": "Test email",

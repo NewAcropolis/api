@@ -89,6 +89,9 @@ class Config(object):
     EMAIL_DISABLED = os.environ.get('EMAIL_DISABLED')
 
     GA_ID = os.environ.get('GA_ID')
+    SMTP_SERVER = os.environ.get('SMTP_SERVER')
+    SMTP_USER = os.environ.get('SMTP_USER')
+    SMTP_PASS = os.environ.get('SMTP_PASS')
 
 
 class Development(Config):

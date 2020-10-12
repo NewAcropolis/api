@@ -15,7 +15,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from html.parser import HTMLParser
 
 from app.na_celery import email_tasks, revoke_task
-from app.comms.email import get_email_html, send_email
+from app.comms.email import get_email_html, send_email, send_admin_email
 from app.dao.emails_dao import (
     dao_create_email,
     dao_create_email_to_member,
@@ -110,13 +110,13 @@ def update_email(email_id):
                 subject = 'Please review {}'.format(event.title)
 
                 event_html = get_email_html(**data)
-                response = send_email(emails_to, subject, review_part + event_html)
+                response = send_admin_email(emails_to, subject, review_part + event_html)
             elif email.email_type == MAGAZINE:
                 magazine = dao_get_magazine_by_id(email.magazine_id)
                 subject = 'Please review {}'.format(magazine.title)
 
                 magazine_html = get_email_html(MAGAZINE, magazine_id=magazine.id)
-                response = send_email(emails_to, subject, review_part + magazine_html)
+                response = send_admin_email(emails_to, subject, review_part + magazine_html)
         elif data.get('email_state') == REJECTED:
             dao_update_email(email_id, email_state=REJECTED)
 
@@ -126,7 +126,7 @@ def update_email(email_id):
 
             message += '<div>Reason: {}</div>'.format(data.get('reject_reason'))
 
-            response = send_email(emails_to, '{} email needs to be corrected'.format(event.title), message)
+            response = send_admin_email(emails_to, '{} email needs to be corrected'.format(event.title), message)
         elif data.get('email_state') == APPROVED:
             later = datetime.utcnow() + timedelta(hours=current_app.config['EMAIL_DELAY'])
             if later < email.send_starts_at:
@@ -139,7 +139,7 @@ def update_email(email_id):
 
             if email.email_type == EVENT:
                 event_html = get_email_html(**data)
-                response = send_email(
+                response = send_admin_email(
                     emails_to, "{} has been approved".format(email.get_subject()), review_part + event_html)
         email_json = email.serialize()
         if response:
@@ -311,6 +311,17 @@ def send_message():
 
     emails_to = [user.email for user in dao_get_admin_users()]
 
-    send_email(emails_to, 'Web message: {}'.format(
+    status_code = send_admin_email(emails_to, 'Web message: {}'.format(
         data['reason']), data['message'], from_email=data['email'], from_name=data['name'])
-    return jsonify({'message': 'Your message was sent'})
+
+    return jsonify(
+        {'message': 'Your message was sent' if status_code == 200 else 'An error occurred sending your message'})
+
+
+@emails_blueprint.route('/email/test')
+@jwt_required
+def send_test_email():  # pragma:no cover
+    current_app.logger.info('Sending test email...')
+    res = send_admin_email(current_app.config.get('TEST_EMAIL'), 'Sending test email', '<h3>Test</h3> email body')
+
+    return 'ok' if res == 200 else 'error'

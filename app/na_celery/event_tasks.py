@@ -3,7 +3,7 @@ from flask import current_app
 import pytz
 
 from app import celery
-from app.comms.email import send_email, get_email_html, get_email_provider
+from app.comms.email import send_admin_email, get_email_html, get_email_provider
 from app.dao.emails_dao import dao_get_email_by_event_id
 from app.dao.events_dao import dao_get_future_events
 from app.dao.users_dao import dao_get_admin_users
@@ -26,7 +26,7 @@ def send_event_email_reminder():
             message_html = get_email_html(BASIC, message=message)
 
             for user in dao_get_admin_users():
-                email_status_code = send_email(user.email, subject, message_html)
-                if email_status_code != 200:
+                status_code = send_admin_email(user.email, subject, message_html)
+                if status_code != 200:
                     current_app.logger.error(
-                        f"Problem sending reminder email {subject} for {user.id}, status code: {email_status_code}")
+                        f"Problem sending reminder email {subject} for {user.id}, status code: {status_code}")

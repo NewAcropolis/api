@@ -9,7 +9,7 @@ class WhenUploadingMagazinePdfs:
         mocker.patch('app.na_celery.upload_tasks.Storage')
         mocker.patch('app.na_celery.upload_tasks.base64')
         mocker.patch('app.na_celery.upload_tasks.extract_topics', return_value='Philosophy: Meaning of Life And Death')
-        mock_send_email = mocker.patch('app.na_celery.upload_tasks.send_email')
+        mock_send_email = mocker.patch('app.na_celery.upload_tasks.send_admin_email')
 
         upload_magazine(sample_magazine.id, 'pdf data')
 
@@ -19,7 +19,7 @@ class WhenUploadingMagazinePdfs:
         mocker.patch('app.na_celery.upload_tasks.Storage')
         mocker.patch('app.na_celery.upload_tasks.base64')
         mocker.patch('app.na_celery.upload_tasks.extract_topics', return_value='Philosophy: Meaning of Life And Death')
-        mock_send_email = mocker.patch('app.na_celery.upload_tasks.send_email', return_value=200)
+        mock_send_email = mocker.patch('app.na_celery.upload_tasks.send_admin_email', return_value=200)
         email = create_email(magazine_id=sample_magazine.id, email_type=MAGAZINE)
 
         upload_magazine(sample_magazine.id, 'pdf data')

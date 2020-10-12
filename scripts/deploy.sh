@@ -68,6 +68,9 @@ if [ $port != 'No environment' ]; then
     eval "RESTART_FLOWER=\$RESTART_FLOWER"
     eval "RESTART_CELERY=\$RESTART_CELERY"
     eval "GOOGLE_APPLICATION_CREDENTIALS=\$GOOGLE_APPLICATION_CREDENTIALS_$environment"
+    eval "SMTP_SERVER=\$SMTP_SERVER"
+    eval "SMTP_USER=\$SMTP_USER_$environment"
+    eval "SMTP_PASS=\$SMTP_PASS_$environment"
     
     echo starting app $environment on port $port
     if [ $environment = 'live' -o $environment = 'preview' ]; then
@@ -105,6 +108,9 @@ CELERY_BROKER_URL=$CELERY_BROKER_URL
 RESTART_FLOWER=$RESTART_FLOWER
 RESTART_CELERY=$RESTART_CELERY
 GA_ID=$GA_ID
+SMTP_SERVER=$SMTP_SERVER
+SMTP_USER=$SMTP_USER
+SMTP_PASS=$SMTP_PASS
 EOL
 
 sudo systemctl daemon-reload
@@ -149,6 +155,10 @@ set +a
         export CELERY_BROKER_URL=$CELERY_BROKER_URL
         export RESTART_FLOWER=$RESTART_FLOWER
         export RESTART_CELERY=$RESTART_CELERY
+        export SMTP_SERVER=$SMTP_SERVER
+        export SMTP_USER=$SMTP_USER
+        export SMTP_PASS=$SMTP_PASS
+        export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
 
         ./scripts/bootstrap.sh
         if [ -z "$RESTART_CELERY" ]; then

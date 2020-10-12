@@ -3,6 +3,9 @@ import json
 import os
 import re
 import requests
+import smtplib
+import ssl
+
 from html.parser import HTMLParser
 
 from na_common.dates import get_nice_event_dates
@@ -189,3 +192,36 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
             'message': message
         }
         current_app.logger.info('No email providers configured, email would have sent: {}'.format(data))
+
+
+def send_admin_email(to, subject, message):  # pragma: no cover
+    current_app.logger.info("Starting to send smtp")
+    from_email = f"New Acropolis<noreply@{current_app.config['EMAIL_DOMAIN']}>"
+    if isinstance(to, list):
+        to = ','.join(to)
+
+    email_text = f"""\
+From: {from_email}
+To: {to}
+Subject: {subject}
+Mime-Version: 1.0;
+Content-Type: text/html; charset="ISO-8859-1";
+Content-Transfer-Encoding: 7bit;
+
+{message}
+"""
+
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP(current_app.config.get("SMTP_SERVER"), 587) as conn:
+            conn.starttls(context=context)
+            conn.ehlo()
+            current_app.logger.info('SU: %r', current_app.config.get("SMTP_USER")[:5])
+            current_app.logger.info('SP: %r', current_app.config.get("SMTP_PASS")[:3])
+            conn.login(current_app.config.get("SMTP_USER"), current_app.config.get("SMTP_PASS"))
+            conn.sendmail(from_email, to, email_text)
+            current_app.logger.info("Successfully sent smtp email")
+            return 200
+    except smtplib.SMTPAuthenticationError as e:
+        current_app.logger.error("Error sending smtp email %r", e)
+        return e.smtp_code

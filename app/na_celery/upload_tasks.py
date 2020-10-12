@@ -5,7 +5,7 @@ from flask import (
 )
 
 from app import celery
-from app.comms.email import get_email_html, send_email
+from app.comms.email import get_email_html, send_admin_email
 from app.dao import dao_update_record
 from app.dao.emails_dao import dao_create_email, dao_get_email_by_magazine_id
 from app.dao.magazines_dao import dao_get_magazine_by_id
@@ -53,7 +53,7 @@ def upload_magazine(magazine_id, pdf_data):
         review_part = '<div>Please review this email: {}/emails/{}</div>'.format(
             current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
         magazine_html = get_email_html(MAGAZINE, magazine_id=magazine.id)
-        response = send_email(emails_to, subject, review_part + magazine_html)
+        response = send_admin_email(emails_to, subject, review_part + magazine_html)
 
         if response != 200:
             current_app.logger.error('Error sending review email {}, for {}'.format(email.id, magazine.id))
