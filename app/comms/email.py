@@ -194,15 +194,17 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
         current_app.logger.info('No email providers configured, email would have sent: {}'.format(data))
 
 
-def send_admin_email(to, subject, message):  # pragma: no cover
+def send_admin_email(to, subject, message, from_email=None, from_name=''):  # pragma: no cover
     current_app.logger.info("Starting to send smtp")
-    from_email = f"New Acropolis<noreply@{current_app.config['EMAIL_DOMAIN']}>"
+    if not from_email:
+        from_email = f"New Acropolis<noreply@{current_app.config['EMAIL_DOMAIN']}>"
     if isinstance(to, list):
         to = ','.join(to)
 
     email_text = f"""\
 From: {from_email}
 To: {to}
+Reply-To: {from_name}<{from_email}>
 Subject: {subject}
 Mime-Version: 1.0;
 Content-Type: text/html; charset="ISO-8859-1";
