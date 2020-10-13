@@ -322,6 +322,12 @@ def send_message():
 @jwt_required
 def send_test_email():  # pragma:no cover
     current_app.logger.info('Sending test email...')
-    res = send_admin_email(current_app.config.get('TEST_EMAIL'), 'Sending test email', '<h3>Test</h3> email body')
+    res = send_admin_email(
+        current_app.config.get('TEST_EMAIL'),
+        'Sending test email',
+        '<h3>Test</h3> email body',
+        from_email=current_app.config.get('TEST_EMAIL').replace("@", "+1@"),
+        from_name="Test+one"
+    )
 
     return 'ok' if res == 200 else 'error'
