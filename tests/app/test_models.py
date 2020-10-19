@@ -116,10 +116,10 @@ class WhenUsingBookModel(object):
             'id': str(book.id),
             'old_id': book.old_id,
             'price': str(book.price),
+            'buy_code': book.buy_code,
             'author': book.author,
             'title': book.title,
             'description': book.description,
-            'long_description': book.long_description,
             'image_filename': book.image_filename,
             'created_at': book.created_at.strftime('%Y-%m-%d')
         }

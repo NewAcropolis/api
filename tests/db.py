@@ -213,18 +213,20 @@ def create_article(
 
 def create_book(
         old_id=1,
+        price='7.00',
+        buy_code='112233XXYYZZ',
         title='Alchemist',
         author='Mrs Blue',
         description='Some info about Alchemy\r\n\"Something in quotes\"',
-        long_description='Some info about Alchemy\r\n\"Something in quotes\"',
         image_filename='alchemist.jpg'
 ):
     data = {
         'old_id': old_id,
+        'price': price,
+        'buy_code': buy_code,
         'title': title,
         'author': author,
         'description': description,
-        'long_description': long_description,
         'image_filename': image_filename
     }
     book = Book(**data)

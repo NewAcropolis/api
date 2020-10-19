@@ -89,6 +89,7 @@ class Product:
         return {
             'id': str(self.id),
             'price': str(self.price),
+            'buy_code': str(self.buy_code),
             'image_filename': self.image_filename,
             'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
         }
@@ -101,7 +102,6 @@ class Book(Product, db.Model):
     title = db.Column(db.String(255))
     author = db.Column(db.String(255))
     description = db.Column(db.Text())
-    long_description = db.Column(db.Text())
 
     def serialize(self):
         book = super().serialize()
@@ -110,7 +110,6 @@ class Book(Product, db.Model):
             title=self.title,
             author=self.author,
             description=self.description,
-            long_description=self.long_description,
         )
         return book
 
