@@ -60,8 +60,7 @@ def import_books():
                 title=item['Title'],
                 author=item['Author'],
                 image_filename=item['ImageFilename'],
-                description=item['Description'],
-                long_description=item['LongDesc'],
+                description=item['LongDesc'],
                 price=item['Price'],
                 buy_code=item['BuyCode']
             )
