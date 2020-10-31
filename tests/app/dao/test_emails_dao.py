@@ -11,10 +11,11 @@ from app.dao.emails_dao import (
     dao_get_future_emails,
     dao_get_latest_emails,
     dao_update_email,
-    _get_nearest_bi_monthly_send_date
+    _get_nearest_bi_monthly_send_date,
+    dao_get_approved_emails_for_sending
 )
 from app.errors import InvalidRequest
-from app.models import Email, EmailToMember, ANON_REMINDER, ANNOUNCEMENT, MAGAZINE
+from app.models import Email, EmailToMember, ANON_REMINDER, ANNOUNCEMENT, MAGAZINE, APPROVED, READY
 
 from tests.db import create_email, create_email_provider, create_email_to_member, create_magazine, create_member
 
@@ -203,6 +204,46 @@ class WhenUsingEmailsDAO(object):
         email_to_member = create_email_to_member()
 
         assert dao_get_todays_email_count_for_provider(email_to_member.email_provider_id) == 2
+
+    @freeze_time("2020-10-31T12:30:00 BST+0100")
+    def it_gets_approved_emails_for_sending(self, db, db_session):
+        create_email(
+            send_starts_at="2020-10-30",
+            send_after="2020-10-30T20:30:00 BST+0100",
+            expires="2020-11-07",
+            email_state=APPROVED
+        )
+        create_email(
+            send_starts_at="2020-10-30",
+            send_after="2020-10-30T20:30:00 BST+0100",
+            expires="2020-11-07",
+            email_state=READY
+        )
+        res = dao_get_approved_emails_for_sending()
+        assert len(res) == 1
+
+    @freeze_time("2020-10-31T12:30:00 BST+0100")
+    def it_gets_approved_emails_for_sending_within_time(self, db, db_session):
+        create_email(
+            send_starts_at="2020-10-30",
+            send_after="2020-10-30T20:30:00 BST+0100",
+            expires="2020-11-07",
+            email_state=APPROVED
+        )
+        create_email(
+            send_starts_at="2020-10-20",
+            send_after="2020-10-20T20:30:00 BST+0100",
+            expires="2020-10-30",
+            email_state=READY
+        )
+        create_email(
+            send_starts_at="2020-11-10",
+            send_after="2020-11-30T20:30:00 BST+0100",
+            expires="2020-11-17",
+            email_state=APPROVED
+        )
+        res = dao_get_approved_emails_for_sending()
+        assert len(res) == 1
 
 
 class WhenGettingNearestBimonthlyDate:
