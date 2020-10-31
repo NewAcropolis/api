@@ -297,16 +297,17 @@ def update_event(event_id):
             if not storage.blob_exists(image_filename_without_cache_buster):
                 raise InvalidRequest('{} does not exist'.format(image_filename_without_cache_buster), 400)
 
-        if data.get('event_state') == APPROVED:
-            if '-temp' in image_filename:
-                q_pos = image_filename.index('-temp?')
-                image_filename = image_filename[0:q_pos]
-                storage.rename_image(image_filename + '-temp', image_filename)
-            else:
-                current_app.logger.warn(f"No temp file to rename: {image_filename}")
+        if image_filename:
+            if data.get('event_state') == APPROVED:
+                if '-temp' in image_filename:
+                    q_pos = image_filename.index('-temp?')
+                    image_filename = image_filename[0:q_pos]
+                    storage.rename_image(image_filename + '-temp', image_filename)
+                else:
+                    current_app.logger.warn(f"No temp file to rename: {image_filename}")
 
-        event.image_filename = image_filename
-        dao_update_event(event.id, image_filename=image_filename)
+            event.image_filename = image_filename
+            dao_update_event(event.id, image_filename=image_filename)
 
         json_event = event.serialize()
 
