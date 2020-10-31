@@ -22,7 +22,7 @@ def send_event_email_reminder():
         if time_to_send and not dao_get_email_by_event_id(event.id):
             subject = f"Event: {event.title} email reminder"
             message = f"Please <a href='{current_app.config['FRONTEND_ADMIN_URL']}/emails'>"\
-                f"login</a> to createa an email for {event.title}"
+                f"login</a> to create an email for {event.title}"
             message_html = get_email_html(BASIC, message=message)
 
             for user in dao_get_admin_users():
