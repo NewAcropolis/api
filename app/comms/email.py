@@ -76,7 +76,7 @@ def get_email_html(email_type, **kwargs):
             'emails/events.html',
             event=event,
             event_dates=get_nice_event_dates(event.event_dates),
-            description=escape(event.description),
+            description=h.unescape(event.description),
             details=kwargs.get('details'),
             extra_txt=kwargs.get('extra_txt'),
             unsubcode=unsubcode
