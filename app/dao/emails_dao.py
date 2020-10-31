@@ -144,7 +144,7 @@ def dao_get_latest_emails():
 
 
 def dao_get_approved_emails_for_sending():
-    now = datetime.today()
+    now = datetime.now(timezone('Europe/London'))
 
     return Email.query.filter(
         Email.expires >= now,

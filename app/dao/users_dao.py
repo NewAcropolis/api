@@ -31,4 +31,4 @@ def dao_get_user_by_email(email):
 
 
 def dao_get_admin_users():
-    return User.query.filter_by(access_area='admin').all()
+    return User.query.filter_by(access_area='admin', active=True).all()

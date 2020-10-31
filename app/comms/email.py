@@ -1,4 +1,6 @@
+from email.mime.text import MIMEText
 from flask import current_app, jsonify, render_template
+from html import escape
 import json
 import os
 import re
@@ -74,7 +76,7 @@ def get_email_html(email_type, **kwargs):
             'emails/events.html',
             event=event,
             event_dates=get_nice_event_dates(event.event_dates),
-            description=h.unescape(event.description),
+            description=escape(event.description),
             details=kwargs.get('details'),
             extra_txt=kwargs.get('extra_txt'),
             unsubcode=unsubcode
@@ -138,7 +140,7 @@ def get_email_data(data_map, to, subject, message, from_email, from_name):
 def send_email(to, subject, message, from_email=None, from_name=None, override=False):
     if current_app.config['EMAIL_DISABLED']:
         current_app.logger.info("Emails disabled, unset EMAIL_DISABLED env var to re-enable")
-        return 200
+        return 200, None
     if current_app.config['ENVIRONMENT'] != 'live' or current_app.config.get('EMAIL_RESTRICT'):
         message = message.replace('<body>', '<body><div>Test email, intended for {}</div>'.format(to))
         to = current_app.config['TEST_EMAIL']
@@ -206,17 +208,10 @@ def send_admin_email(to, subject, message, from_email=None, from_name=''):  # pr
     if isinstance(to, list):
         to = ','.join(to)
 
-    email_text = f"""\
-From: {_from}
-To: {to}
-Reply-To: {from_email}
-Subject: {subject}
-Mime-Version: 1.0;
-Content-Type: text/html; charset="ISO-8859-1";
-Content-Transfer-Encoding: 7bit;
-
-{message}
-"""
+    msg = MIMEText(message, "html")
+    msg['Subject'] = subject
+    msg['From'] = _from
+    msg['To'] = to
 
     try:
         context = ssl.create_default_context()
@@ -226,7 +221,7 @@ Content-Transfer-Encoding: 7bit;
             current_app.logger.info('SU: %r', current_app.config.get("SMTP_USER")[:5])
             current_app.logger.info('SP: %r', current_app.config.get("SMTP_PASS")[:3])
             conn.login(current_app.config.get("SMTP_USER"), current_app.config.get("SMTP_PASS"))
-            conn.sendmail(from_email, to, email_text)
+            conn.send_message(msg)
             current_app.logger.info("Successfully sent smtp email")
             return 200
     except smtplib.SMTPAuthenticationError as e:
