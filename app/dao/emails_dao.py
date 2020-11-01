@@ -170,6 +170,6 @@ def dao_get_past_hour_email_count_for_provider(email_provider_id):
 
     return EmailToMember.query.filter(
         EmailToMember.created_at > today,
-        EmailToMember.created_at < today + timedelta(hours=1),
+        EmailToMember.created_at > now - timedelta(hours=1),
         EmailToMember.email_provider_id == email_provider_id
     ).count()
