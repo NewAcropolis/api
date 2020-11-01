@@ -7,6 +7,7 @@ from app.dao.emails_dao import (
     dao_add_member_sent_to_email,
     dao_get_emails_for_year_starting_on,
     dao_get_todays_email_count_for_provider,
+    dao_get_past_hour_email_count_for_provider,
     dao_get_email_by_id,
     dao_get_future_emails,
     dao_get_latest_emails,
@@ -244,6 +245,50 @@ class WhenUsingEmailsDAO(object):
         )
         res = dao_get_approved_emails_for_sending()
         assert len(res) == 1
+
+    @freeze_time("2020-10-31T12:30:00")
+    def it_gets_past_hour_emails_for_provider(
+        self, db, db_session, sample_member, sample_email, sample_email_provider
+    ):
+        email = create_email(
+            send_starts_at="2020-10-30",
+            send_after="2020-10-30T20:30:00",
+            expires="2020-11-07",
+            email_state=APPROVED
+        )
+        member = create_member(
+            email="test1@example.com"
+        )
+        email_to_member = create_email_to_member(
+            email_id=email.id,
+            created_at="2020-10-31T12:00:00"
+        )
+        create_email_to_member(
+            member_id=sample_member.id,
+            email_id=email.id,
+            created_at="2020-10-31T10:00:00",
+            email_provider_id=email_to_member.email_provider_id
+        )
+        create_email_to_member(
+            member_id=member.id,
+            email_id=email.id,
+            created_at="2020-10-31T11:31:00",
+            email_provider_id=email_to_member.email_provider_id
+        )
+
+        # use another provider to show that it doesn't get that count
+        email_provider = create_email_provider(
+            name="Another email provider"
+        )
+        create_email_to_member(
+            member_id=sample_member.id,
+            email_id=sample_email.id,
+            email_provider_id=email_provider.id,
+            created_at="2020-10-31T11:31:00",
+        )
+
+        count = dao_get_past_hour_email_count_for_provider(email_to_member.email_provider_id)
+        assert count == 2
 
 
 class WhenGettingNearestBimonthlyDate:
