@@ -150,10 +150,10 @@ class WhenProcessingSendEmailsTask:
 
     @pytest.mark.parametrize('now', [
         "2020-09-05T23:00:01",
-        "2020-09-05T07:00:00",
+        "2020-09-05T06:00:00",
     ])
     def it_doesnt_send_email_out_of_hours(self, mocker, db_session, sample_email, sample_member, now):
-        mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails')
+        mock_get_emails = mocker.patch('app.na_celery.email_tasks.dao_get_approved_emails_for_sending')
 
         create_email(
             send_starts_at='2020-06-02',
@@ -164,7 +164,36 @@ class WhenProcessingSendEmailsTask:
         with freeze_time(now):
             send_periodic_emails()
 
-        assert not mock_send_emails.called
+        assert not mock_get_emails.called
+
+    @pytest.mark.parametrize('now', [
+        "2020-09-05T23:00:01",
+        "2020-09-05T06:00:00",
+    ])
+    def it_sends_emails_anytime(self, mocker, db_session, sample_email, sample_member, now):
+        mocker.patch.dict('app.application.config', {
+            'ENVIRONMENT': 'test',
+            'EMAIL_RESTRICT': None,
+            'EMAIL_ANYTIME': True
+        })
+        mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails')
+
+        event_date = create_event_date(event_datetime='2020-09-20 19:00')
+        event = create_event(event_dates=[event_date])
+        create_email(
+            send_starts_at='2020-09-02',
+            created_at='2020-09-01',
+            send_after='2020-09-03 8:00',
+            expires=None,
+            email_state=APPROVED,
+            old_event_id=None,
+            event_id=event.id
+        )
+
+        with freeze_time(now):
+            send_periodic_emails()
+
+        assert mock_send_emails.called
 
     @pytest.mark.parametrize('now', [
         "2020-09-05T20:59:01",  # UTC london time at 21:59

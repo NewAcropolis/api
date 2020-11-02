@@ -55,6 +55,7 @@ def app():
         'EMAIL_SALT': 'test',
         'EMAIL_UNSUB_SALT': 'unsub_test',
         'EMAIL_RESTRICT': None,
+        'EMAIL_ANYTIME': False,
         'TEST_EMAIL': 'test@example.com',
         'EVENTS_MAX': 2,
         'PROJECT': 'test-project',
