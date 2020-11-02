@@ -73,11 +73,14 @@ def send_periodic_emails():
     tz_London = pytz.timezone('Europe/London')
     current_time = datetime.strftime(datetime.now(tz_London), "%H:%M:%S")
 
-    if current_app.config['ENVIRONMENT'] != 'development' and \
-            (current_time < current_app.config['EMAIL_EARLIEST_TIME'] or
-                current_time > current_app.config['EMAIL_LATEST_TIME']):
-        current_app.logger.info('Task send_periodic_emails received: not between 8am and 10pm')
-        return
+    if current_app.config.get('EMAIL_ANYTIME'):
+        current_app.logger.info('Email anytime config set')
+    else:
+        if current_app.config['ENVIRONMENT'] != 'development' and \
+                (current_time < current_app.config['EMAIL_EARLIEST_TIME'] or
+                    current_time > current_app.config['EMAIL_LATEST_TIME']):
+            current_app.logger.info('Task send_periodic_emails received: not between 8am and 10pm')
+            return
 
     emails = dao_get_approved_emails_for_sending()
     current_app.logger.info('Task send_periodic_emails received: {}'.format(
