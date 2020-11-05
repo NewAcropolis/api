@@ -22,17 +22,31 @@ from flask_jwt_extended import jwt_required
 
 from app.comms.email import send_email
 from app.dao import dao_create_record
+from app.dao.books_dao import dao_create_book_to_order, dao_get_book_by_old_id, dao_get_book_by_id
 from app.dao.events_dao import dao_get_event_by_id
 from app.dao.event_dates_dao import dao_get_event_date_on_date, dao_get_event_date_by_id
 from app.dao.orders_dao import dao_get_order_with_txn_id
 from app.dao.tickets_dao import dao_get_ticket_id, dao_update_ticket
 from app.errors import register_errors, InvalidRequest
 
-from app.models import Order, Ticket, TICKET_STATUS_USED
+from app.models import BookToOrder, Order, Ticket, BOOK, TICKET_STATUS_USED
 from app.utils.storage import Storage
 
 orders_blueprint = Blueprint('orders', __name__)
 register_errors(orders_blueprint)
+
+
+@orders_blueprint.route('/orders/<string:txn_id>', methods=['GET'])
+def get_orders(txn_id):
+    order = dao_get_order_with_txn_id(txn_id)
+    if order:
+        return jsonify(order.serialize())
+
+
+@orders_blueprint.route('/orders/complete', methods=['GET'])
+def orders_complete():
+    current_app.logger.info("Orders complete: %r", request.args)
+    return 'orders complete'
 
 
 @orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
@@ -61,7 +75,7 @@ def paypal_ipn():
             else:
                 data[key] = params[key]
 
-        order_data, tickets, events = parse_ipn(data)
+        order_data, tickets, events, products = parse_ipn(data)
 
         if not order_data:
             return 'Paypal IPN no order created'
@@ -70,6 +84,21 @@ def paypal_ipn():
         order = Order(**order_data)
 
         dao_create_record(order)
+
+        for product in products:
+            if product['type'] == BOOK:
+                book_to_order = BookToOrder(
+                    book_id=product['book_id'],
+                    order_id=order.id,
+                    quantity=product['quantity']
+                )
+                dao_create_book_to_order(book_to_order)
+
+        if products and data['address_country_code'] != current_app.config.get('POSTAGE_COUNTRY_CODE'):
+            current_app.logger.info(f"International postage to {data['address_country_code']}")
+            # send an email out to the payer via email to request additional payment for postage
+            # or change how paypal calculates shipping costs
+
         for i, _ticket in enumerate(tickets):
             _ticket['order_id'] = order.id
             ticket = Ticket(**_ticket)
@@ -138,6 +167,7 @@ def parse_ipn(ipn):
     receiver_email = None
     tickets = []
     events = []
+    products = []
 
     order_mapping = {
         'payer_email': 'email_address',
@@ -147,6 +177,13 @@ def parse_ipn(ipn):
         'txn_type': 'txn_type',
         'mc_gross': 'payment_total',
         'txn_id': 'txn_id',
+        'payment_date': 'created_at',
+        'fullfillment_address_street': 'address_street',
+        'fullfillment_address_city': 'address_city',
+        'fullfillment_address_zip': 'address_postal_code',
+        'fullfillment_address_state': 'address_state',
+        'fullfillment_address_country': 'address_country',
+        'fullfillment_address_country_code': 'address_country_code',
     }
 
     for key in ipn.keys():
@@ -158,23 +195,22 @@ def parse_ipn(ipn):
     if order_data['payment_status'] != 'Completed':
         current_app.logger.error(
             'Order: %s, payment not complete: %s', order_data['txn_id'], order_data['payment_status'])
-        return None, None, None
+        return None, None, None, None
 
     if receiver_email != current_app.config['PAYPAL_RECEIVER']:
         current_app.logger.error('Paypal receiver not valid: %s for %s', receiver_email, order_data['txn_id'])
         order_data['payment_status'] = 'Invalid receiver'
-        return None, None, None
+        return None, None, None, None
 
     order_found = dao_get_order_with_txn_id(order_data['txn_id'])
     if order_found:
         current_app.logger.error(
             'Order: %s, payment already made', order_data['txn_id'])
-        return None, None, None
+        return None, None, None, None
 
     if ipn['txn_type'] == 'paypal_here':
         _event_date = datetime.strptime(ipn['payment_date'], '%H:%M:%S %b %d, %Y PST').strftime('%Y-%m-%d')
         event_date = dao_get_event_date_on_date(_event_date)
-
         ticket = {
             'ticket_number': 1,
             'event_id': event_date.event_id,
@@ -188,53 +224,74 @@ def parse_ipn(ipn):
     else:
         counter = 1
         while ('item_number%d' % counter) in ipn:
-            try:
-                event = dao_get_event_by_id(ipn['item_number%d' % counter])
-                events.append(event)
-            except NoResultFound:
-                current_app.logger.error("Event not found for item_number: %s", ipn['item_number%d' % counter])
-                counter += 1
-                continue
-
-            if 'option_name2_%d' % counter in ipn.keys():
-                event_date_index = int(ipn['option_selection2_%d' % counter]) \
-                    if ipn['option_name2_%d' % counter] == 'Date' else 1
+            if ipn['item_number%d' % counter].startswith('book-'):
+                book_id = ipn['item_number%d' % counter][len("book-"):]
+                UUID_LENGTH = 36
+                if len(book_id) < UUID_LENGTH:
+                    book = dao_get_book_by_old_id(book_id)
+                else:
+                    book = dao_get_book_by_id(book_id)
+                if book:
+                    quantity = int(ipn['quantity%d' % counter])
+                    products.append(
+                        {
+                            "type": BOOK,
+                            "book_id": book.id,
+                            "quantity": quantity
+                        }
+                    )
+                else:
+                    current_app.logger.error("Book not found for item_number: %s", ipn['item_number%d' % counter])
+                    counter += 1
+                    continue
             else:
-                event_date_index = 1
+                try:
+                    event = dao_get_event_by_id(ipn['item_number%d' % counter])
+                    events.append(event)
+                except NoResultFound:
+                    current_app.logger.error("Event not found for item_number: %s", ipn['item_number%d' % counter])
+                    counter += 1
+                    continue
 
-            if event_date_index > len(event.event_dates):
-                current_app.logger.error(
-                    "Event date %s not found for: %s", event_date_index, ipn['item_number%d' % counter])
-                counter += 1
-                continue
+                if 'option_name2_%d' % counter in ipn.keys():
+                    event_date_index = int(ipn['option_selection2_%d' % counter]) \
+                        if ipn['option_name2_%d' % counter] == 'Date' else 1
+                else:
+                    event_date_index = 1
 
-            event_date_id = event.event_dates[event_date_index - 1].id
-            quantity = int(ipn['quantity%d' % counter])
-            price = float("{0:.2f}".format(float(ipn['mc_gross_%d' % counter]) / quantity))
+                if event_date_index > len(event.event_dates):
+                    current_app.logger.error(
+                        "Event date %s not found for: %s", event_date_index, ipn['item_number%d' % counter])
+                    counter += 1
+                    continue
 
-            for i in range(1, quantity + 1):
-                ticket = {
-                    'ticket_number': i,
-                    'event_id': event.id,
-                    'ticket_type': ipn['option_selection1_%d' % counter],
-                    'eventdate_id': event_date_id,
-                    'price': price,
-                    'name':
-                        ipn.get('option_selection3_%d' % counter)
-                        if ipn.get('option_name3_%d' % counter) == 'Course Member name'
-                        else ipn.get('option_selection2_%d' % counter)
-                        if ipn.get('option_name2_%d' % counter) == 'Course Member name'
-                        else None
-                }
-                tickets.append(ticket)
+                event_date_id = event.event_dates[event_date_index - 1].id
+                quantity = int(ipn['quantity%d' % counter])
+                price = float("{0:.2f}".format(float(ipn['mc_gross_%d' % counter]) / quantity))
+
+                for i in range(1, quantity + 1):
+                    ticket = {
+                        'ticket_number': i,
+                        'event_id': event.id,
+                        'ticket_type': ipn['option_selection1_%d' % counter],
+                        'eventdate_id': event_date_id,
+                        'price': price,
+                        'name':
+                            ipn.get('option_selection3_%d' % counter)
+                            if ipn.get('option_name3_%d' % counter) == 'Course Member name'
+                            else ipn.get('option_selection2_%d' % counter)
+                            if ipn.get('option_name2_%d' % counter) == 'Course Member name'
+                            else None
+                    }
+                    tickets.append(ticket)
             counter += 1
 
     if not tickets:
         current_app.logger.error('No valid tickets, no order created: %s', order_data['txn_id'])
-        return None, None, None
+        return None, None, None, None
 
     order_data['buyer_name'] = '{} {}'.format(order_data['first_name'], order_data['last_name'])
     del order_data['first_name']
     del order_data['last_name']
 
-    return order_data, tickets, events
+    return order_data, tickets, events, products
