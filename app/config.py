@@ -77,7 +77,7 @@ class Config(object):
         },
         'send-periodic-emails': {
             'task': 'send_periodic_emails',
-            'schedule': crontab(minute=0, hour='*') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
+            'schedule': crontab(minute=0, hour='*') if ENVIRONMENT != 'development' else crontab(minute='*'),
         },
         'send-num-subscribers-and-social-stats': {
             'task': 'send_num_subscribers_and_social_stats',
@@ -102,6 +102,7 @@ class Config(object):
 
     FACEBOOK_URL = "https://www.facebook.com/pg/newacropolisuk/community/"
     INSTAGRAM_URL = os.environ.get('INSTAGRAM_URL')
+    POSTAGE_COUNTRY_CODE = "GB"
 
 
 class Development(Config):

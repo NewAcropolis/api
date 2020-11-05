@@ -78,6 +78,11 @@ class Article(db.Model):
         }
 
 
+BOOK = 'book'
+GIFT = 'gift'
+PRODUCT_TYPES = [BOOK, GIFT]
+
+
 class Product:
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     price = db.Column(db.Numeric(3, 2), nullable=True)
@@ -722,6 +727,26 @@ class Order(db.Model):
     payment_status = db.Column(db.String)
     payment_total = db.Column(db.Numeric(precision=2))
     params = db.Column(db.String)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'txn_id': self.txn_id,
+            'txn_type': self.txn_type,
+            'buyer_name': self.buyer_name,
+            'payment_status': self.payment_status,
+            'payment_total': self.payment_total,
+        }
+
+
+class BookToOrder(db.Model):
+    __tablename__ = 'book_to_order'
+    __table_args__ = (
+        PrimaryKeyConstraint('book_id', 'order_id'),
+    )
+    book_id = db.Column(UUID(as_uuid=True), db.ForeignKey('books.id'))
+    order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
+    quantity = db.Column(db.Integer)
 
 
 TICKET_FULL = 'Full'
