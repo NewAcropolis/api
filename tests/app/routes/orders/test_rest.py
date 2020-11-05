@@ -23,8 +23,8 @@ sample_ipns = [
     "payment_gross=&ipn_track_id=112233",
     # multiple tickets
     "cmd=_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&item_number1={id}&"
-    "item_number2={id}&payer_id=XXYYZZ2&address_street=Flat+1%2C+70+Angel+Place&payment_date=14%3A45%3A55+Mar+"
-    "30%2C+2019+PDT&option_name2_1=Course+Member+name&option_name2_2=Course+Member+name&option_selection1_1=Full&"
+    "item_number2={id}&payer_id=XXYYZZ2&address_street=Flat+1%2C+70+Angel+Place&payment_date=14%3A45%3A55+Jan+"
+    "01%2C+2018+PDT&option_name2_1=Course+Member+name&option_name2_2=Course+Member+name&option_selection1_1=Full&"
     "payment_status=Completed&option_selection1_2=Full&charset=windows-1252&address_zip=n1+1xx&mc_shipping=0.00&"
     "first_name=Test&mc_fee=0.54&address_country_code=GB&address_name=Test+User&notify_version=3.9&custom=&"
     "payer_status=unverified&business=receiver%40example.com&address_country=United+Kingdom&num_cart_items=2&"
@@ -38,7 +38,7 @@ sample_ipns = [
     "&shipping_method=Default&transaction_subject=&payment_gross=&ipn_track_id=112233",
     # paypal card reader
     "cmd=_notify-validate&mc_gross=24.00&protection_eligibility=Ineligible&payer_id=XXYYZZ3&tax=0.00&"
-    "payment_date=19%3A27%3A52+Jan+01%2C+2018+PST&payment_status=Completed&payment_method=credit_card&"
+    "payment_date=19%3A27%3A52+Jan+02%2C+2018+PST&payment_status=Completed&payment_method=credit_card&"
     "invoice_id=INV2-XXYYZZ&charset=windows-1252&first_name=&mc_fee=0.66&notify_version=3.9&"
     "custom=%5BCONTACTLESS_CHIP%28V%2C7102%29%40%2851.112233%2C-0."
     "112233%29%2C%2819290223020%29%5D&payer_status=unverified&"
@@ -50,7 +50,7 @@ sample_ipns = [
     "112233",
     # no dates
     "mc_gross=0.01&protection_eligibility=Ineligible&item_number1={id}&tax=0.00&payer_id=XXYYZZ1&payment_date="
-    "10%3A00%3A00+Jan+01%2C+2018+PST&option_selection1_1=Concession&payment_status=Completed&"
+    "10%3A00%3A00+Oct+01%2C+2018+PST&option_selection1_1=Concession&payment_status=Completed&"
     "charset=windows-1252&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&notify_version=3.8&custom=&"
     "payer_status=verified&business=receiver%40example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=XXYYZZ1"
     ".t.sign&payer_email=test1%40example.com&mc_shipping1=0.00&tax1=0.00&btn_id1="
@@ -63,7 +63,7 @@ sample_ipns = [
 
 sample_incomplete_ipn = (
     "mc_gross=0.01&protection_eligibility=Ineligible&item_number1={id}&tax=0.00&payer_id=XXYYZZ1&payment_date="
-    "10%3A00%3A00+Jan+01%2C+2018+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Incomplete&"
+    "10%3A00%3A00+Jan+01%2C+2019+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Incomplete&"
     "charset=windows-1252&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&notify_version=3.8&custom=&"
     "payer_status=verified&business=receiver%40example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=XXYYZZ1"
     ".t.sign&payer_email=test1%40example.com&mc_shipping1=0.00&tax1=0.00&btn_id1="
@@ -101,7 +101,7 @@ sample_invalid_date = (
 
 
 class WhenHandlingPaypalIPN:
-    def it_creates_orders_and_tickets(self, mocker, client, db_session, sample_event_with_dates):
+    def it_creates_orders_and_event_tickets(self, mocker, client, db_session, sample_event_with_dates):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
         mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
@@ -134,6 +134,16 @@ class WhenHandlingPaypalIPN:
             for n in range(num_tickets[i]):
                 assert 'http://test/images/qr_codes/{}'.format(
                     str(tickets[n].id)) in mock_send_email.call_args_list[i][0][2]
+
+    def it_creates_a_book_order(self, mocker, client, db_session, sample_event_with_dates):
+        # mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        # txn_ids = ['112233', '112244', '112255', '112266']
+        # txn_types = ['cart', 'cart', 'paypal_here', 'cart']
+        # num_tickets = [1, 2, 1, 1]
+        pass
+
+    def it_creates_a_mixed_order(self, mocker, client, db_session):
+        pass
 
     def it_does_not_create_an_order_if_payment_not_complete(self, mocker, client, db_session):
         with requests_mock.mock() as r:

@@ -78,6 +78,11 @@ class Article(db.Model):
         }
 
 
+BOOK = 'book'
+GIFT = 'gift'
+PRODUCT_TYPES = [BOOK, GIFT]
+
+
 class Product:
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     price = db.Column(db.Numeric(3, 2), nullable=True)
@@ -722,6 +727,41 @@ class Order(db.Model):
     payment_status = db.Column(db.String)
     payment_total = db.Column(db.Numeric(precision=2))
     params = db.Column(db.String)
+    address_street = db.Column(db.String)
+    address_city = db.Column(db.String)
+    address_postal_code = db.Column(db.String)
+    address_state = db.Column(db.String)
+    address_country = db.Column(db.String)
+    address_country_code = db.Column(db.String)
+    delivery_zone = db.Column(db.String(5))
+    delivery_zone_confirmed = db.Column(db.Boolean)
+    books = db.relationship("BookToOrder", back_populates="order")
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'txn_id': self.txn_id,
+            'txn_type': self.txn_type,
+            'buyer_name': self.buyer_name,
+            'payment_status': self.payment_status,
+            'payment_total': str(self.payment_total),  # not possible to json serialize a decimal
+            'address_country_code': self.address_country_code,
+            'delivery_zone': self.delivery_zone,
+            'delivery_zone_confirmed': self.delivery_zone_confirmed,
+        }
+
+
+class BookToOrder(db.Model):
+    __tablename__ = 'book_to_order'
+    __table_args__ = (
+        PrimaryKeyConstraint('book_id', 'order_id'),
+    )
+    book_id = db.Column(UUID(as_uuid=True), db.ForeignKey('books.id'))
+    order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
+    quantity = db.Column(db.Integer)
+
+    # book = db.relationship("Book", back_populates="orders")
+    order = db.relationship("Order", back_populates="books")
 
 
 TICKET_FULL = 'Full'

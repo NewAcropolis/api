@@ -1002,6 +1002,22 @@ function SendEmailStats {
     -H "Authorization: Bearer $TKN"
 }
 
+function SendSubscribersSocialStats {
+    echo "*** Send subscribers and social stats ***"
+
+    curl -X GET $api_server'/stats/subscribers_and_social' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
+function SendEmailStats {
+    echo "*** Send email stats ***"
+
+    curl -X GET $api_server'/stats/emails/11/2020' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
 function ImportMembers {
     echo "*** Import members ***"
 
@@ -1030,6 +1046,12 @@ function TestPaypalIPN {
     -d "$sample_ipn"
 }
 
+
+function GetOrder {
+    echo "*** Get order with transaction ID ***"
+
+    curl $api_server'/order/'$TXN_ID
+}
 
 function Logout {
     echo "*** Logout ***"
@@ -1281,6 +1303,10 @@ case "$arg" in
 
         -uem)
             UpdateEmailToReady
+        ;;
+
+        -go)
+            GetOrder
         ;;
 
         -uema)
