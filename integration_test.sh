@@ -683,7 +683,10 @@ email_provider=$(cat  << EOF
         "data_map": "$EMAIL_PROVIDER_DATA_MAP",
         "pos": $EMAIL_PROVIDER_POS,
         "headers": $EMAIL_PROVIDER_HEADERS,
-        "as_json": $EMAIL_PROVIDER_AS_JSON
+        "as_json": $EMAIL_PROVIDER_AS_JSON,
+        "smtp_server": "$EMAIL_PROVIDER_SMTP_SERVER",
+        "smtp_user": "$EMAIL_PROVIDER_SMTP_USER",
+        "smtp_password": "$EMAIL_PROVIDER_SMTP_PASSWORD"
     }
 EOF
 )
