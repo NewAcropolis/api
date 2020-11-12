@@ -40,10 +40,18 @@ def mock_config_disabled(app):
     app.config = old_config
 
 
-def mock_get_email_count_for_provider_over_first_limit(email_provider_id):
+def mock_get_todays_email_count_for_provider_over_first_limit(email_provider_id):
     email_provider = dao_get_email_provider_by_id(email_provider_id)
     if email_provider.pos == 0:
         return email_provider.daily_limit + 1
+    else:
+        return 0
+
+
+def mock_get_past_hour_email_count_for_provider_over_first_limit(email_provider_id):
+    email_provider = dao_get_email_provider_by_id(email_provider_id)
+    if email_provider.pos == 0:
+        return email_provider.hourly_limit + 1
     else:
         return 0
 
@@ -98,6 +106,24 @@ class WhenSendingAnEmail:
 
             assert r.last_request.text == json.dumps(data)
 
+    def it_sends_email_to_provider_with_smtp(self, mocker, db_session, sample_email_provider):
+        sample_email_provider.smtp_server = "http://smtp_server.com"
+        sample_email_provider.smtp_user = "user"
+        sample_email_provider.smtp_password = "password"
+
+        mock_smtp = mocker.patch('app.comms.email.send_smtp_email')
+
+        send_email('someone@example.com', 'test subject', 'test message')
+
+        assert mock_smtp.called
+        assert mock_smtp.call_args == call(
+            'test@example.com',
+            'test subject',
+            'test message',
+            from_name='New Acropolis',
+            smtp_info={'SMTP_SERVER': 'http://smtp_server.com', 'SMTP_USER': 'user', 'SMTP_PASS': 'password'}
+        )
+
     def it_triggers_429_when_hourly_limit_reached(self, mocker, db_session, sample_email_provider):
         mocker.patch('app.comms.email.dao_get_past_hour_email_count_for_provider', return_value=30)
 
@@ -137,7 +163,7 @@ class WhenSendingAnEmail:
     def it_sends_the_email_with_override_for_hourly_limit_reached(self, mocker, db_session, sample_email_provider):
         mocker.patch(
             'app.comms.email.dao_get_past_hour_email_count_for_provider',
-            mock_get_email_count_for_provider_over_first_limit
+            mock_get_todays_email_count_for_provider_over_first_limit
         )
 
         next_provider = create_email_provider(name='next provider', pos=2)
@@ -150,7 +176,7 @@ class WhenSendingAnEmail:
     def it_sends_the_email_using_next_provider_with_override(self, mocker, db_session, sample_email_provider):
         mocker.patch(
             'app.comms.email.dao_get_todays_email_count_for_provider',
-            mock_get_email_count_for_provider_over_first_limit
+            mock_get_todays_email_count_for_provider_over_first_limit
         )
         next_email_provider = create_email_provider(name='Next email provider', daily_limit=30)
         with requests_mock.mock() as r:
@@ -158,6 +184,45 @@ class WhenSendingAnEmail:
             resp = send_email('someone@example.com', 'test subject', 'test message', override=True)
 
             assert resp == (200, next_email_provider.id)
+
+    def it_sends_the_email_using_next_available_provider(self, mocker, db_session, sample_email_provider):
+        mocker.patch(
+            'app.comms.email.dao_get_todays_email_count_for_provider',
+            mock_get_todays_email_count_for_provider_over_first_limit
+        )
+
+        create_email_provider(
+            name='Next unavailable email provider', hourly_limit=30, pos=3)
+
+        next_available_email_provider = create_email_provider(
+            name='Next email provider', hourly_limit=30, pos=5, available=True)
+
+        with requests_mock.mock() as r:
+            r.post(next_available_email_provider.api_url, text='OK')
+            resp = send_email('someone@example.com', 'test subject', 'test message')
+
+            assert resp == (200, next_available_email_provider.id)
+
+    def it_sends_the_email_using_next_available_provider_hourly_limit(self, mocker, db_session):
+        mocker.patch(
+            'app.comms.email.dao_get_past_hour_email_count_for_provider',
+            mock_get_past_hour_email_count_for_provider_over_first_limit
+        )
+
+        create_email_provider(
+            name='First email provider', daily_limit=0, hourly_limit=30, pos=0)
+
+        create_email_provider(
+            name='Another email provider', daily_limit=0, hourly_limit=30, pos=3)
+
+        next_available_email_provider = create_email_provider(
+            name='Next available email provider', hourly_limit=30, pos=5, available=True)
+
+        with requests_mock.mock() as r:
+            r.post(next_available_email_provider.api_url, text='OK')
+            resp = send_email('someone@example.com', 'test subject', 'test message')
+
+            assert resp == (200, next_available_email_provider.id)
 
     def it_doesnt_send_email_if_disabled(self, mocker, mock_config_disabled):
         mock_logger = mocker.patch('app.comms.email.current_app.logger.info')

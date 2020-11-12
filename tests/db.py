@@ -452,7 +452,9 @@ DATA_MAP = {
 def create_email_provider(
     name='Test Email Provider', daily_limit=25, hourly_limit=5,
     api_key='apikey', api_url='http://alt-api-url.com', pos=1,
-    headers=True, as_json=False, data_map=DATA_MAP
+    headers=True, as_json=False, data_map=DATA_MAP,
+    smtp_server=None, smtp_user=None, smtp_password=None,
+    available=False
 ):
     data = {
         'name': name,
@@ -464,6 +466,10 @@ def create_email_provider(
         'headers': headers,
         'as_json': as_json,
         'pos': pos,
+        'smtp_server': smtp_server,
+        'smtp_user': smtp_user,
+        'smtp_password': smtp_password,
+        'available': available
     }
 
     email_provider = EmailProvider(**data)

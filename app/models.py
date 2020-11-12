@@ -147,6 +147,11 @@ class EmailProvider(db.Model):
     pos = db.Column(db.Integer, unique=True)
     headers = db.Column(db.Boolean)
     as_json = db.Column(db.Boolean)
+    smtp_server = db.Column(db.String)
+    smtp_user = db.Column(db.String)
+    smtp_password = db.Column(db.String)
+    available = db.Column(db.Boolean)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     def serialize(self):
         return {
@@ -159,7 +164,12 @@ class EmailProvider(db.Model):
             'data_map': self.data_map,
             'pos': self.pos,
             'headers': self.headers,
-            'as_json': self.as_json
+            'as_json': self.as_json,
+            'smtp_server': self.smtp_server,
+            'smtp_user': self.smtp_user,
+            'smtp_password': self.smtp_password,
+            'available': self.available,
+            'created_at': str(self.created_at)
         }
 
 

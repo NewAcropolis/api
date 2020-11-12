@@ -12,7 +12,7 @@ import time
 from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.comms.email import send_admin_email
+from app.comms.email import send_smtp_email
 from app.dao.events_dao import (
     dao_create_event,
     dao_delete_event,
@@ -319,7 +319,7 @@ def update_event(event_id):
                 event.title
             )
 
-            status_code = send_admin_email(emails_to, '{} is ready for review'.format(event.title), message)
+            status_code = send_smtp_email(emails_to, '{} is ready for review'.format(event.title), message)
             if status_code != 200:
                 errs.append(f"Problem sending admin email {status_code}")
         elif data.get('event_state') == REJECTED:
@@ -334,7 +334,7 @@ def update_event(event_id):
                 message += '<li>{}</li>'.format(reject_reason['reason'])
             message += '</ol>'
 
-            status_code = send_admin_email(emails_to, '{} event needs to be corrected'.format(event.title), message)
+            status_code = send_smtp_email(emails_to, '{} event needs to be corrected'.format(event.title), message)
             if status_code != 200:
                 errs.append(f"Problem sending smtp emails: {status_code}")
 
