@@ -17,7 +17,9 @@ from app.errors import InvalidRequest
 from app.models import BASIC, EVENT, MAGAZINE
 from app.dao.events_dao import dao_get_event_by_id
 from app.dao.emails_dao import dao_get_past_hour_email_count_for_provider, dao_get_todays_email_count_for_provider
-from app.dao.email_providers_dao import dao_get_first_email_provider, dao_get_next_email_provider
+from app.dao.email_providers_dao import (
+    dao_get_first_email_provider, dao_get_next_email_provider, dao_get_next_available_email_provider
+)
 from app.dao.magazines_dao import dao_get_magazine_by_id
 
 h = HTMLParser()
@@ -29,32 +31,42 @@ def get_email_provider(override=False, email_provider=None):
         if not email_provider:
             return None
 
-    daily_email_count = dao_get_todays_email_count_for_provider(email_provider.id)
-    hourly_email_count = 0
+    hourly_email_count = daily_email_count = 0
+
+    if email_provider.daily_limit > 0:
+        daily_email_count = dao_get_todays_email_count_for_provider(email_provider.id)
+
+        if daily_email_count > email_provider.daily_limit:
+            next_email_provider = dao_get_next_available_email_provider(email_provider.pos)
+            if next_email_provider:
+                return get_email_provider(override, next_email_provider)
+
+            if override:
+                next_email_provider = dao_get_next_email_provider(email_provider.pos)
+
+                if next_email_provider:
+                    return get_email_provider(override, next_email_provider)
+            else:
+                email_provider.limit = 0
+                email_provider.daily_limit_reached = True
+            return email_provider
 
     if email_provider.hourly_limit > 0:
         hourly_email_count = dao_get_past_hour_email_count_for_provider(email_provider.id)
 
-    if daily_email_count > email_provider.daily_limit:
-        if override:
-            next_email_provider = dao_get_next_email_provider(email_provider.pos)
-
+        if hourly_email_count > email_provider.hourly_limit:
+            next_email_provider = dao_get_next_available_email_provider(email_provider.pos)
             if next_email_provider:
                 return get_email_provider(override, next_email_provider)
-        else:
+
+            if override:
+                next_email_provider = dao_get_next_email_provider(email_provider.pos)
+                if next_email_provider:
+                    return get_email_provider(override, next_email_provider)
+
             email_provider.limit = 0
-            email_provider.daily_limit_reached = True
-        return email_provider
+            email_provider.hourly_limit_reached = True
 
-    if hourly_email_count > email_provider.hourly_limit:
-        if override:
-            next_email_provider = dao_get_next_email_provider(email_provider.pos)
-            if next_email_provider:
-                return get_email_provider(override, next_email_provider)
-        email_provider.limit = 0
-        email_provider.hourly_limit_reached = True
-
-    if email_provider.hourly_limit > 0:
         email_provider.limit = email_provider.hourly_limit - hourly_email_count
 
     email_provider.limit = email_provider.daily_limit - daily_email_count
@@ -158,33 +170,39 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
         elif hasattr(email_provider, "daily_limit_reached"):
             raise InvalidRequest('Daily limit reached', 429)
 
-        # temp log to investigate emails
-        current_app.logger.info(f"Sending email to: {to[:10]}")
+        if email_provider.smtp_server:
+            smtp_info = {
+                "SMTP_SERVER": email_provider.smtp_server,
+                "SMTP_USER": email_provider.smtp_user,
+                "SMTP_PASS": email_provider.smtp_password,
+            }
+            response_code = send_smtp_email(to, subject, message, from_name="New Acropolis", smtp_info=smtp_info)
+            return response_code, email_provider.id
+        else:
+            data = get_email_data(email_provider.data_map, to, subject, message, from_email, from_name)
+            data = data if email_provider.as_json else json.dumps(data)
 
-        data = get_email_data(email_provider.data_map, to, subject, message, from_email, from_name)
-        data = data if email_provider.as_json else json.dumps(data)
+            headers = {
+                'api-key': email_provider.api_key,
+                'accept': 'application/json',
+                'content-type': 'application/json'
+            } if email_provider.headers else None
 
-        headers = {
-            'api-key': email_provider.api_key,
-            'accept': 'application/json',
-            'content-type': 'application/json'
-        } if email_provider.headers else None
+            response = requests.post(
+                email_provider.api_url,
+                auth=('api', email_provider.api_key),
+                headers=headers,
+                data=data,
+            )
 
-        response = requests.post(
-            email_provider.api_url,
-            auth=('api', email_provider.api_key),
-            headers=headers,
-            data=data,
-        )
+            response.raise_for_status()
+            current_app.logger.info('Sent email: {}, response: {}'.format(subject, response.text))
+            if current_app.config['ENVIRONMENT'] != 'live':  # pragma: no cover
+                current_app.logger.info('Email to: {}'.format(to))
+                current_app.logger.info('Email provider: {}'.format(email_provider.api_url))
+                current_app.logger.info('Email key: {}'.format(email_provider.api_key[:5]))
 
-        response.raise_for_status()
-        current_app.logger.info('Sent email: {}, response: {}'.format(subject, response.text))
-        if current_app.config['ENVIRONMENT'] != 'live':  # pragma: no cover
-            current_app.logger.info('Email to: {}'.format(to))
-            current_app.logger.info('Email provider: {}'.format(email_provider.api_url))
-            current_app.logger.info('Email key: {}'.format(email_provider.api_key[:5]))
-
-        return response.status_code, email_provider.id
+            return response.status_code, email_provider.id
     else:
         data = {
             'to': to,
@@ -196,8 +214,15 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
         current_app.logger.info('No email providers configured, email would have sent: {}'.format(data))
 
 
-def send_admin_email(to, subject, message, from_email=None, from_name=''):  # pragma: no cover
+def send_smtp_email(to, subject, message, from_email=None, from_name='', smtp_info=None):  # pragma: no cover
     current_app.logger.info("Starting to send smtp")
+
+    if not smtp_info:
+        smtp_info = {
+            "SMTP_SERVER": current_app.config.get("SMTP_SERVER"),
+            "SMTP_USER": current_app.config.get("SMTP_USER"),
+            "SMTP_PASS": current_app.config.get("SMTP_PASS"),
+        }
     if not from_email:
         from_email = f"noreply@{current_app.config['EMAIL_DOMAIN']}"
     if from_name:
@@ -215,12 +240,12 @@ def send_admin_email(to, subject, message, from_email=None, from_name=''):  # pr
 
     try:
         context = ssl.create_default_context()
-        with smtplib.SMTP(current_app.config.get("SMTP_SERVER"), 587) as conn:
+        with smtplib.SMTP(smtp_info['SMTP_SERVER'], 587) as conn:
             conn.starttls(context=context)
             conn.ehlo()
-            current_app.logger.info('SU: %r', current_app.config.get("SMTP_USER")[:5])
-            current_app.logger.info('SP: %r', current_app.config.get("SMTP_PASS")[:3])
-            conn.login(current_app.config.get("SMTP_USER"), current_app.config.get("SMTP_PASS"))
+            current_app.logger.info('SU: %r', smtp_info["SMTP_USER"][:5])
+            current_app.logger.info('SP: %r', smtp_info["SMTP_PASS"][:3])
+            conn.login(smtp_info["SMTP_USER"], smtp_info["SMTP_PASS"])
             conn.send_message(msg)
             current_app.logger.info("Successfully sent smtp email")
             return 200
