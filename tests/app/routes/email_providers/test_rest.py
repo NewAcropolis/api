@@ -9,7 +9,9 @@ from tests.db import create_email_provider
 
 class WhenGettingEmailProviders:
     def it_gets_email_providers_in_order(self, client, db, db_session, sample_email_provider):
-        next_email_provider = create_email_provider(name='Next email provider', pos=2)
+        next_email_provider = create_email_provider(
+            name='Next email provider', pos=2,
+            smtp_server='http://smtp.test', smtp_user='user', smtp_password='password')
 
         response = client.get(
             url_for('email_provider.get_email_providers'),
@@ -23,6 +25,7 @@ class WhenGettingEmailProviders:
         assert response.json[1]['id'] == str(next_email_provider.id)
         assert 'api_key' not in response.json[1]
         assert response.json[1]['shortened_api_key'] == next_email_provider.api_key[-10:]
+        assert response.json[1]['shortened_smtp_password'] == next_email_provider.smtp_password[-5:]
 
 
 class WhenPostingEmailProvider:

@@ -56,8 +56,14 @@ def get_email_providers():
     email_providers = []
     for fetched_email_provider in dao_get_email_providers():
         email_provider_json = fetched_email_provider.serialize()
-        shortened_api_key = email_provider_json['api_key'][-10:]
-        del email_provider_json['api_key']
-        email_provider_json['shortened_api_key'] = shortened_api_key
+        if email_provider_json['api_key']:
+            shortened_api_key = email_provider_json['api_key'][-10:]
+            del email_provider_json['api_key']
+            email_provider_json['shortened_api_key'] = shortened_api_key
+
+        if email_provider_json['smtp_password']:
+            shortened_smtp_pass = email_provider_json['smtp_password'][-5:]
+            del email_provider_json['smtp_password']
+            email_provider_json['shortened_smtp_password'] = shortened_smtp_pass
         email_providers.append(email_provider_json)
     return jsonify(email_providers), 200
