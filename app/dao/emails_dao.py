@@ -38,7 +38,7 @@ def dao_create_email(email):
         if email.magazine_id:
             try:
                 magazine = dao_get_magazine_by_id(email.magazine_id)
-                email.subject = u"New Acropolis bi-monthly newsletter: {}".format(magazine.title)
+                email.subject = u"New Acropolis bi-monthly magazine: {}".format(magazine.title)
                 if not email.send_starts_at:
                     email.send_starts_at = _get_nearest_bi_monthly_send_date()
                     email.expires = email.send_starts_at + timedelta(weeks=2)

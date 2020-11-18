@@ -161,7 +161,7 @@ class WhenUsingEmailModel:
 
         assert email.serialize() == {
             'id': str(email.id),
-            'subject': u'New Acropolis bi-monthly newsletter: Test magazine',
+            'subject': u'New Acropolis bi-monthly magazine: Test magazine',
             'event_id': None,
             'magazine_id': str(sample_magazine.id),
             'old_id': email.old_id,
