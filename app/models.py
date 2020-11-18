@@ -226,7 +226,7 @@ class Email(db.Model):
 
             if magazine:
                 current_app.logger.info('magazine found %s' % magazine.title)
-                return u"New Acropolis bi-monthly newsletter: {}".format(magazine.title)
+                return u"New Acropolis bi-monthly magazine: {}".format(magazine.title)
 
             current_app.logger.error('No magazine found')
             return "Magazine not found"
