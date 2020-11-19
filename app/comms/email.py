@@ -74,16 +74,15 @@ def get_email_provider(override=False, email_provider=None):
 
 
 def get_email_html(email_type, **kwargs):
+    member_id = kwargs.get('member_id')
+    unsubcode = encrypt(
+        "{}={}".format(current_app.config['EMAIL_TOKENS']['member_id'], member_id),
+        current_app.config['EMAIL_UNSUB_SALT']
+    ) if member_id else None
+
     if email_type == EVENT:
         event = dao_get_event_by_id(kwargs.get('event_id'))
-        member_id = kwargs.get('member_id')
-        if not member_id:
-            member_id = '0'  # for preview of emails
         current_app.logger.debug('Email Tokens %s', current_app.config['EMAIL_TOKENS'])
-        unsubcode = encrypt(
-            "{}={}".format(current_app.config['EMAIL_TOKENS']['member_id'], member_id),
-            current_app.config['EMAIL_UNSUB_SALT']
-        )
         return render_template(
             'emails/events.html',
             event=event,
@@ -104,13 +103,15 @@ def get_email_html(email_type, **kwargs):
         return render_template(
             'emails/magazine.html',
             magazine=magazine,
-            topics=topics
+            topics=topics,
+            unsubcode=unsubcode
         )
     elif email_type == BASIC:
         return render_template(
             'emails/basic.html',
             title=kwargs.get('title', ''),
-            message=kwargs.get('message')
+            message=kwargs.get('message'),
+            unsubcode=unsubcode
         )
 
 
