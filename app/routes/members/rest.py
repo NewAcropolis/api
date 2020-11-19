@@ -19,6 +19,7 @@ from app.dao.members_dao import (
 
 from app.comms.email import get_email_html, send_email
 from app.comms.encryption import decrypt, get_tokens
+from app.comms.stats import send_ga_event
 from app.errors import register_errors, InvalidRequest
 
 from app.models import Marketing, Member, BASIC
@@ -54,12 +55,20 @@ def subscribe_member():
 
     dao_create_member(member)
 
+    send_ga_event(
+        f"Subscribed {member.id}",
+        "email",
+        "subscribe",
+        f"{member.id}")
+
     basic_html = get_email_html(
         email_type=BASIC,
         title='Subscription',
-        message="Thank you{} for subscribing to New Acropolis events and news letters".format(
+        message="Thank you{} for subscribing to New Acropolis events and magazines".format(
             ' {}'.format(data.get('name', '')) if 'name' in data else ''
-        ))
+        ),
+        member_id=member.id
+    )
     response = send_email(data['email'], 'New Acropolis subscription', basic_html)
 
     return jsonify(member.serialize())
@@ -78,6 +87,19 @@ def _get_member_from_unsubcode(unsubcode):
 def unsubscribe_member(unsubcode):
     member = _get_member_from_unsubcode(unsubcode)
     dao_update_member(member.id, active=False)
+
+    send_ga_event(
+        f"Unsubscribed {member.id}",
+        "email",
+        "unsubscribe",
+        f"{member.id}")
+
+    basic_html = get_email_html(
+        email_type=BASIC,
+        title='Unsubscribe',
+        message="{}, you have successfully unsubscribed from New Acropolis events and magazines".format(member.name)
+    )
+    send_email(member.email, 'New Acropolis unsubscription', basic_html)
 
     return jsonify({'message': '{} unsubscribed'.format(member.name)})
 

@@ -48,7 +48,7 @@ def send_emails(email_id):
                     member_id=member_id
                 )
             elif email.email_type == MAGAZINE:
-                message = get_email_html(MAGAZINE, magazine_id=email.magazine_id)
+                message = get_email_html(MAGAZINE, magazine_id=email.magazine_id, member_id=member_id)
 
             email_status_code, email_provider_id = send_email(email_to, subject, message)
             dao_add_member_sent_to_email(
