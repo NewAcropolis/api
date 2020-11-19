@@ -38,6 +38,7 @@ class WhenPostingMembers:
 
     def it_subscribes_member(self, mocker, app, client, db_session, sample_marketing):
         mock_send_email = mocker.patch('app.routes.members.rest.send_email')
+        mock_ga_event = mocker.patch('app.routes.members.rest.send_ga_event')
         data = {
             'name': 'Test member',
             'email': 'test@example.com',
@@ -55,10 +56,11 @@ class WhenPostingMembers:
         assert members[0].email == data['email']
         assert members[0].active is True
         assert members[0].marketing_id == sample_marketing.id
+        assert mock_ga_event.called
         assert mock_send_email.called
         assert mock_send_email.call_args[0][0] == data['email']
         assert mock_send_email.call_args[0][1] == 'New Acropolis subscription'
-        assert 'Thank you {} for subscribing to New Acropolis events and news letters'.format(data['name']) \
+        assert 'Thank you {} for subscribing to New Acropolis events and magazines'.format(data['name']) \
             in mock_send_email.call_args[0][2]
 
     def it_doesnt_subscribes_member_with_matching_email(self, app, client, db_session, sample_member, sample_marketing):
@@ -77,7 +79,10 @@ class WhenPostingMembers:
         members = Member.query.all()
         assert len(members) == 1
 
-    def it_unsubscribes_member(self, app, client, db_session, sample_member):
+    def it_unsubscribes_member(self, mocker, app, client, db_session, sample_member):
+        mock_send_email = mocker.patch('app.routes.members.rest.send_email')
+        mock_ga_event = mocker.patch('app.routes.members.rest.send_ga_event')
+
         unsubcode = encrypt(
             "{}={}".format(app.config['EMAIL_TOKENS']['member_id'], str(sample_member.id)),
             app.config['EMAIL_UNSUB_SALT']
@@ -90,6 +95,12 @@ class WhenPostingMembers:
 
         assert not sample_member.active
         assert response.json == {'message': '{} unsubscribed'.format(sample_member.name)}
+        assert mock_ga_event.called
+        assert mock_send_email.called
+        assert mock_send_email.call_args[0][0] == sample_member.email
+        assert mock_send_email.call_args[0][1] == 'New Acropolis unsubscription'
+        assert '{}, you have successfully unsubscribed from New Acropolis events and magazines'.format(
+            sample_member.name) in mock_send_email.call_args[0][2]
 
     def it_updates_member(self, app, client, db_session, sample_member):
         unsubcode = encrypt(
