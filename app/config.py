@@ -68,7 +68,7 @@ class Config(object):
     CELERY_ENABLE_UTC = True
     CELERY_ACCEPT_CONTENT = ['json']
     CELERY_TASK_SERIALIZER = 'json'
-    CELERY_IMPORTS = ("app.na_celery.event_tasks",)
+    CELERY_IMPORTS = ("app.na_celery.event_tasks", "app.na_celery.stats_tasks",)
 
     CELERYBEAT_SCHEDULE = {
         'send-event-reminder-email': {
@@ -78,6 +78,10 @@ class Config(object):
         'send-periodic-emails': {
             'task': 'send_periodic_emails',
             'schedule': crontab(minute=0, hour='*') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
+        },
+        'send-num-subscribers': {
+            'task': 'send_num_subscribers',
+            'schedule': crontab(hour=10, day=1) if ENVIRONMENT != 'development' else crontab(minute='*/10'),
         },
     }
 

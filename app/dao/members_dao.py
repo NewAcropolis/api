@@ -24,6 +24,10 @@ def dao_get_members():
     return Member.query.all()
 
 
+def dao_get_active_member_count():
+    return Member.query.filter_by(active=True).count()
+
+
 def dao_get_member_by_email(email):
     return Member.query.filter_by(email=email).first()
 
