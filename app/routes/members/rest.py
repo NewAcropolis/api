@@ -57,7 +57,7 @@ def subscribe_member():
 
     send_ga_event(
         f"Subscribed {member.id}",
-        "email",
+        "members",
         "subscribe",
         f"{member.id}")
 
@@ -90,7 +90,7 @@ def unsubscribe_member(unsubcode):
 
     send_ga_event(
         f"Unsubscribed {member.id}",
-        "email",
+        "members",
         "unsubscribe",
         f"{member.id}")
 
