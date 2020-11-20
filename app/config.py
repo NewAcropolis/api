@@ -81,7 +81,7 @@ class Config(object):
         },
         'send-num-subscribers': {
             'task': 'send_num_subscribers',
-            'schedule': crontab(hour=10, day=1) if ENVIRONMENT != 'development' else crontab(minute='*/10'),
+            'schedule': crontab(hour=10, day_of_month=1) if ENVIRONMENT != 'development' else crontab(minute='*/10'),
         },
     }
 
