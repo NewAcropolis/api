@@ -327,6 +327,7 @@ def create_member(
     active=True,
     old_marketing_id=1,
     is_course_member=False,
+    created_at=None,
     last_updated=None,
     marketing_id=None
 ):
@@ -345,6 +346,7 @@ def create_member(
         'active': active,
         'old_marketing_id': old_marketing_id,
         'is_course_member': is_course_member,
+        'created_at': created_at,
         'last_updated': last_updated,
         'marketing_id': marketing_id
     }
