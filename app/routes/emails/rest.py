@@ -326,9 +326,8 @@ def send_test_email():  # pragma:no cover
         current_app.config.get('TEST_EMAIL'),
         'Sending test email',
         '<h3>Test</h3> email body',
-        # from_email=current_app.config.get('TEST_EMAIL').replace("@", "+1@"),
-        from_email='noreply@newacropolisuk.org',
-        from_name="Test+one"
+        from_email=current_app.config.get('TEST_EMAIL').replace("@", f"+{current_app.config.get('ENVIRONMENT')}@"),
+        from_name=f"Test+{current_app.config.get('ENVIRONMENT')}"
     )
 
     return 'ok' if res == 200 else 'error'
