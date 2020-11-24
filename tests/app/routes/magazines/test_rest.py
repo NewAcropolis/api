@@ -200,6 +200,7 @@ class WhenDownloadingMagazine:
 
     def it_downloads_a_pdf(self, app, db_session, client, mocker, mock_storage, sample_magazine):
         mocker.patch("app.utils.storage.Storage.get_blob", return_value=b'Test data')
+        mocker.patch.dict('app.application.config', {'ENVIRONMENT': 'development'})
 
         with requests_mock.mock() as r:
             r.post("http://www.google-analytics.com/collect")
@@ -216,6 +217,7 @@ class WhenDownloadingMagazine:
     def it_logs_missing_tracking_if_ga_response_not_200(
         self, app, db_session, client, mocker, mock_storage, sample_magazine
     ):
+        mocker.patch.dict('app.application.config', {'ENVIRONMENT': 'development'})
         mocker.patch("app.utils.storage.Storage.get_blob", return_value=b'Test data')
         mock_logger = mocker.patch("app.routes.magazines.rest.current_app.logger.info")
 

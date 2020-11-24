@@ -13,6 +13,10 @@ def send_ga_event(description, category, action, label):
         'el': label
     }
 
+    if current_app.config.get("DISABLE_STATS"):
+        current_app.logger.info(f"Stats disabled: {description}: {category} - {label}")
+        return
+
     if current_app.config["ENVIRONMENT"] != "test":
         r = requests.post("http://www.google-analytics.com/collect", data=payload)
         if r.status_code != 200:

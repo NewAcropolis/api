@@ -73,6 +73,8 @@ def app():
         'CELERY_BROKER_URL': 'http://mock-celery',
         'EMAIL_DELAY': 1,
         'GA_ID': 1,
+        'INSTAGRAM_URL': 'http://example.instagram',
+        'DISABLE_STATS': False,
         'EMAIL_DISABLED': None,
         'SMTP_SERVER': 'test.smtp.server'
     })

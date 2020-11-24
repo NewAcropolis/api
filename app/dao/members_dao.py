@@ -24,8 +24,22 @@ def dao_get_members():
     return Member.query.all()
 
 
-def dao_get_active_member_count():
-    return Member.query.filter_by(active=True).count()
+def dao_get_active_member_count(month=None, year=None):
+    if not month:
+        return Member.query.filter_by(active=True).count()
+    else:
+        end_month = int(month) + 1
+        end_year = int(year)
+        if end_month > 12:
+            end_month = 1
+            end_year += 1
+
+        return Member.query.filter(
+            and_(
+                Member.created_at.between(f'{year}-{month}-01', f'{end_year}-{end_month}-01'),
+                Member.active
+            )
+        ).count()
 
 
 def dao_get_member_by_email(email):

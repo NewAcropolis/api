@@ -24,3 +24,15 @@ class WhenSendingStats:
         send_ga_event("test", "test", "test", "test")
 
         assert mock_post.called
+
+    def it_doesnt_send_stats_if_send_stats_disabled(self, app, mocker):
+        mocker.patch.dict('app.application.config', {
+            'ENVIRONMENT': 'development',
+            'DISABLE_STATS': True
+        })
+
+        mock_post = mocker.patch('app.comms.stats.requests.post')
+
+        send_ga_event("test", "test", "test", "test")
+
+        assert not mock_post.called

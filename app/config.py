@@ -79,9 +79,9 @@ class Config(object):
             'task': 'send_periodic_emails',
             'schedule': crontab(minute=0, hour='*') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
         },
-        'send-num-subscribers': {
-            'task': 'send_num_subscribers',
-            'schedule': crontab(hour=10, day_of_month=1) if ENVIRONMENT != 'development' else crontab(minute='*/10'),
+        'send-num-subscribers-and-social-stats': {
+            'task': 'send_num_subscribers_and_social_stats',
+            'schedule': crontab(hour=7, day_of_month=1) if ENVIRONMENT != 'development' else crontab(minute='*/10'),
         },
     }
 
@@ -94,9 +94,14 @@ class Config(object):
     EMAIL_DISABLED = os.environ.get('EMAIL_DISABLED')
 
     GA_ID = os.environ.get('GA_ID')
+    DISABLE_STATS = os.environ.get('DISABLE_STATS') == '1'
+
     SMTP_SERVER = os.environ.get('SMTP_SERVER')
     SMTP_USER = os.environ.get('SMTP_USER')
     SMTP_PASS = os.environ.get('SMTP_PASS')
+
+    FACEBOOK_URL = "https://www.facebook.com/pg/newacropolisuk/community/"
+    INSTAGRAM_URL = os.environ.get('INSTAGRAM_URL')
 
 
 class Development(Config):

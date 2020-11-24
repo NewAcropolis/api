@@ -54,6 +54,12 @@ def extract_topics():
 
 
 @manager.command
+def send_stats():
+    from app.na_celery.stats_tasks import send_num_subscribers_and_social_stats
+    send_num_subscribers_and_social_stats(inc_subscribers=False)
+
+
+@manager.command
 def upload_file(filename):
     """Upload file."""
     application.logger.info('Upload file')

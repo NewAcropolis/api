@@ -80,6 +80,7 @@ class WhenGettingLegacyPDFs:
         mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
 
     def it_downloads_a_pdf(self, app, db_session, client, mocker, mock_storage, sample_member, sample_magazine):
+        mocker.patch.dict('app.application.config', {'ENVIRONMENT': 'development'})
         enc_member_id = encrypt(
             "{}={}".format(app.config['EMAIL_TOKENS']['member_id'], str(sample_member.id)),
             app.config['EMAIL_UNSUB_SALT']
