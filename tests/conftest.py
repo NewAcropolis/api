@@ -32,7 +32,7 @@ from tests.db import (
     create_venue
 )
 
-TEST_DATABASE_URI = "postgresql://localhost/na_api_" + get_env() + '_test'
+TEST_DATABASE_URI = os.environ.get("TEST_DATABASE_URI", "postgresql://localhost/na_api_" + get_env() + '_test')
 TEST_ADMIN_USER = 'admin@example.com'
 TEST_ADMIN_USER_CONFIG = 'admin-config@example.com'
 
@@ -48,6 +48,7 @@ def app():
         'ADMIN_CLIENT_ID': 'testadmin',
         'ADMIN_CLIENT_SECRET': 'testsecret',
         'TOKEN_EXPIRY': 1,
+        'GOOGLE_APPLICATION_CREDENTIALS': './path/to/creds',
         'JWT_SECRET_KEY': 'secret',
         'ADMIN_USERS': [TEST_ADMIN_USER_CONFIG],
         'EMAIL_DOMAIN': 'example.com',
