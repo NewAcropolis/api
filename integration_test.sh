@@ -767,6 +767,14 @@ function GetMarketings {
     -H "Authorization: Bearer $TKN"
 }
 
+function SendSocialStats {
+    echo "*** Send social stats ***"
+
+    curl -X GET $api_server'/stats/social' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
 function ImportMembers {
     echo "*** Import members ***"
 
@@ -938,6 +946,10 @@ case "$arg" in
 
         -gm)
             GetMarketings
+        ;;
+
+        -ss)
+            SendSocialStats
         ;;
 
         -gas)

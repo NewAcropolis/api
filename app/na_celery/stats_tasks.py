@@ -76,3 +76,5 @@ def send_num_subscribers_and_social_stats(inc_subscribers=True):
             f"num_instagram_{report_month}",
             instagram_count
         )
+
+    return facebook_count, instagram_count
