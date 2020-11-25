@@ -27,4 +27,4 @@ six==1.11.0
 Wand==0.5.8
 Werkzeug==0.16.0
 
--e git+https://github.com/NewAcropolis/na-common.git@afd9e32dfe2d6e7c6c72f61dee417cf85a1b625e#egg=na-common
+-e git+https://github.com/NewAcropolis/na-common.git@da27fc1cc1ef9aeae10bd7c9fb8f3b0590dcb06a#egg=na-common
