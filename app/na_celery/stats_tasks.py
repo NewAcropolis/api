@@ -16,10 +16,12 @@ def get_facebook_count():
     try:
         response = requests.get(current_app.config.get('FACEBOOK_URL'))
         soup = BeautifulSoup(response.content, 'html.parser')
-        div = soup.find('div', text=re.compile('Total follows'))
+        div = soup.find('div', text=re.compile('total follows', re.IGNORECASE))
         return int(div.previousSibling.get_text().replace(',', ''))
     except Exception as e:
         current_app.logger.error(f"Problem retrieving facebook followers count: {str(e)}")
+        current_app.logger.error(f"Facebook URL: {current_app.config.get('FACEBOOK_URL')}")
+        current_app.logger.error(f"Content: {response.content}")
         return 'failed'
 
 
