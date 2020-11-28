@@ -727,6 +727,12 @@ class Order(db.Model):
     payment_status = db.Column(db.String)
     payment_total = db.Column(db.Numeric(precision=2))
     params = db.Column(db.String)
+    address_street = db.Column(db.String)
+    address_city = db.Column(db.String)
+    address_postal_code = db.Column(db.String)
+    address_state = db.Column(db.String)
+    address_country = db.Column(db.String)
+    address_country_code = db.Column(db.String)
 
     def serialize(self):
         return {
