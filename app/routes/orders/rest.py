@@ -178,12 +178,12 @@ def parse_ipn(ipn):
         'mc_gross': 'payment_total',
         'txn_id': 'txn_id',
         'payment_date': 'created_at',
-        'fullfillment_address_street': 'address_street',
-        'fullfillment_address_city': 'address_city',
-        'fullfillment_address_zip': 'address_postal_code',
-        'fullfillment_address_state': 'address_state',
-        'fullfillment_address_country': 'address_country',
-        'fullfillment_address_country_code': 'address_country_code',
+        'address_street': 'address_street',
+        'address_city': 'address_city',
+        'address_zip': 'address_postal_code',
+        'address_state': 'address_state',
+        'address_country': 'address_country',
+        'address_country_code': 'address_country_code',
     }
 
     for key in ipn.keys():
