@@ -238,6 +238,7 @@ def send_smtp_email(to, subject, message, from_email=None, from_name='', smtp_in
     msg['Subject'] = subject
     msg['From'] = _from
     msg['To'] = to
+    msg['reply-to'] = from_email
 
     try:
         context = ssl.create_default_context()
