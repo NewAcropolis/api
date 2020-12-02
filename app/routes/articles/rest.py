@@ -100,7 +100,8 @@ def import_articles():
                 title=item['title'],
                 author=item['author'],
                 content=item['content'],
-                created_at=item['entrydate'] if item['entrydate'] != '0000-00-00' else None
+                created_at=item['entrydate'] if item['entrydate'] != '0000-00-00' else None,
+                image_filename=item['image_filename'] if 'image_filename' in item else None
             )
 
             articles.append(article)
