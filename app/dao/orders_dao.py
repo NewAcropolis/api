@@ -6,4 +6,4 @@ def dao_get_orders():
 
 
 def dao_get_order_with_txn_id(txn_id):
-    return Order.query.filter_by(txn_id=txn_id).order_by(Order.created_at).all()
+    return Order.query.filter_by(txn_id=txn_id).order_by(Order.created_at).first()

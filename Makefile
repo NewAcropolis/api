@@ -45,6 +45,10 @@ test-dir: ## Test directory under tests/app, make test-dir dir=<directory of tes
 run: ## Run app
 	./scripts/run_app.sh
 
+.PHONY: run-mock-paypal
+run-mock-paypal: ## Run mock paypal server to verify IPN
+	python ./scripts/mock_server.py
+
 .PHONY: integration-test
 integration-test: ## Run integration tests
 	./scripts/integration_test.sh -a
@@ -53,4 +57,5 @@ integration-test: ## Run integration tests
 start-local-celery: ## Run integration tests
 	./scripts/run_local_redis.sh >> logs/redis.log &
 	./scripts/run_local_celery.sh
+
 

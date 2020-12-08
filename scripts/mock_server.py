@@ -1,16 +1,16 @@
-import BaseHTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
-class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
+class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write('VERIFIED')
+        self.wfile.write(b'VERIFIED')
 
 
 def main():
-    httpd = BaseHTTPServer.HTTPServer(('127.0.0.1', 5005), Handler)
+    httpd = HTTPServer(('127.0.0.1', 5005), Handler)
     httpd.serve_forever()
 
 
