@@ -21,3 +21,5 @@ def send_ga_event(description, category, action, label):
         r = requests.post("http://www.google-analytics.com/collect", data=payload)
         if r.status_code != 200:
             current_app.logger.info(f"Failed to track {description}: {category} - {label}")
+        else:
+            current_app.logger.info(f"Sent stats for {description}: {category} - {label}")
