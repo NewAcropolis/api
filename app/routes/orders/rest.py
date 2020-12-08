@@ -36,17 +36,25 @@ orders_blueprint = Blueprint('orders', __name__)
 register_errors(orders_blueprint)
 
 
-@orders_blueprint.route('/orders/<string:txn_id>', methods=['GET'])
-def get_orders(txn_id):
+@orders_blueprint.route('/order/<string:txn_id>', methods=['GET'])
+def get_order(txn_id):
     order = dao_get_order_with_txn_id(txn_id)
     if order:
         return jsonify(order.serialize())
+    else:
+        return jsonify({'message': f'Transaction ID: {txn_id} not found'}), 404
 
 
 @orders_blueprint.route('/orders/complete', methods=['GET'])
 def orders_complete():
     current_app.logger.info("Orders complete: %r", request.args)
     return 'orders complete'
+
+
+@orders_blueprint.route('/order/missing/<string:txn_id>', methods=['GET'])
+def order_missing(txn_id):
+    order = dao_get_order_with_txn_id(txn_id)
+    # calculate amount needed to cover payment and send back the paypal button code
 
 
 @orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
@@ -68,6 +76,7 @@ def paypal_ipn():
     if r.text == 'VERIFIED':
         current_app.logger.info('VERIFIED: %s', params['txn_id'])
 
+        delivery_message = ''
         data = {}
         for key in params.keys():
             if isinstance(params[key], list):
@@ -85,19 +94,39 @@ def paypal_ipn():
 
         dao_create_record(order)
 
-        for product in products:
-            if product['type'] == BOOK:
-                book_to_order = BookToOrder(
-                    book_id=product['book_id'],
-                    order_id=order.id,
-                    quantity=product['quantity']
-                )
-                dao_create_book_to_order(book_to_order)
+        if products:
+            for product in products:
+                if product['type'] == BOOK:
+                    book_to_order = BookToOrder(
+                        book_id=product['book_id'],
+                        order_id=order.id,
+                        quantity=product['quantity']
+                    )
+                    dao_create_book_to_order(book_to_order)
 
-        if products and data['address_country_code'] != current_app.config.get('POSTAGE_COUNTRY_CODE'):
-            current_app.logger.info(f"International postage to {data['address_country_code']}")
-            # send an email out to the payer via email to request additional payment for postage
-            # or change how paypal calculates shipping costs
+            def get_delivery_zone(country_code):
+                for zone in current_app.config.get('DELIVERY_ZONES'):
+                    if data['address_country_code'] in zone['codes']:
+                        return zone['name']
+                return 'Rest of the World'
+
+            if data['delivery_zone']:
+                delivery_zone = get_delivery_zone(data['address_country_code'])
+
+                if data['delivery_zone'] != delivery_zone:
+                    current_app.logger.info(
+                        f"Incorrect postage costs {data['delivery_zone']} for "
+                        f"{data['address_country_code']}, should be {delivery_zone}"
+                    )
+                    # send an email out to the payer via email to request additional payment for postage
+                    # mark order with error message
+                    delivery_message = "Incorrect postage costs"
+            else:
+                delivery_message = "No delivery cost added"
+
+            if delivery_message:
+                delivery_message += f", please <a href='{current_app.config['FRONTEND_URL']}/pay/{params['txn_id']}'>"
+                "pay</a> for delivery and packaging costs to complete your order."
 
         for i, _ticket in enumerate(tickets):
             _ticket['order_id'] = order.id
@@ -224,7 +253,15 @@ def parse_ipn(ipn):
     else:
         counter = 1
         while ('item_number%d' % counter) in ipn:
-            if ipn['item_number%d' % counter].startswith('book-'):
+            if ipn['item_number%d' % counter].startswith('delivery'):
+                delivery_zone = ipn['item_name%d' % counter]
+                if 'delivery_zone' not in order_data.keys():
+                    order_data['delivery_zone'] = delivery_zone
+                else:
+                    current_app.error(f"Multiple delivery costs in order: {order_data['txn_id']}")
+                    ## not sure how to handle this? maybe email admin so that they can issue a refund?
+                    ## or let admin user know that order contains multiple delivery costs
+            elif ipn['item_number%d' % counter].startswith('book-'):
                 book_id = ipn['item_number%d' % counter][len("book-"):]
                 UUID_LENGTH = 36
                 if len(book_id) < UUID_LENGTH:

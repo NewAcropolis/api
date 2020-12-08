@@ -733,6 +733,8 @@ class Order(db.Model):
     address_state = db.Column(db.String)
     address_country = db.Column(db.String)
     address_country_code = db.Column(db.String)
+    delivery_zone = db.Column(db.String(5))
+    delivery_zone_confirmed = db.Column(db.Boolean)
 
     def serialize(self):
         return {
@@ -741,7 +743,10 @@ class Order(db.Model):
             'txn_type': self.txn_type,
             'buyer_name': self.buyer_name,
             'payment_status': self.payment_status,
-            'payment_total': self.payment_total,
+            'payment_total': str(self.payment_total),  # not possible to json serialize a decimal
+            'address_country_code': self.address_country_code,
+            'delivery_zone': self.delivery_zone,
+            'delivery_zone_confirmed': self.delivery_zone_confirmed,
         }
 
 
