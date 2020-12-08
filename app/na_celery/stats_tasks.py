@@ -45,20 +45,25 @@ def send_num_subscribers_and_social_stats(inc_subscribers=True):
     current_app.logger.info('Task send_num_subscribers_and_social_stats received: {}')
     report_month = (datetime.today() - timedelta(weeks=2)).strftime('%B').lower()
 
+    num_subscribers = num_new_subscribers = 0
+
     if inc_subscribers:
         month_year = (datetime.today() - timedelta(weeks=2)).strftime('%m-%Y')
+        num_subscribers = dao_get_active_member_count()
         send_ga_event(
             "Number of subscribers",
             "members",
             f"num_subscribers_{report_month}",
-            dao_get_active_member_count()
+            num_subscribers
         )
+
+        num_new_subscribers = dao_get_active_member_count(month=month_year.split('-')[0], year=month_year.split('-')[1])
 
         send_ga_event(
             "Number of new subscribers",
             "members",
             f"num_new_subscribers_{report_month}",
-            dao_get_active_member_count(month=month_year.split('-')[0], year=month_year.split('-')[1])
+            num_new_subscribers
         )
 
     facebook_count = get_facebook_count()
@@ -79,4 +84,4 @@ def send_num_subscribers_and_social_stats(inc_subscribers=True):
             instagram_count
         )
 
-    return facebook_count, instagram_count
+    return num_subscribers, num_new_subscribers, facebook_count, instagram_count
