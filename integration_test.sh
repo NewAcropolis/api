@@ -775,6 +775,22 @@ function SendSocialStats {
     -H "Authorization: Bearer $TKN"
 }
 
+function SendSubscribersSocialStats {
+    echo "*** Send subscribers and social stats ***"
+
+    curl -X GET $api_server'/stats/subscribers_and_social' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
+function SendEmailStats {
+    echo "*** Send email stats ***"
+
+    curl -X GET $api_server'/stats/emails/08/2020' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
 function ImportMembers {
     echo "*** Import members ***"
 
@@ -793,7 +809,7 @@ function TestPaypal {
 }
 
 
-sample_ipn="mc_gross=0.01&protection_eligibility=Ineligible&item_number1=$EVENT_ID&tax=0.00&payer_id=XXYYZZ1&payment_date=10%3A00%3A00+Jan+01%2C+2018+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Completed&charset=windows-1252&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&notify_version=3.8&custom=&payer_status=verified&business=receiver%40example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=XXYYZZ1.t.sign&payer_email=$ADMIN_USER&mc_shipping1=0.00&tax1=0.00&btn_id1=XXYYZZ1&option_name1_1=Type&txn_id=112233&payment_type=instant&option_selection2_1=1&last_name=User&item_name1=Get+Inspired+-+Discover+Philosophy&receiver_email=receiver%40example.com&payment_fee=&quantity1=1&receiver_id=AABBCC1&txn_type=Cart&mc_gross_1=0.01&mc_currency=GBP&residence_country=GB&transaction_subject=&payment_gross=&ipn_track_id=112233"
+sample_ipn="mc_gross=0.01&protection_eligibility=Ineligible&item_number1=$EVENT_ID&item_number2=delivery&tax=0.00&payer_id=XXYYZZ1&address_street=Flat+1%2C+1+Example+Street&payment_date=10%3A00%3A00+Jan+01%2C+2018+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Completed&charset=windows-1252&address_zip=n1+5ds&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&address_country_code=GB&notify_version=3.8&custom=&payer_status=verified&business=seller%40newacropolisuk.org&address_country=United+Kingdom&num_cart_items=2&mc_handling1=0.00&address_city=London&verify_sign=XXYYZZ1.t.sign&payer_email=$ADMIN_USER&mc_shipping1=0.00&tax1=0.00&btn_id1=XXYYZZ1&option_name1_1=Type&txn_id=112233&payment_type=instant&option_selection2_1=1&last_name=User&item_name1=Get+Inspired+-+Discover+Philosophy&receiver_email=seller%40newacropolisuk.org&item_name2=UK&payment_fee=&quantity1=1&receiver_id=AABBCC1&txn_type=Cart&mc_gross_1=0.01&mc_currency=GBP&residence_country=GB&transaction_subject=&payment_gross=&ipn_track_id=112233"
 
 
 function TestPaypalIPN {
@@ -950,6 +966,14 @@ case "$arg" in
 
         -ss)
             SendSocialStats
+        ;;
+
+        -sss)
+            SendSubscribersSocialStats
+        ;;
+
+        -ses)
+            SendEmailStats
         ;;
 
         -gas)
