@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from app.dao.emails_dao import (
     dao_add_member_sent_to_email,
     dao_get_emails_for_year_starting_on,
+    dao_get_emails_sent_count,
     dao_get_todays_email_count_for_provider,
     dao_get_past_hour_email_count_for_provider,
     dao_get_email_by_id,
@@ -289,6 +290,72 @@ class WhenUsingEmailsDAO(object):
 
         count = dao_get_past_hour_email_count_for_provider(email_to_member.email_provider_id)
         assert count == 2
+
+    @freeze_time("2020-12-20T12:30:00")
+    def it_get_emails_sent_count_for_current_month(
+        self, db, db_session, sample_member, sample_email
+    ):
+        email = create_email(
+            send_starts_at="2020-11-30",
+            send_after="2020-11-30T20:30:00",
+            expires="2020-12-20",
+            email_state=APPROVED
+        )
+        member = create_member(
+            email="test1@example.com"
+        )
+        # not counted
+        create_email_to_member(
+            email_id=email.id,
+            created_at="2020-11-30T12:00:00"
+        )
+        # counted
+        create_email_to_member(
+            member_id=sample_member.id,
+            email_id=email.id,
+            created_at="2020-12-11T12:00:00"
+        )
+        create_email_to_member(
+            member_id=member.id,
+            email_id=email.id,
+            created_at="2020-12-12T12:00:00"
+        )
+
+        count = dao_get_emails_sent_count()
+        assert count == 2
+
+    @freeze_time("2020-12-20T12:30:00")
+    def it_get_emails_sent_count_for_specified_month(
+        self, db, db_session, sample_member, sample_email
+    ):
+        email = create_email(
+            send_starts_at="2020-11-30",
+            send_after="2020-11-30T20:30:00",
+            expires="2020-12-20",
+            email_state=APPROVED
+        )
+        member = create_member(
+            email="test1@example.com"
+        )
+        # counted
+        create_email_to_member(
+            email_id=email.id,
+            created_at="2020-11-30T12:00:00"
+        )
+        # not counted
+        create_email_to_member(
+            member_id=sample_member.id,
+            email_id=email.id,
+            created_at="2020-12-11T12:30:00"
+        )
+        create_email_to_member(
+            member_id=member.id,
+            email_id=email.id,
+            created_at="2020-12-12T12:00:00"
+        )
+
+        count = dao_get_emails_sent_count(month=11, year=2020)
+        assert count == 1
 
 
 class WhenGettingNearestBimonthlyDate:
