@@ -95,7 +95,7 @@ class WhenGettingLegacyPDFs:
                 url_for('legacy.download_pdf_handler', enc=enc_member_id, id=sample_magazine.old_id)
             )
             assert r.last_request.text ==\
-                "v=1&tid=1&cid=888&t=event&ec=legacy_magazine_email&ea=download&el=Test+magazine"
+                "v=1&tid=1&cid=888&t=event&ec=legacy_magazine_email&ea=download&el=Test+magazine&ev=1"
 
         assert response.status_code == 200
         assert response.headers['Content-Disposition'] == 'attachment; filename=magazine.pdf'

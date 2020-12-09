@@ -28,10 +28,22 @@ class WhenGettingSubscribersAndSocialStats:
             return_value=(200, 200, 100, 100)
         )
         response = client.get(
-            url_for('stats.send_subscribers_and_social'),
+            url_for('stats.send_subscribers_and_social_stats'),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
         assert mock_send_social_stats.called
         assert mock_send_social_stats.call_args == call(inc_subscribers=True)
         assert response.get_data(as_text=True) == "subscribers=200, new subscribers=200, facebook=100, instagram=100"
+
+    def it_sends_email_stats(self, mocker, client):
+        mocker.patch(
+            'app.routes.stats.rest.dao_get_emails_sent_count',
+            return_value=10
+        )
+        response = client.get(
+            url_for('stats.send_email_stats', month=12, year=2020),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.get_data(as_text=True) == "email count for 12/2020 = 10"

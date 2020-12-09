@@ -209,7 +209,8 @@ class WhenDownloadingMagazine:
                 url_for('magazines.download_pdf', magazine_id=sample_magazine.id)
             )
 
-            assert r.last_request.text == "v=1&tid=1&cid=888&t=event&ec=magazine_download&ea=download&el=Test+magazine"
+            assert r.last_request.text == "v=1&tid=1&cid=888&t=event&ec=magazine_download&"\
+                "ea=download&el=Test+magazine&ev=1"
 
         assert response.status_code == 200
         assert response.headers['Content-Disposition'] == 'attachment; filename=magazine.pdf'
@@ -228,9 +229,10 @@ class WhenDownloadingMagazine:
                 url_for('magazines.download_pdf', magazine_id=sample_magazine.id)
             )
 
-            assert r.last_request.text == "v=1&tid=1&cid=888&t=event&ec=magazine_download&ea=download&el=Test+magazine"
+            assert r.last_request.text == "v=1&tid=1&cid=888&t=event&ec="\
+                "magazine_download&ea=download&el=Test+magazine&ev=1"
 
         assert response.status_code == 200
         assert response.headers['Content-Disposition'] == 'attachment; filename=magazine.pdf'
         assert mock_logger.called
-        assert mock_logger.call_args[0][0] == "Failed to track magazine download: magazine_download - Test magazine"
+        assert mock_logger.call_args[0][0] == "Failed to track magazine download: magazine_download - Test magazine, 1"
