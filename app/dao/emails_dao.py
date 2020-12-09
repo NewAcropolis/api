@@ -173,3 +173,22 @@ def dao_get_past_hour_email_count_for_provider(email_provider_id):
         EmailToMember.created_at > now - timedelta(hours=1),
         EmailToMember.email_provider_id == email_provider_id
     ).count()
+
+
+def dao_get_emails_sent_count(month=None, year=None):
+    if not month:
+        month = int(datetime.today().strftime("%m"))
+    if not year:
+        year = int(datetime.today().strftime("%Y"))
+
+    end_month = month + 1
+    end_year = year
+
+    if end_month > 12:
+        end_month = 1
+        end_year += 1
+
+    return EmailToMember.query.filter(
+        EmailToMember.created_at > f"{year}-{month}-01",
+        EmailToMember.created_at < f"{end_year}-{end_month}-01"
+    ).count()
