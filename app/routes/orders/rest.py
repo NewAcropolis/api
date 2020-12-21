@@ -259,8 +259,8 @@ def parse_ipn(ipn):
                     order_data['delivery_zone'] = delivery_zone
                 else:
                     current_app.error(f"Multiple delivery costs in order: {order_data['txn_id']}")
-                    ## not sure how to handle this? maybe email admin so that they can issue a refund?
-                    ## or let admin user know that order contains multiple delivery costs
+                    # not sure how to handle this? maybe email admin so that they can issue a refund?
+                    # or let admin user know that order contains multiple delivery costs
             elif ipn['item_number%d' % counter].startswith('book-'):
                 book_id = ipn['item_number%d' % counter][len("book-"):]
                 UUID_LENGTH = 36
