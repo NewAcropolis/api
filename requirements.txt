@@ -6,7 +6,7 @@ Flask==1.0.2
 Flask-Migrate==1.8.0
 Flask-Script==2.0.5
 Flask-SQLAlchemy==2.1 
-Flask-JWT-Extended==3.12.0
+Flask-JWT-Extended==3.25.0
 google-cloud-storage==1.17.0
 gevent==1.4.0
 gunicorn==20.0.2
