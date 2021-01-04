@@ -735,6 +735,7 @@ class Order(db.Model):
     address_country_code = db.Column(db.String)
     delivery_zone = db.Column(db.String(5))
     delivery_zone_confirmed = db.Column(db.Boolean)
+    books = db.relationship("BookToOrder", back_populates="order")
 
     def serialize(self):
         return {
@@ -758,6 +759,9 @@ class BookToOrder(db.Model):
     book_id = db.Column(UUID(as_uuid=True), db.ForeignKey('books.id'))
     order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
     quantity = db.Column(db.Integer)
+
+    book = db.relationship("Book", back_populates="orders")
+    order = db.relationship("Order", back_populates="books")
 
 
 TICKET_FULL = 'Full'

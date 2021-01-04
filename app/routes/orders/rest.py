@@ -125,7 +125,7 @@ def paypal_ipn():
                 delivery_message = "No delivery cost added"
 
             if delivery_message:
-                delivery_message += f", please <a href='{current_app.config['FRONTEND_URL']}/pay/{params['txn_id']}'>"
+                delivery_message += f", please <a href='{current_app.config['FRONTEND_URL']}/order/{params['txn_id']}'>"
                 "pay</a> for delivery and packaging costs to complete your order."
 
         for i, _ticket in enumerate(tickets):
