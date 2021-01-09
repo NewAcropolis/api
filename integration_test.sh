@@ -1047,6 +1047,12 @@ function TestPaypalIPN {
 }
 
 
+function GetOrder {
+    echo "*** Get order with transaction ID ***"
+
+    curl $api_server'/order/'$TXN_ID
+}
+
 function Logout {
     echo "*** Logout ***"
 
@@ -1297,6 +1303,10 @@ case "$arg" in
 
         -uem)
             UpdateEmailToReady
+        ;;
+
+        -go)
+            GetOrder
         ;;
 
         -uema)
