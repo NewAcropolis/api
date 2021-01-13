@@ -22,6 +22,7 @@ env
 # celery
 celerybeat.pid
 celerybeat-schedule.db
+celerybeat-schedule
 
 # environment
 *environment.sh

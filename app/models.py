@@ -760,7 +760,7 @@ class BookToOrder(db.Model):
     order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
     quantity = db.Column(db.Integer)
 
-    book = db.relationship("Book", back_populates="orders")
+    # book = db.relationship("Book", back_populates="orders")
     order = db.relationship("Order", back_populates="books")
 
 
