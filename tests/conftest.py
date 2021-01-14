@@ -58,6 +58,7 @@ def app():
         'EMAIL_ANYTIME': False,
         'TEST_EMAIL': 'test@example.com',
         'EVENTS_MAX': 2,
+        'GOOGLE_APPLICATION_CREDENTIALS': 'test',
         'PROJECT': 'test-project',
         'STORAGE': 'test-store',
         'PAYPAL_URL': 'https://test.paypal',
