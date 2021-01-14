@@ -280,22 +280,25 @@ def update_event(event_id):
 
         image_filename = data.get('image_filename')
 
-        storage = Storage(current_app.config['STORAGE'])
-        if image_data:
-            event_year = str(event.event_dates[0].event_datetime).split('-')[0]
-            target_image_filename = '{}/{}'.format(event_year, str(event_id))
+        if current_app.config['STORAGE'].startswith('None'):
+            current_app.logger.warn('Storage not setup')
+        else:
+            storage = Storage(current_app.config['STORAGE'])
+            if image_data:
+                event_year = str(event.event_dates[0].event_datetime).split('-')[0]
+                target_image_filename = '{}/{}'.format(event_year, str(event_id))
 
-            if data.get('event_state') != APPROVED:
-                target_image_filename += '-temp'
+                if data.get('event_state') != APPROVED:
+                    target_image_filename += '-temp'
 
-            storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
+                storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
 
-            unix_time = time.time()
-            image_filename = '{}?{}'.format(target_image_filename, unix_time)
-        elif image_filename:
-            image_filename_without_cache_buster = image_filename.split('?')[0]
-            if not storage.blob_exists(image_filename_without_cache_buster):
-                raise InvalidRequest('{} does not exist'.format(image_filename_without_cache_buster), 400)
+                unix_time = time.time()
+                image_filename = '{}?{}'.format(target_image_filename, unix_time)
+            elif image_filename:
+                image_filename_without_cache_buster = image_filename.split('?')[0]
+                if not storage.blob_exists(image_filename_without_cache_buster):
+                    raise InvalidRequest('{} does not exist'.format(image_filename_without_cache_buster), 400)
 
         if image_filename:
             if data.get('event_state') == APPROVED:

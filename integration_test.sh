@@ -140,6 +140,15 @@ function ImportSpeakers {
     -d @data/speakers.json
 }
 
+function ImportTestSpeakers {
+    echo "*** Import speakers ***"
+
+    curl -X POST $api_server'/speakers/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$speakers"
+}
+
 function GetVenues {
     echo "*** Get venues ***"
 
@@ -190,6 +199,15 @@ function ImportVenues {
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
     -d @data/venues.json
+}
+
+function ImportTestVenues {
+    echo "*** Import venues ***"
+
+    curl -X POST $api_server'/venues/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$venues"
 }
 
 events=$(cat  << EOF
@@ -264,6 +282,80 @@ function ExtractSpeakers {
     curl -X POST $api_server'/events/extract-speakers' \
     -H "Accept: application/json" \
     -d @data/events.json
+}
+
+test_event=$(cat  << EOF
+    [
+        {
+            "id": "1",
+            "BookingCode": "xxx",
+            "Approved": "y",
+            "Type": "1",
+            "Title": "Test event",
+            "SubTitle": "Test subtitle",
+            "Description": "Test preview",
+            "venue": "1",
+            "Speaker": "Sabine Leitner",
+            "MultiDayFee": "0",
+            "MultiDayConcFee": "0",
+            "StartDate": "2021-05-20 19:30:00",
+            "StartDate2": "0000-00-00 00:00:00",
+            "StartDate3": "0000-00-00 00:00:00",
+            "StartDate4": "0000-00-00 00:00:00",
+            "EndDate": "0000-00-00 00:00:00",
+            "Duration": "0",
+            "Fee": "4",
+            "ConcFee": "2",
+            "ImageFilename": "events_image.png"
+        }
+    ]
+EOF
+)
+
+function ImportTestEvents {
+    echo "*** Import Test Events ***"
+
+    curl -X POST $api_server'/events/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$test_event"
+}
+
+function setupTestEventID {
+    TEST_EVENT_ID=$(curl $api_server'/events' \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $TKN" | jq -r '.[0].id')
+
+    echo "Setup TEST_EVENT_ID" $TEST_EVENT_ID
+}
+
+test_event_update=$(cat  << EOF
+    {
+        "title": "Test title",
+        "description": "Test description",
+        "image_filename": "events_image_2.png"
+    }
+EOF
+)
+
+function UpdateTestEvent {
+    echo "*** Update Test Event ***"
+
+    curl -X POST $api_server'/event/'$TEST_EVENT_ID \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$test_event_update"
+}
+
+function PreviewTestEmail {
+    echo "*** Preview test email ***"
+
+    preview_test_email="%7B%22details%22%3A%20%22%3Cdiv%3ESome%20additional%20details%3C/div%3E%22%2C%20%22email_type%22%3A%20%22event%22%2C%20%22event_id%22%3A%20%22$TEST_EVENT_ID%22%2C%20%22extra_txt%22%3A%20%22%3Cdiv%3ESome%20more%20information%20about%20the%20event%3C/div%3E%22%2C%20%22replace_all%22%3A%20false%7D"
+
+    curl -X GET $api_server'/email/preview?data='$preview_test_email \
+    -H "Accept: application/json" > 'data/preview_test_email.html'
+
+    open 'data/preview_test_email.html'
 }
 
 function ImportEvents {
@@ -808,7 +900,6 @@ function TestPaypal {
     -H "Authorization: Bearer $TKN" 
 }
 
-
 sample_ipn="mc_gross=0.01&protection_eligibility=Ineligible&item_number1=$EVENT_ID&item_number2=delivery&tax=0.00&payer_id=XXYYZZ1&address_street=Flat+1%2C+1+Example+Street&payment_date=10%3A00%3A00+Jan+01%2C+2018+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Completed&charset=windows-1252&address_zip=n1+5ds&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&address_country_code=GB&notify_version=3.8&custom=&payer_status=verified&business=seller%40newacropolisuk.org&address_country=United+Kingdom&num_cart_items=2&mc_handling1=0.00&address_city=London&verify_sign=XXYYZZ1.t.sign&payer_email=$ADMIN_USER&mc_shipping1=0.00&tax1=0.00&btn_id1=XXYYZZ1&option_name1_1=Type&txn_id=112233&payment_type=instant&option_selection2_1=1&last_name=User&item_name1=Get+Inspired+-+Discover+Philosophy&receiver_email=seller%40newacropolisuk.org&item_name2=UK&payment_fee=&quantity1=1&receiver_id=AABBCC1&txn_type=Cart&mc_gross_1=0.01&mc_currency=GBP&residence_country=GB&transaction_subject=&payment_gross=&ipn_track_id=112233"
 
 
@@ -851,6 +942,23 @@ case "$arg" in
             GetVenues
             Logout
             GetFees
+        ;;
+
+        -imin) echo "Import minimal"
+            ImportEventTypes
+            ImportTestVenues
+            ImportTestSpeakers
+            ImportTestEvents
+        ;;
+
+        -pvtest) echo "Preview test"
+            setupTestEventID
+            PreviewTestEmail
+        ;;
+
+        -uptest) echo "Update test event"
+            setupTestEventID
+            UpdateTestEvent
         ;;
 
         -iall) echo "Import all"
