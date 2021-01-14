@@ -902,6 +902,29 @@ class WhenPostingUpdatingAnEvent:
         assert event_dates[0].id != old_event_date_id
         assert mock_smtp.called
 
+    def it_updates_an_event_image_without_checking_if_storage_not_set(
+        self, mocker, client, db_session, sample_req_event_data_with_event,
+        sample_admin_user, sample_email_provider
+    ):
+        mocker.patch.dict('app.application.config', {
+            'STORAGE': 'Nonetest'
+        })
+
+        data = {
+            "image_filename": "new_image.png"
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        json_events = json.loads(response.get_data(as_text=True))
+        assert json_events["image_filename"] == data["image_filename"]
+
     def it_rejects_invalid_event_states(
         self, mocker, client, db_session, sample_req_event_data_with_event
     ):
