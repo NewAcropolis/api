@@ -331,3 +331,15 @@ def send_test_email():  # pragma:no cover
     )
 
     return 'ok' if res == 200 else 'error'
+
+
+@emails_blueprint.route('/email/send/<uuid:email_id>')
+@jwt_required
+def send_email_by_id(email_id):  # pragma:no cover
+    current_app.logger.info(f'Sending email by id: {email_id}')
+    from app.na_celery.email_tasks import send_emails as send_email_task
+    try:
+        send_email_task(email_id)
+        return 'Sent email'
+    except Exception as e:
+        return f'Error sending email: {str(e)}'

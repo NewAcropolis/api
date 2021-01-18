@@ -329,6 +329,63 @@ function setupTestEventID {
     echo "Setup TEST_EVENT_ID" $TEST_EVENT_ID
 }
 
+function UpdateTestEventApproved {
+    echo "*** Update Test Event approved ***"
+
+    TEST_EVENT_ID=$(curl $api_server'/events' \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $TKN" | jq -r '.[0].id')
+
+    curl -X POST $api_server'/event/'$TEST_EVENT_ID \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "{\"event_state\": \"approved\"}"
+}
+
+test_marketing=$(cat  << EOF
+[{
+    "id": "0",
+    "marketingtxt": "Friend",
+    "ordernum": "0",
+    "visible": "1"
+}]
+EOF
+)
+
+function ImportTestMarketing {
+    echo "*** Import test marketing ***"
+
+    curl -X POST $api_server'/marketings/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$test_marketing"
+}
+
+test_member=$(cat  << EOF
+[
+    {
+        "id": "1",
+        "Name": "Test Member",
+        "EmailAdd": "$TEST_SUBSCRIBER",
+        "Active": "y",
+        "CreationDate": "0000-00-00",
+        "Marketing": "0",
+        "IsMember": "n",
+        "LastUpdated": "2021-01-01 20:00:00"
+    }
+]
+EOF
+)
+
+function ImportTestMember {
+    echo "*** Import test member ***"
+
+    curl -X POST $api_server'/members/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$test_member"
+}
+
 test_event_update=$(cat  << EOF
     {
         "title": "Test title",
@@ -356,6 +413,68 @@ function PreviewTestEmail {
     -H "Accept: application/json" > 'data/preview_test_email.html'
 
     open 'data/preview_test_email.html'
+}
+
+function CreateTestEmail {
+    echo "*** Create test email ***"
+
+test_email=$(cat  << EOF
+    {
+        "event_id": "$TEST_EVENT_ID",
+        "details": "<div>Some additional details</div>",
+        "extra_txt": "<div>Some more information about the event</div>",
+        "replace_all": false,
+        "email_type": "event"
+    }
+EOF
+)
+
+    curl -X POST $api_server'/email' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$test_email"
+}
+
+function SendTestEmail {
+    echo "*** Send test email ***"
+
+    TEST_EMAIL=$(curl $api_server'/emails/latest' \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $TKN")
+
+    TEST_EMAIL_ID=$(echo "$TEST_EMAIL" | jq -r '.[0].id')
+
+    echo 'Sending '$TEST_EMAIL_ID
+
+    curl $api_server'/email/send/'$TEST_EMAIL_ID \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
+function UpdateTestEmailToApproved {
+    echo "*** Update test email to approved ***"
+
+    TEST_EMAIL=$(curl $api_server'/emails/latest' \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $TKN")
+
+    TEST_EMAIL_ID=$(echo "$TEST_EMAIL" | jq -r '.[0].id')
+    TEST_EVENT_ID=$(echo "$TEST_EMAIL" | jq -r '.[0].event_id')
+
+    echo "Setup TEST_EMAIL_ID" $TEST_EMAIL_ID $TEST_EVENT_ID
+update_test_email=$(cat  << EOF
+    {
+        "email_state": "approved", 
+        "email_type": "event", 
+        "event_id": "$TEST_EVENT_ID"
+    }
+EOF
+)
+
+    curl -X POST $api_server'/email/'$TEST_EMAIL_ID \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$update_test_email"
 }
 
 function ImportEvents {
@@ -944,11 +1063,18 @@ case "$arg" in
             GetFees
         ;;
 
-        -imin) echo "Import minimal"
+        -imin) echo "Import minimal for email test"
             ImportEventTypes
             ImportTestVenues
             ImportTestSpeakers
             ImportTestEvents
+            UpdateTestEventApproved
+            ImportTestMarketing
+            ImportTestMember
+            setupTestEventID
+            CreateEmailProvider
+            CreateTestEmail
+            UpdateTestEmailToApproved
         ;;
 
         -pvtest) echo "Preview test"
@@ -959,6 +1085,11 @@ case "$arg" in
         -uptest) echo "Update test event"
             setupTestEventID
             UpdateTestEvent
+        ;;
+
+        -sendtest) echo "Send test event email"
+            
+            SendTestEmail
         ;;
 
         -iall) echo "Import all"

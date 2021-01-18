@@ -216,6 +216,10 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
 
 
 def send_smtp_email(to, subject, message, from_email=None, from_name='', smtp_info=None):  # pragma: no cover
+    if not to:
+        current_app.logger.info("smtp: no email to send to")
+        return
+
     current_app.logger.info("Starting to send smtp")
 
     if not smtp_info:
