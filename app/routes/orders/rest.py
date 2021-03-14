@@ -20,41 +20,57 @@ import time
 
 from flask_jwt_extended import jwt_required
 
-from app.comms.email import send_email
-from app.dao import dao_create_record
+from app.comms.email import send_email, send_smtp_email
+from app.dao import dao_create_record, dao_update_record
 from app.dao.books_dao import dao_create_book_to_order, dao_get_book_by_old_id, dao_get_book_by_id
 from app.dao.events_dao import dao_get_event_by_id
 from app.dao.event_dates_dao import dao_get_event_date_on_date, dao_get_event_date_by_id
-from app.dao.orders_dao import dao_get_order_with_txn_id
+from app.dao.orders_dao import dao_get_order_with_txn_id, dao_get_orders
 from app.dao.tickets_dao import dao_get_ticket_id, dao_update_ticket
+from app.dao.users_dao import dao_get_admin_users
 from app.errors import register_errors, InvalidRequest
 
-from app.models import BookToOrder, Order, Ticket, BOOK, TICKET_STATUS_USED
+from app.models import (
+    BookToOrder, Order, OrderError, Ticket,
+    BOOK, TICKET_STATUS_USED,
+    DELIVERY_FEE_UK_EU, DELIVERY_FEE_UK_ROW, DELIVERY_FEE_EU_ROW,
+    DELIVERY_REFUND_EU_UK, DELIVERY_REFUND_ROW_UK, DELIVERY_REFUND_ROW_EU
+)
 from app.utils.storage import Storage
+
+from na_common.delivery import DELIVERY_ZONES
 
 orders_blueprint = Blueprint('orders', __name__)
 register_errors(orders_blueprint)
 
 
-@orders_blueprint.route('/order/<string:txn_id>', methods=['GET'])
-def get_order(txn_id):
-    order = dao_get_order_with_txn_id(txn_id)
-    if order:
-        return jsonify(order.serialize())
-    else:
-        return jsonify({'message': f'Transaction ID: {txn_id} not found'}), 404
+# @orders_blueprint.route('/order/<string:txn_id>', methods=['GET'])
+# def get_order(txn_id):
+#     order = dao_get_order_with_txn_id(txn_id)
+#     if order:
+#         return jsonify(order.serialize())
+#     else:
+#         return jsonify({'message': f'Transaction ID: {txn_id} not found'}), 404
 
 
-@orders_blueprint.route('/orders/complete', methods=['GET'])
+@orders_blueprint.route('/orders', methods=['GET'])
+def get_orders():
+    orders = dao_get_orders()
+
+    return jsonify([o.serialize() for o in orders])
+
+
+@orders_blueprint.route('/orders/complete', methods=['GET', 'POST'])
 def orders_complete():
     current_app.logger.info("Orders complete: %r", request.args)
     return 'orders complete'
 
 
-@orders_blueprint.route('/order/missing/<string:txn_id>', methods=['GET'])
-def order_missing(txn_id):
-    order = dao_get_order_with_txn_id(txn_id)
-    # calculate amount needed to cover payment and send back the paypal button code
+def get_delivery_zone(country_code):
+    for zone in DELIVERY_ZONES:
+        if country_code in zone['codes']:
+            return zone
+    return DELIVERY_ZONES[-1]  # Otherwise return RoW - Rest of the World
 
 
 @orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
@@ -76,7 +92,8 @@ def paypal_ipn():
     if r.text == 'VERIFIED':
         current_app.logger.info('VERIFIED: %s', params['txn_id'])
 
-        delivery_message = ''
+        status = product_message = delivery_message = error_message = ''
+        diff = 0.0
         data = {}
         for key in params.keys():
             if isinstance(params[key], list):
@@ -84,16 +101,16 @@ def paypal_ipn():
             else:
                 data[key] = params[key]
 
-        order_data, tickets, events, products = parse_ipn(data)
+        order_data, tickets, events, products, delivery_zones, errors = parse_ipn(data)
 
         if not order_data:
             return 'Paypal IPN no order created'
         order_data['params'] = json.dumps(params)
 
         order = Order(**order_data)
-
+        print('*** pre create order')
         dao_create_record(order)
-
+        print('*** post create order')
         if products:
             for product in products:
                 if product['type'] == BOOK:
@@ -104,29 +121,81 @@ def paypal_ipn():
                     )
                     dao_create_book_to_order(book_to_order)
 
-            def get_delivery_zone(country_code):
-                for zone in current_app.config.get('DELIVERY_ZONES'):
-                    if data['address_country_code'] in zone['codes']:
-                        return zone['name']
-                return 'Rest of the World'
-
-            if data['delivery_zone']:
-                delivery_zone = get_delivery_zone(data['address_country_code'])
-
-                if data['delivery_zone'] != delivery_zone:
-                    current_app.logger.info(
-                        f"Incorrect postage costs {data['delivery_zone']} for "
-                        f"{data['address_country_code']}, should be {delivery_zone}"
+                    product_message += (
+                        f'<tr><td>{product["title"]}</td><td>{product["quantity"]}</td>'
+                        f'<td>{product["price"]}</td></tr>'
                     )
-                    # send an email out to the payer via email to request additional payment for postage
-                    # mark order with error message
-                    delivery_message = "Incorrect postage costs"
+            product_message = f'<table>{product_message}</table>'
+
+            if 'delivery_zone' not in order_data:
+                delivery_message = "No delivery fee paid"
+                status = "no_delivery_fee"
             else:
-                delivery_message = "No delivery cost added"
+                if 'address_country_code' not in order_data:
+                    delivery_message = "No address supplied"
+                    status = "missing_address"
+                    # frontend page will provide a web form to enter delivery address
+                else:
+                    address_delivery_zone = get_delivery_zone(order_data['address_country_code'])
+                    if delivery_zones:
+                        delivery_message = "More than 1 delivery fee paid"
+                        admin_message = ""
+                        total_cost = 0
+                        for dz in delivery_zones:
+                            _d = [_dz for _dz in DELIVERY_ZONES if _dz['name'] == dz]
+                            if _d:
+                                d = _d[0]
+                                total_cost += d['price']
+                                admin_message += f"<tr><td>{d['name']}</td><td>{d['price']}</td></tr>"
+                            else:
+                                errors.append(f'Delivery zone: {dz} not found')
+
+                        admin_message = f"<p>Order delivery zones: <table>{admin_message}" \
+                            f"</table>Total: &pound;{total_cost}</p>"
+                        admin_message += "<p>Expected delivery zone: " \
+                            f"{address_delivery_zone['name']} - &pound;{address_delivery_zone['price']}</p>"
+
+                        diff = total_cost - address_delivery_zone['price']
+                        if diff > 0:
+                            status = "refund"
+                            delivery_message = f"Refund of &pound;{diff} due as wrong delivery fee paid"
+                            admin_message = f"Transaction ID: {order.txn_id}<br>Order ID: {order.id}" \
+                                f"<br>{delivery_message}.{admin_message}"
+
+                            for user in dao_get_admin_users():
+                                send_smtp_email(user.email, f'New Acropolis {status}', admin_message)
+                        elif diff < 0:
+                            status = "extra"
+                            delivery_message = "Not enough delivery paid, &pound;{:0,.2f} due".format(abs(diff))
+
+                    elif order_data['delivery_zone'] != address_delivery_zone['name']:
+                        current_app.logger.info(
+                            f"Incorrect postage costs {order_data['delivery_zone']} for "
+                            f"{order_data['address_country_code']}, should be {address_delivery_zone['name']}"
+                        )
+                        delivery_message = "Incorrect postage costs"
+
+                        status = f"postage_uk_{address_delivery_zone['name'].lower()}"
 
             if delivery_message:
-                delivery_message += f", please <a href='{current_app.config['FRONTEND_URL']}/order/{params['txn_id']}'>"
-                "pay</a> for delivery and packaging costs to complete your order."
+                dao_update_record(Order, order.id, delivery_status=status)
+
+                if status == 'refund':
+                    delivery_message = f"<p>{delivery_message}, please send a message " \
+                        "to website admin if there is no refund within 5 working days.</p>"
+                else:
+                    delivery_message = (
+                        f"<p>{delivery_message}. Please "
+                        f"<a href='{current_app.config['FRONTEND_URL']}/order/{status}/{order_data['txn_id']}/"
+                        f"{abs(diff)}'>complete</a>"
+                        "your order.</p>"
+                    )
+            else:
+                product_message = (
+                    f'{product_message}<br><div>Delivery to: {order_data["address_street"]},'
+                    f'{order_data["address_city"]}, '
+                    f'{order_data["address_postal_code"]}, {order_data["address_country"]}</div>'
+                )
 
         for i, _ticket in enumerate(tickets):
             _ticket['order_id'] = order.id
@@ -134,28 +203,41 @@ def paypal_ipn():
             dao_create_record(ticket)
             tickets[i]['ticket_id'] = ticket.id
 
-        storage = Storage(current_app.config['STORAGE'])
-        message = "<p>Thank you for your order:<p>"
-        for i, event in enumerate(events):
-            link_to_post = '{}{}'.format(
-                current_app.config['API_BASE_URL'], url_for('.use_ticket', ticket_id=tickets[i]['ticket_id']))
-            img = pyqrcode.create(link_to_post)
-            buffer = io.BytesIO()
-            img.png(buffer, scale=2)
+        message = f"<p>Thank you for your order ({order.id})</p>"
+        if tickets:
+            storage = Storage(current_app.config['STORAGE'])
+            for i, event in enumerate(events):
+                link_to_post = '{}{}'.format(
+                    current_app.config['API_BASE_URL'], url_for('.use_ticket', ticket_id=tickets[i]['ticket_id']))
+                img = pyqrcode.create(link_to_post)
+                buffer = io.BytesIO()
+                img.png(buffer, scale=2)
 
-            img_b64 = base64.b64encode(buffer.getvalue())
-            target_image_filename = '{}/{}'.format('qr_codes', str(tickets[i]['ticket_id']))
-            storage.upload_blob_from_base64string('qr.code', target_image_filename, img_b64)
+                img_b64 = base64.b64encode(buffer.getvalue())
+                target_image_filename = '{}/{}'.format('qr_codes', str(tickets[i]['ticket_id']))
+                storage.upload_blob_from_base64string('qr.code', target_image_filename, img_b64)
 
-            message += '<div><span><img src="{}/{}"></span>'.format(
-                current_app.config['IMAGES_URL'], target_image_filename)
+                message += '<div><span><img src="{}/{}"></span>'.format(
+                    current_app.config['IMAGES_URL'], target_image_filename)
 
-            event_date = dao_get_event_date_by_id(tickets[i]['eventdate_id'])
-            minutes = ':%M' if event_date.event_datetime.minute > 0 else ''
-            message += "<span>{} on {}</span></div>".format(
-                event.title, event_date.event_datetime.strftime('%-d %b at %-I{}%p'.format(minutes)))
+                event_date = dao_get_event_date_by_id(tickets[i]['eventdate_id'])
+                minutes = ':%M' if event_date.event_datetime.minute > 0 else ''
+                message += "<span>{} on {}</span></div>".format(
+                    event.title, event_date.event_datetime.strftime('%-d %b at %-I{}%p'.format(minutes)))
 
-        send_email(order.email_address, 'New Acropolis Event Tickets', message)
+        if errors:
+            error_message = ''
+            for error in errors:
+                error_message += f"<div>{error}</div>"
+                order.errors.append(OrderError(error=error))
+            error_message = f"<p>Errors in order: {error_message}</p>"
+            # frontend will show the orders successfully processed and error messages
+
+        send_email(
+            order.email_address,
+            'New Acropolis Order',
+            message + product_message + delivery_message + error_message
+        )
 
     elif r.text == 'INVALID':
         current_app.logger.info('INVALID %r', params['txn_id'])
@@ -194,9 +276,13 @@ def use_ticket(ticket_id):
 def parse_ipn(ipn):
     order_data = {}
     receiver_email = None
+    none_response = None, None, None, None, None
+    none_response_with_no_errors = None, None, None, None, None, None
     tickets = []
     events = []
     products = []
+    delivery_zones = []
+    errors = []
 
     order_mapping = {
         'payer_email': 'email_address',
@@ -224,18 +310,19 @@ def parse_ipn(ipn):
     if order_data['payment_status'] != 'Completed':
         current_app.logger.error(
             'Order: %s, payment not complete: %s', order_data['txn_id'], order_data['payment_status'])
-        return None, None, None, None
+        return none_response_with_no_errors
 
     if receiver_email != current_app.config['PAYPAL_RECEIVER']:
         current_app.logger.error('Paypal receiver not valid: %s for %s', receiver_email, order_data['txn_id'])
         order_data['payment_status'] = 'Invalid receiver'
-        return None, None, None, None
+        return none_response_with_no_errors
 
     order_found = dao_get_order_with_txn_id(order_data['txn_id'])
     if order_found:
-        current_app.logger.error(
-            'Order: %s, payment already made', order_data['txn_id'])
-        return None, None, None, None
+        msg = 'Order: %s, payment already made', order_data['txn_id']
+        current_app.logger.error(msg)
+        errors.append(msg)
+        return *none_response, errors
 
     if ipn['txn_type'] == 'paypal_here':
         _event_date = datetime.strptime(ipn['payment_date'], '%H:%M:%S %b %d, %Y PST').strftime('%Y-%m-%d')
@@ -253,14 +340,18 @@ def parse_ipn(ipn):
     else:
         counter = 1
         while ('item_number%d' % counter) in ipn:
+            quantity = int(ipn['quantity%d' % counter])
+            price = float("{0:.2f}".format(float(ipn['mc_gross_%d' % counter]) / quantity))
+
             if ipn['item_number%d' % counter].startswith('delivery'):
                 delivery_zone = ipn['item_name%d' % counter]
                 if 'delivery_zone' not in order_data.keys():
                     order_data['delivery_zone'] = delivery_zone
                 else:
-                    current_app.error(f"Multiple delivery costs in order: {order_data['txn_id']}")
-                    # not sure how to handle this? maybe email admin so that they can issue a refund?
-                    # or let admin user know that order contains multiple delivery costs
+                    current_app.logger.error(f"Multiple delivery costs in order: {order_data['txn_id']}")
+                    if not delivery_zones:
+                        delivery_zones.append(order_data['delivery_zone'])
+                    delivery_zones.append(delivery_zone)
             elif ipn['item_number%d' % counter].startswith('book-'):
                 book_id = ipn['item_number%d' % counter][len("book-"):]
                 UUID_LENGTH = 36
@@ -269,25 +360,30 @@ def parse_ipn(ipn):
                 else:
                     book = dao_get_book_by_id(book_id)
                 if book:
-                    quantity = int(ipn['quantity%d' % counter])
                     products.append(
                         {
                             "type": BOOK,
                             "book_id": book.id,
-                            "quantity": quantity
+                            "title": book.title,
+                            "quantity": quantity,
+                            "price": price
                         }
                     )
                 else:
-                    current_app.logger.error("Book not found for item_number: %s", ipn['item_number%d' % counter])
+                    msg = f"Book not found for item_number: {book_id}"
+                    current_app.logger.error(msg)
                     counter += 1
+                    errors.append(msg)
                     continue
             else:
                 try:
                     event = dao_get_event_by_id(ipn['item_number%d' % counter])
                     events.append(event)
                 except NoResultFound:
-                    current_app.logger.error("Event not found for item_number: %s", ipn['item_number%d' % counter])
+                    msg = f"Event not found for item_number: {ipn['item_number%d' % counter]}"
+                    current_app.logger.error(msg)
                     counter += 1
+                    errors.append(msg)
                     continue
 
                 if 'option_name2_%d' % counter in ipn.keys():
@@ -297,14 +393,13 @@ def parse_ipn(ipn):
                     event_date_index = 1
 
                 if event_date_index > len(event.event_dates):
-                    current_app.logger.error(
-                        "Event date %s not found for: %s", event_date_index, ipn['item_number%d' % counter])
+                    error_msg = f"Event date {event_date_index} not found for: {ipn['item_number%d' % counter]}"
+                    current_app.logger.error(error_msg)
                     counter += 1
+                    errors.append(error_msg)
                     continue
 
                 event_date_id = event.event_dates[event_date_index - 1].id
-                quantity = int(ipn['quantity%d' % counter])
-                price = float("{0:.2f}".format(float(ipn['mc_gross_%d' % counter]) / quantity))
 
                 for i in range(1, quantity + 1):
                     ticket = {
@@ -323,12 +418,12 @@ def parse_ipn(ipn):
                     tickets.append(ticket)
             counter += 1
 
-    if not tickets:
-        current_app.logger.error('No valid tickets, no order created: %s', order_data['txn_id'])
-        return None, None, None, None
+    # if not tickets and not products:
+    #     current_app.logger.error('No valid tickets or products, no order created: %s', order_data['txn_id'])
+    #     return *none_response, errors
 
     order_data['buyer_name'] = '{} {}'.format(order_data['first_name'], order_data['last_name'])
     del order_data['first_name']
     del order_data['last_name']
 
-    return order_data, tickets, events, products
+    return order_data, tickets, events, products, delivery_zones, errors
