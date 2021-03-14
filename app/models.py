@@ -380,7 +380,12 @@ class Event(db.Model):
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    event_dates = db.relationship("EventDate", backref=db.backref("events"), cascade="all,delete,delete-orphan")
+    event_dates = db.relationship(
+        "EventDate",
+        backref=db.backref("event"),
+        cascade="all,delete,delete-orphan",
+        order_by='EventDate.event_datetime'
+    )
     event_state = db.Column(
         db.String(255),
         db.ForeignKey('event_states.name'),
@@ -712,6 +717,15 @@ class Venue(db.Model):
         }
 
 
+# UK = 2, EU = 4.50, ROW = 6
+DELIVERY_FEE_UK_EU = 'uk-eu', 2.50
+DELIVERY_FEE_UK_ROW = 'uk-row', 4
+DELIVERY_FEE_EU_ROW = 'eu-row', 1.50
+DELIVERY_REFUND_EU_UK = 'eu-uk', 2.50
+DELIVERY_REFUND_ROW_UK = 'row-uk', 4
+DELIVERY_REFUND_ROW_EU = 'row-eu', 1.5
+
+
 class Order(db.Model):
     __tablename__ = "orders"
 
@@ -733,9 +747,17 @@ class Order(db.Model):
     address_state = db.Column(db.String)
     address_country = db.Column(db.String)
     address_country_code = db.Column(db.String)
-    delivery_zone = db.Column(db.String(5))
-    delivery_zone_confirmed = db.Column(db.Boolean)
-    books = db.relationship("BookToOrder", back_populates="order")
+    delivery_zone = db.Column(db.String(6))
+    delivery_status = db.Column(db.String(20))
+    delivery_balance = db.Column(db.Numeric(precision=2), default=0.0)
+    books = db.relationship("BookToOrder", back_populates="order", order_by='Book.title')
+    tickets = db.relationship("Ticket", back_populates="order")
+    errors = db.relationship(
+        "OrderError",
+        backref=db.backref("order"),
+        cascade="all,delete,delete-orphan",
+        order_by='OrderError.error'
+    )
 
     def serialize(self):
         return {
@@ -746,9 +768,22 @@ class Order(db.Model):
             'payment_status': self.payment_status,
             'payment_total': str(self.payment_total),  # not possible to json serialize a decimal
             'address_country_code': self.address_country_code,
+            'address_street': self.address_street,
+            'address_city': self.address_city,
+            'address_postal_code': self.address_postal_code,
+            'address_state': self.address_state,
+            'address_country': self.address_country,
             'delivery_zone': self.delivery_zone,
-            'delivery_zone_confirmed': self.delivery_zone_confirmed,
+            'delivery_status': self.delivery_status,
+            'delivery_balance': self.delivery_balance
         }
+
+
+class OrderError(db.Model):
+    __tablename__ = 'order_errors'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
+    error = db.Column(db.String)
 
 
 class BookToOrder(db.Model):
@@ -760,7 +795,6 @@ class BookToOrder(db.Model):
     order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
     quantity = db.Column(db.Integer)
 
-    # book = db.relationship("Book", back_populates="orders")
     order = db.relationship("Order", back_populates="books")
 
 
@@ -795,6 +829,7 @@ class Ticket(db.Model):
     event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'))
     old_id = db.Column(db.Integer)
     order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
+    order = db.relationship("Order", back_populates="tickets")
     old_order_id = db.Column(db.Integer)
     ticket_type = db.Column(db.String, db.ForeignKey('ticket_types._type'))
     eventdate_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_dates.id'))
