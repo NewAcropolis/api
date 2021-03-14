@@ -45,6 +45,7 @@ def app():
         'SQLALCHEMY_DATABASE_URI': TEST_DATABASE_URI,
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
         'PREFERRED_URL_SCHEME': 'http',
+        'DELIVERY_ID': 'delivery-53441e2a-c991-4d38-a785-394277bbc30c',
         'ADMIN_CLIENT_ID': 'testadmin',
         'ADMIN_CLIENT_SECRET': 'testsecret',
         'TOKEN_EXPIRY': 1,

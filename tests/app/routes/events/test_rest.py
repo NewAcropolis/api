@@ -1356,9 +1356,10 @@ class WhenPostingUpdatingAnEvent:
         event_dates = EventDate.query.all()
 
         assert len(event_dates) == 2
-        assert event_dates[0].speakers[0].id == event.event_dates[0].speakers[0].id
+        assert event_dates[0].speakers[0].id in [
+            event.event_dates[0].speakers[0].id, event.event_dates[1].speakers[0].id]
         # use existing event date
-        assert event_dates[0].id == old_event_date_id
+        assert old_event_date_id in [event_dates[0].id, event_dates[1].id]
 
     def it_updates_an_event_add_speakers_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload

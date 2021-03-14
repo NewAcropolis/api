@@ -20,7 +20,7 @@ from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
 from app.models import (
     Article, Book, Email, EmailToMember, EmailProvider, Event, EventDate, EventType, Fee, Magazine, Marketing,
-    Member, RejectReason, Speaker, Ticket, User, Venue,
+    Member, Order, RejectReason, Speaker, Ticket, User, Venue,
     EVENT, TICKET_STATUS_UNUSED, DRAFT
 )
 
@@ -418,6 +418,61 @@ def create_reject_reason(event_id=None, reason='Test reason', resolved=False, cr
     dao_create_reject_reason(reject_reason)
 
     return reject_reason
+
+
+def create_order(
+    old_id=1,
+    member_id=None,
+    old_member_id=1,
+    email_address='test@example.com',
+    buyer_name='Test buyer',
+    txn_id='1122334455',
+    txn_type='cart',
+    payment_status='completed',
+    payment_total='10.0',
+    params='some_test_params&test_param2',
+    address_street='1 Test Steeet',
+    address_city='Test City',
+    address_postal_code='T11 2TS',
+    address_state='London',
+    address_country='UK',
+    address_country_code='GB',
+    delivery_zone='UK',
+    delivery_status='completed',
+    delivery_balance=0.0,
+    books=[],
+    tickets=[],
+    errors=[]
+):
+    data = {
+        'old_id': old_id,
+        'member_id': member_id,
+        'old_member_id': old_member_id,
+        'email_address': email_address,
+        'buyer_name': buyer_name,
+        'txn_id': txn_id,
+        'txn_type': txn_type,
+        'payment_status': payment_status,
+        'payment_total': payment_total,
+        'params': params,
+        'address_street': address_street,
+        'address_city': address_city,
+        'address_postal_code': address_postal_code,
+        'address_state': address_state,
+        'address_country': address_country,
+        'address_country_code': address_country_code,
+        'delivery_zone': delivery_zone,
+        'delivery_status': delivery_status,
+        'delivery_balance': delivery_balance,
+        'books': books,
+        'tickets': tickets,
+        'errors': errors
+    }
+    order = Order(**data)
+
+    dao_create_record(order)
+
+    return order
 
 
 def create_ticket(
