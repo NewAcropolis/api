@@ -105,18 +105,6 @@ class Config(object):
     INSTAGRAM_URL = os.environ.get('INSTAGRAM_URL')
     POSTAGE_COUNTRY_CODE = "GB"
 
-    DELIVERY_ZONES = [
-        {
-            'name': 'UK', 'codes': 'GB'
-        }, {
-            # https://www.royalmail.com/international-zones#europe
-            'name': 'Europe',
-            'codes': 'AL,AD,AM,AT,AZ,BY,BE,BA,BG,HR,CY,CZ,DK,EE,FO,FI,FR,GE,DE,GI,GR,GL,HU,IS,IE,IT,'
-                     'KZ,KG,LV,LI,LT,LU,MK,MT,MD,MC,ME,NL,NO,PL,PT,RO,RU,SM,RS,SK,ES,SE,CH,TJ,TR,TM,'
-                     'UA,UZ,VA'
-        }
-    ]
-
 
 class Development(Config):
     DEBUG = True
