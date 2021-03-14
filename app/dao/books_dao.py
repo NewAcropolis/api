@@ -22,7 +22,7 @@ def dao_get_books():
 
 
 def dao_get_book_by_id(book_id):
-    return Book.query.filter_by(id=book_id).one()
+    return Book.query.filter_by(id=book_id).first()
 
 
 def dao_get_book_by_old_id(old_book_id):
