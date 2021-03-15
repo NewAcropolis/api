@@ -276,13 +276,12 @@ def use_ticket(ticket_id):
 def parse_ipn(ipn):
     order_data = {}
     receiver_email = None
-    none_response = None, None, None, None, None
-    none_response_with_no_errors = None, None, None, None, None, None
+    errors = []
+    none_response = None, None, None, None, None, errors
     tickets = []
     events = []
     products = []
     delivery_zones = []
-    errors = []
 
     order_mapping = {
         'payer_email': 'email_address',
@@ -310,19 +309,19 @@ def parse_ipn(ipn):
     if order_data['payment_status'] != 'Completed':
         current_app.logger.error(
             'Order: %s, payment not complete: %s', order_data['txn_id'], order_data['payment_status'])
-        return none_response_with_no_errors
+        return none_response
 
     if receiver_email != current_app.config['PAYPAL_RECEIVER']:
         current_app.logger.error('Paypal receiver not valid: %s for %s', receiver_email, order_data['txn_id'])
         order_data['payment_status'] = 'Invalid receiver'
-        return none_response_with_no_errors
+        return none_response
 
     order_found = dao_get_order_with_txn_id(order_data['txn_id'])
     if order_found:
         msg = 'Order: %s, payment already made', order_data['txn_id']
         current_app.logger.error(msg)
         errors.append(msg)
-        return *none_response, errors
+        return none_response
 
     if ipn['txn_type'] == 'paypal_here':
         _event_date = datetime.strptime(ipn['payment_date'], '%H:%M:%S %b %d, %Y PST').strftime('%Y-%m-%d')
