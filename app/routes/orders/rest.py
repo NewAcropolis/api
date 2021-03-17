@@ -108,9 +108,7 @@ def paypal_ipn():
         order_data['params'] = json.dumps(params)
 
         order = Order(**order_data)
-        print('*** pre create order')
         dao_create_record(order)
-        print('*** post create order')
         if products:
             for product in products:
                 if product['type'] == BOOK:
