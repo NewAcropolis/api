@@ -775,7 +775,7 @@ class Order(db.Model):
             'address_country': self.address_country,
             'delivery_zone': self.delivery_zone,
             'delivery_status': self.delivery_status,
-            'delivery_balance': self.delivery_balance
+            'delivery_balance': str(self.delivery_balance)
         }
 
 
