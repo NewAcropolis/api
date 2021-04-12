@@ -58,7 +58,7 @@ class Config(object):
     API_BASE_URL = os.environ.get('API_BASE_URL')
     IMAGES_URL = os.environ.get('IMAGES_URL')
     THUMBNAIL_MAXSIZE = 250, 250
-    STANDARD_MAXSIZE = 800, 800
+    STANDARD_MAXSIZE = 1500, 800
     FRONTEND_URL = os.environ.get('FRONTEND_URL')
     GOOGLE_APPLICATION_CREDENTIALS = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
     TRAVIS_COMMIT = os.environ.get('TRAVIS_COMMIT')
