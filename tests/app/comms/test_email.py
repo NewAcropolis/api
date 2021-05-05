@@ -312,3 +312,20 @@ class WhenGettingEmailHTML:
             {'description': ' test 2', 'title': 'Culture'},
             {'description': ' test 3', 'title': 'Art'}
         ]
+
+    @pytest.mark.parametrize('topics', [
+        "Philosophy- test 1\nCulture- test 2\nArt- test 3",
+        "Philosophy test 1\nCulture test 2\nArt test 3",
+        "Philosophy: test 1\nCulture- test 2\nArt test 3",
+    ])
+    def it_shows_divider_error(self, mocker, db_session, sample_magazine, topics):
+        mock_render_template = mocker.patch('app.comms.email.render_template')
+        sample_magazine.topics = topics
+        get_email_html(MAGAZINE, magazine_id=sample_magazine.id)
+
+        args, kwargs = mock_render_template.call_args
+        assert args[0] == 'emails/magazine.html'
+        assert kwargs['topics'] == [
+            {'description': 'Use : as divider between topic header and sub-header', 'title': 'Missing divider'},
+            {'description': topics, 'title': 'Topics'}
+        ]
