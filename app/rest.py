@@ -24,7 +24,9 @@ def are_celery_workers_running():
 
 @base_blueprint.route('/')
 def get_info():
-    workers_running = are_celery_workers_running()
+    workers_running = False
+    if 'http://localhost' not in current_app.config['API_BASE_URL']:
+        workers_running = are_celery_workers_running()
 
     current_app.logger.info('get_info')
     query = 'SELECT version_num FROM alembic_version'
