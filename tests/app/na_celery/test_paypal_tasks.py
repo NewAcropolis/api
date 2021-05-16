@@ -16,7 +16,7 @@ def mock_paypal(mocker):
 def mock_paypal_error(mocker):
     return mocker.patch(
         "app.na_celery.paypal_tasks.PayPal.create_update_paypal_button",
-        side_effect=PaypalException('Paypal exception')
+        side_effect=PaypalException('Paypal exception,' * 10)
     )
 
 
@@ -38,6 +38,7 @@ class WhenProcessingCreateUpdatePaypalButtonTask:
 
         assert mock_paypal_error.called
         assert sample_event_with_dates.booking_code.startswith('error:')
+        assert sample_event_with_dates.booking_code == 'error: ' + ('Paypal exception,' * 10)[:40]
 
     def it_calls_create_button_with_no_booking_code_for_pending_or_error(
         self, mocker, mock_paypal, sample_event_with_dates

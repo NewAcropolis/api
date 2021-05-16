@@ -36,5 +36,5 @@ def create_update_paypal_button_task(self, event_id):
     except NoResultFound as e:
         current_app.logger.error(f'No result error trying to create_update_paypal_button {e} {event_id}')
     except PaypalException as e:
-        dao_update_event(event_id, booking_code=f'error: {self.request.id}')
+        dao_update_event(event_id, booking_code=f'error: {str(e)[:40]}')
         current_app.logger.error(f'Paypal error trying to create_update_paypal_button {e} {event_id}')
