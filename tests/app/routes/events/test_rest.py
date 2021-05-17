@@ -507,8 +507,14 @@ class WhenPostingCreatingAnEvent:
                 mock_storage_blob_upload.assert_called_with(
                     'test_img.png', '2019/{}'.format(str(event.id)), base64img)
 
+    @pytest.mark.parametrize('mock_state,paypal_button_task_called', [
+        (DRAFT, False),
+        (READY, True),
+        (APPROVED, True)
+    ])
     def it_creates_an_event_via_rest(
-        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
+        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts,
+        mock_state, paypal_button_task_called, mock_paypal_task
     ):
         mocker.patch("app.utils.storage.Storage.blob_exists", return_value=True)
 
@@ -537,6 +543,7 @@ class WhenPostingCreatingAnEvent:
                     ]
                 }
             ],
+            "event_state": mock_state,
             "venue_id": sample_req_event_data['venue'].id,
             "fee": 15,
             "conc_fee": 12,
@@ -549,6 +556,8 @@ class WhenPostingCreatingAnEvent:
         )
 
         assert response.status_code == 201
+
+        assert paypal_button_task_called == mock_paypal_task.called
 
         json_events = json.loads(response.get_data(as_text=True))
 
@@ -563,7 +572,7 @@ class WhenPostingCreatingAnEvent:
         speaker_ids = [e['id'] for e in json_events["event_dates"][1]["speakers"]]
         assert sample_req_event_data['speaker'].serialize()['id'] in speaker_ids
         assert speaker.serialize()['id'] in speaker_ids
-        assert json_events["event_state"] == DRAFT
+        assert json_events["event_state"] == mock_state
 
         event = Event.query.one()
         assert event.event_dates[0].end_time.strftime('%H:%M') == '21:00'
