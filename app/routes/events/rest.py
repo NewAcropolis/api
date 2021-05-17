@@ -105,7 +105,7 @@ def create_event():
 
         e = EventDate(
             event_datetime=event_date['event_date'],
-            end_time=event_date.get('end_time'),
+            end_time=None if event_date.get('end_time') == '' else event_date.get('end_time'),
             speakers=speakers
         )
 
@@ -132,6 +132,9 @@ def create_event():
 
     event.image_filename = image_filename
     dao_update_event(event.id, image_filename=image_filename)
+
+    if event.fee and event.fee > 0 and event.event_state in [READY, APPROVED]:
+        paypal_tasks.create_update_paypal_button_task.apply_async((str(event.id),))
 
     return jsonify(event.serialize()), 201
 

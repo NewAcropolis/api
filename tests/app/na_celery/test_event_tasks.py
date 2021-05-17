@@ -1,12 +1,15 @@
 from freezegun import freeze_time
 
 from app.na_celery.event_tasks import send_event_email_reminder
+from app.dao.events_dao import dao_update_event
+from app.models import APPROVED
 
 
 class WhenProcessingSendEventEmailReminderTask:
 
     @freeze_time("2017-12-20T10:00:00")
     def it_sends_the_event_email_reminder(self, mocker, db_session, sample_event_with_dates, sample_admin_user):
+        dao_update_event(sample_event_with_dates.id, event_state=APPROVED)
         mock_send_email = mocker.patch('app.na_celery.event_tasks.send_smtp_email', return_value=200)
 
         send_event_email_reminder()
@@ -28,6 +31,7 @@ class WhenProcessingSendEventEmailReminderTask:
     def it_reports_an_error_if_sending_reminder_fails(
         self, mocker, db_session, sample_event_with_dates, sample_admin_user
     ):
+        dao_update_event(sample_event_with_dates.id, event_state=APPROVED)
         mock_send_email = mocker.patch('app.na_celery.event_tasks.send_smtp_email', return_value=503)
         mock_logger = mocker.patch('app.na_celery.event_tasks.current_app.logger.error')
 

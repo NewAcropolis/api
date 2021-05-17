@@ -13,6 +13,7 @@ from app.dao.members_dao import dao_get_active_member_count
 
 
 def get_facebook_count():
+    response = None
     try:
         response = requests.get(current_app.config.get('FACEBOOK_URL'))
         soup = BeautifulSoup(response.content, 'html.parser')
