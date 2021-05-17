@@ -25,13 +25,13 @@ mock_get_button_details = (
     '%2fwebscr%22%20method%3d%22post%22%3e%0a%2fform%3e%0a&HOSTEDBUTTONID={}&BUTTONCODE=HOSTED&'
     'BUTTONTYPE=ADDCART&BUTTONSUBTYPE=SERVICES&L_BUTTONVAR0=%22no_note%3d0%22&L_BUTTONVAR1=%22add%3d1%22&'
     'L_BUTTONVAR2=%22bn%3d%3dZ354JXLJ44EBU%3aPP%2dShopCartBF_S%22&L_BUTTONVAR3=%22business%3dZ354JXLJ44EBU%22&'
-    'L_BUTTONVAR4=%22currency_code%3dGBP%22&L_BUTTONVAR5=%22item_name%3dTest%20paypal%20udpate%22&L_BUTTONVAR6=%22'
-    'item_number%3d{}%22&OPTION0NAME=%22Ticket%20type%22&OPTION1NAME=%22Date%22&L_OPTION0SELECT0=%22Full%22&'
+    'L_BUTTONVAR4=%22currency_code%3dGBP%22&L_BUTTONVAR5=%22item_name%3dTest%20paypal%20udpate%22&'
+    '{}OPTION0NAME=%22Ticket%20type%22&OPTION1NAME=%22Date%22&L_OPTION0SELECT0=%22Full%22&'
     'L_OPTION0SELECT1=%22Concession%22&L_OPTION0SELECT2=%22Member%22&L_OPTION1SELECT0=%22all%22&'
     'L_OPTION1SELECT1=%221%22&L_OPTION1SELECT2=%222%22&L_OPTION1SELECT3=%223%22&L_OPTION1SELECT4=%224%22&'
     'L_OPTION0PRICE0=%225%2e00%22&L_OPTION0PRICE1=%223%2e00%22&L_OPTION0PRICE2=%220%2e01%22&BUTTONIMAGE=REG&'
     'BUTTONCOUNTRY=GB&BUTTONLANGUAGE=en&TIMESTAMP=2019%2d01%2d01T00%3a00%3a00Z&CORRELATIONID=c4e87abc815c3&'
-    'ACK=Success&VERSION=51%2e0&BUILD=46457558'.format(mock_update_button_id, mock_item_id)
+    'ACK=Success&VERSION=51%2e0&BUILD=46457558'
 )
 
 mock_process_button = (
@@ -43,9 +43,10 @@ mock_process_button = (
 
 
 class MockRequests:
-    def __init__(self, ack='Success', err_msg=''):
+    def __init__(self, ack='Success', err_msg='', has_L_BUTTONVAR6=True):
         self.ack = ack
         self.err_msg = err_msg
+        self.has_L_BUTTONVAR6 = has_L_BUTTONVAR6
 
     def post(self, _, data=None, **kwargs):
         mock_response = Mock()
@@ -54,7 +55,10 @@ class MockRequests:
         if data['METHOD'] == 'BMButtonSearch':
             mock_response.content = mock_get_resp_content
         elif data['METHOD'] == 'BMGetButtonDetails':
-            mock_response.content = mock_get_button_details
+            mock_response.content = mock_get_button_details.format(
+                mock_update_button_id,
+                f"L_BUTTONVAR6=%22item_number%3d{mock_item_id}%22&" if self.has_L_BUTTONVAR6 else ''
+            )
         elif data['METHOD'] in ['BMCreateButton']:
             mock_response.content = mock_process_button.format(
                 button_id=mock_create_button_id, ack=self.ack, err_msg=self.err_msg)
@@ -106,6 +110,14 @@ class WhenCreatingPaypalButton:
         p = PayPal()
         button_id = p.create_update_paypal_button(mock_item_id, 'test title')
         assert button_id == mock_update_button_id
+
+    def it_creates_a_paypal_button_for_search_without_L_BUTTONVAR6(self, app, mocker, sample_uuid):
+        mocker.patch('app.payments.paypal.requests', MockRequests(has_L_BUTTONVAR6=False))
+
+        p = PayPal()
+        button_id = p.create_update_paypal_button(
+            sample_uuid, 'test title', all_fee=20, all_conc_fee=15, members_free=True)
+        assert button_id == mock_create_button_id
 
     def it_raises_an_error_on_paypal_error(self, app, mocker):
         mocker.patch('app.payments.paypal.requests', MockRequests(ack='Error', err_msg='&L_LONGMESSAGE0=Error'))

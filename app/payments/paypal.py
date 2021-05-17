@@ -61,6 +61,10 @@ class PayPal:
 
                 get_resp = parse_qs(response.content.decode('ASCII'))
 
+                if 'L_BUTTONVAR6' not in get_resp:
+                    current_app.logger.info('Skipping %s', get_resp['HOSTEDBUTTONID'])
+                    continue
+
                 _item_id = get_resp['L_BUTTONVAR6'][0].split('=')[1]
                 _item_id = _item_id[:-1]
 
