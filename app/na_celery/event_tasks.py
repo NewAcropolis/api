@@ -7,7 +7,7 @@ from app.comms.email import send_smtp_email, get_email_html, get_email_provider
 from app.dao.emails_dao import dao_get_email_by_event_id
 from app.dao.events_dao import dao_get_future_events
 from app.dao.users_dao import dao_get_admin_users
-from app.models import BASIC
+from app.models import BASIC, APPROVED
 
 
 @celery.task(name='send_event_email_reminder')
@@ -15,6 +15,8 @@ def send_event_email_reminder():
     current_app.logger.info('Task send_event_email_reminder received: {}')
 
     for event in dao_get_future_events():
+        if event.event_state != APPROVED:
+            continue
         event.event_dates.sort(key=lambda k: k.event_datetime)
 
         time_to_send = (event.event_dates[0].event_datetime - timedelta(weeks=2)) < datetime.today()
