@@ -125,55 +125,55 @@ def paypal_ipn():
                     )
             product_message = f'<table>{product_message}</table>'
 
-            if 'delivery_zone' not in order_data:
-                delivery_message = "No delivery fee paid"
-                status = "no_delivery_fee"
+            # we should just calculate the delivery fee needed as an extra rather than using this settings
+            # if 'delivery_zone' not in order_data:
+            #     delivery_message = "No delivery fee paid"
+            #     status = "no_delivery_fee"
+            # else:
+            if 'address_country_code' not in order_data:
+                delivery_message = "No address supplied"
+                status = "missing_address"
             else:
-                if 'address_country_code' not in order_data:
-                    delivery_message = "No address supplied"
-                    status = "missing_address"
-                    # frontend page will provide a web form to enter delivery address
-                else:
-                    address_delivery_zone = get_delivery_zone(order_data['address_country_code'])
-                    if delivery_zones:
-                        delivery_message = "More than 1 delivery fee paid"
-                        admin_message = ""
-                        total_cost = 0
-                        for dz in delivery_zones:
-                            _d = [_dz for _dz in DELIVERY_ZONES if _dz['name'] == dz]
-                            if _d:
-                                d = _d[0]
-                                total_cost += d['price']
-                                admin_message += f"<tr><td>{d['name']}</td><td>{d['price']}</td></tr>"
-                            else:
-                                errors.append(f'Delivery zone: {dz} not found')
+                address_delivery_zone = get_delivery_zone(order_data['address_country_code'])
+                if delivery_zones:
+                    delivery_message = "More than 1 delivery fee paid"
+                    admin_message = ""
+                    total_cost = 0
+                    for dz in delivery_zones:
+                        _d = [_dz for _dz in DELIVERY_ZONES if _dz['name'] == dz]
+                        if _d:
+                            d = _d[0]
+                            total_cost += d['price']
+                            admin_message += f"<tr><td>{d['name']}</td><td>{d['price']}</td></tr>"
+                        else:
+                            errors.append(f'Delivery zone: {dz} not found')
 
-                        admin_message = f"<p>Order delivery zones: <table>{admin_message}" \
-                            f"</table>Total: &pound;{total_cost}</p>"
-                        admin_message += "<p>Expected delivery zone: " \
-                            f"{address_delivery_zone['name']} - &pound;{address_delivery_zone['price']}</p>"
+                    admin_message = f"<p>Order delivery zones: <table>{admin_message}" \
+                        f"</table>Total: &pound;{total_cost}</p>"
+                    admin_message += "<p>Expected delivery zone: " \
+                        f"{address_delivery_zone['name']} - &pound;{address_delivery_zone['price']}</p>"
 
-                        diff = total_cost - address_delivery_zone['price']
-                        if diff > 0:
-                            status = "refund"
-                            delivery_message = f"Refund of &pound;{diff} due as wrong delivery fee paid"
-                            admin_message = f"Transaction ID: {order.txn_id}<br>Order ID: {order.id}" \
-                                f"<br>{delivery_message}.{admin_message}"
+                    diff = total_cost - address_delivery_zone['price']
+                    if diff > 0:
+                        status = "refund"
+                        delivery_message = f"Refund of &pound;{diff} due as wrong delivery fee paid"
+                        admin_message = f"Transaction ID: {order.txn_id}<br>Order ID: {order.id}" \
+                            f"<br>{delivery_message}.{admin_message}"
 
-                            for user in dao_get_admin_users():
-                                send_smtp_email(user.email, f'New Acropolis {status}', admin_message)
-                        elif diff < 0:
-                            status = "extra"
-                            delivery_message = "Not enough delivery paid, &pound;{:0,.2f} due".format(abs(diff))
+                        for user in dao_get_admin_users():
+                            send_smtp_email(user.email, f'New Acropolis {status}', admin_message)
+                    elif diff < 0:
+                        status = "extra"
+                        delivery_message = "Not enough delivery paid, &pound;{:0,.2f} due".format(abs(diff))
 
-                    elif order_data['delivery_zone'] != address_delivery_zone['name']:
-                        current_app.logger.info(
-                            f"Incorrect postage costs {order_data['delivery_zone']} for "
-                            f"{order_data['address_country_code']}, should be {address_delivery_zone['name']}"
-                        )
-                        delivery_message = "Incorrect postage costs"
+                # elif order_data['delivery_zone'] != address_delivery_zone['name']:
+                #     current_app.logger.info(
+                #         f"Incorrect postage costs {order_data['delivery_zone']} for "
+                #         f"{order_data['address_country_code']}, should be {address_delivery_zone['name']}"
+                #     )
+                #     delivery_message = "Incorrect postage costs"
 
-                        status = f"postage_uk_{address_delivery_zone['name'].lower()}"
+                #     status = f"postage_uk_{address_delivery_zone['name'].lower()}"
 
             if delivery_message:
                 dao_update_record(Order, order.id, delivery_status=status)
