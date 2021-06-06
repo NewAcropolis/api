@@ -736,10 +736,11 @@ class Order(db.Model):
     email_address = db.Column(db.String)
     buyer_name = db.Column(db.String)
     txn_id = db.Column(db.String)
+    linked_txn_id = db.Column(db.String)
     txn_type = db.Column(db.String)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     payment_status = db.Column(db.String)
-    payment_total = db.Column(db.Numeric(precision=2))
+    payment_total = db.Column(db.Numeric(scale=2))
     params = db.Column(db.String)
     address_street = db.Column(db.String)
     address_city = db.Column(db.String)
@@ -747,10 +748,10 @@ class Order(db.Model):
     address_state = db.Column(db.String)
     address_country = db.Column(db.String)
     address_country_code = db.Column(db.String)
-    delivery_zone = db.Column(db.String(6))
+    delivery_zone = db.Column(db.String)
     delivery_status = db.Column(db.String(20))
-    delivery_balance = db.Column(db.Numeric(precision=2), default=0.0)
-    books = db.relationship("BookToOrder", back_populates="order", order_by='Book.title')
+    delivery_balance = db.Column(db.Numeric(scale=2), default=0.0)
+    books = db.relationship("Book", secondary="book_to_order", order_by='Book.title')
     tickets = db.relationship("Ticket", back_populates="order")
     errors = db.relationship(
         "OrderError",
@@ -760,6 +761,24 @@ class Order(db.Model):
     )
 
     def serialize(self):
+        def get_serialized_list(array, delete_created_at=True):
+            _list = []
+            for item in array:
+                _json = item.serialize()
+                if 'created_at' in _json and delete_created_at:
+                    del(_json['created_at'])
+                _list.append(_json)
+            return _list
+
+        _json = self.short_serialize()
+        _json.update(
+            books=get_serialized_list(self.books),
+            tickets=get_serialized_list(self.tickets, delete_created_at=False),
+            errors=get_serialized_list(self.errors, delete_created_at=False)
+        )
+        return _json
+
+    def short_serialize(self):
         return {
             'id': str(self.id),
             'txn_id': self.txn_id,
@@ -775,7 +794,7 @@ class Order(db.Model):
             'address_country': self.address_country,
             'delivery_zone': self.delivery_zone,
             'delivery_status': self.delivery_status,
-            'delivery_balance': str(self.delivery_balance)
+            'delivery_balance': str(self.delivery_balance),
         }
 
 
@@ -794,8 +813,6 @@ class BookToOrder(db.Model):
     book_id = db.Column(UUID(as_uuid=True), db.ForeignKey('books.id'))
     order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
     quantity = db.Column(db.Integer)
-
-    order = db.relationship("Order", back_populates="books")
 
 
 TICKET_FULL = 'Full'
@@ -834,9 +851,24 @@ class Ticket(db.Model):
     ticket_type = db.Column(db.String, db.ForeignKey('ticket_types._type'))
     eventdate_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_dates.id'))
     name = db.Column(db.String)
-    price = db.Column(db.Numeric(precision=2))
+    price = db.Column(db.Numeric(scale=2))
     last_updated = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     status = db.Column(db.String, db.ForeignKey('ticket_statuses.status'), default=TICKET_STATUS_UNUSED)
     ticket_number = db.Column(db.Integer)
     event = db.relationship("Event", backref=db.backref("tickets", uselist=False))
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'event_id': str(self.event_id),
+            'old_id': self.old_id,
+            'ticket_type': self.ticket_type,
+            'eventdate_id': str(self.eventdate_id),
+            'name': self.name,
+            'price': self.price,
+            'last_updated': self.last_updated.strftime('%Y-%m-%d %H:%M'),
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
+            'status': self.status,
+            'ticket_number': self.ticket_number
+        }
