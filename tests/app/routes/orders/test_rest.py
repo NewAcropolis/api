@@ -1,12 +1,14 @@
 from flask import current_app, url_for
 from freezegun import freeze_time
+import json
 import pytest
 import requests_mock
 from mock import call
 
 from app.dao.orders_dao import dao_get_orders
 from app.dao.tickets_dao import dao_get_tickets_for_order
-from app.models import Order, Ticket, TICKET_STATUS_USED, TICKET_STATUS_UNUSED
+from app.models import Order, OrderError, Ticket, TICKET_STATUS_USED, TICKET_STATUS_UNUSED
+from na_common.delivery import statuses as delivery_statuses
 from tests.conftest import create_authorization_header
 from tests.db import create_ticket, create_order
 
@@ -153,8 +155,6 @@ sample_book_order_multiple_delivery_ipn = (
     "shipping_method=Default&transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
 )
 
-# cmd=_notify-validate&first_name=STEVEN&discount=0.00&mc_shipping=0.00&mc_currency=GBP&payer_status=verified&shipping_discount=0.00&payment_fee=&payment_gross=&txn_type=cart&num_cart_items=4&verify_sign=A.j0przmGUhLU.WrJOOyX23mThJZA-e2fmPYj7nqrmrUJLyi-cWnDRer&payer_id=Q85R78BM9S2ZG&option_selection2_1=-&option_selection2_2=2&option_selection2_3=-&charset=windows-1252&option_selection2_4=-&receiver_id=9RA4ER42RSDJE&mc_handling1=0.00&mc_handling2=0.00&mc_handling3=0.00&mc_handling4=0.00&btn_id1=163099148&item_name1=What+is+Karma%3F&btn_id2=163099510&item_name2=Mind%3A+Best+Friend+or+Worst+Enemy%3F&btn_id3=163099573&item_name3=The+Spirit+of+Rome+and+its+Sacred+Foundations&btn_id4=163099638&item_name4=Celebrating+the+Centenary+of+the+End+of+WWI&payment_type=instant&mc_shipping1=0.00&mc_shipping2=0.00&mc_shipping3=0.00&txn_id=0LH003251F4173055&mc_shipping4=0.00&mc_gross_1=5.00&quantity1=1&mc_gross_2=15.00&quantity2=1&item_number1=289&protection_eligibility=Ineligible&mc_gross_3=5.00&quantity3=1&item_number2=291&mc_gross_4=8.00&quantity4=1&item_number3=292&custom=&item_number4=293&option_selection1_1=Full&option_selection1_2=Full&business=accounts%40newacropolisuk.org&option_selection1_3=Full&option_selection1_4=Full&residence_country=GB&last_name=BONALLACK&payer_email=stevebonallack%40btinternet.com&option_name2_1=Course+Member+name&option_name2_2=Date&option_name2_3=Course+Member+name&option_name2_4=Course+Member+name&payment_status=Completed&payment_date=03%3A50%3A52+Sep+13%2C+2018+PDT&transaction_subject=&receiver_email=accounts%40newacropolisuk.org&mc_fee=1.32&notify_version=3.9&shipping_method=Default&mc_gross=33.00&insurance_amount=0.00&option_name1_1=Type&option_name1_2=Type&option_name1_3=Type&option_name1_4=Type&ipn_track_id=fed1c7524e99b
-
 sample_mixed_order_ipn = (
     "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
     "item_number1={book_id}&item_number2={delivery_id}&item_number3={event_id}"
@@ -194,6 +194,23 @@ sample_book_order_without_address_ipn = (
     "&receiver_email=receiver%40example.com&item_name2={delivery_zone}&payment_fee=&shipping_discount=0.00&quantity1=1&"
     "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=5.00&mc_currency=GBP"
     "&mc_gross_2=5.00&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&"
+    "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
+)
+
+sample_complete_order_ipn = (
+    "_notify-validate&mc_gross={linked_payment}&protection_eligibility=Eligible&address_status=confirmed&"
+    "item_number1={delivery_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
+    "payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&charset=windows-1252&"
+    "payment_status=Completed&address_zip=n1+1aa&mc_shipping=0.00&first_name=TestName&last_name=User&mc_fee=0.54&"
+    "address_country_code={country_code}&address_name=Test+Name"
+    "&notify_version=3.9&custom={linked_txn_id}&payer_status=unverified&business=test%40test.com&"
+    "address_country=United+Kingdom&address_city=London&verify_sign=AXl-"
+    "x13NMy7f84hsUb1AfdPySBVSAn5cuQjLRnnBnlH2cpx64XuK5l34&payer_email={payer_email}"
+    "&txn_id=2233445566&payment_type=instant&"
+    "item_name1=UK"
+    "&receiver_email=receiver%40example.com&payment_fee=&shipping_discount=0.00&quantity1=1&"
+    "insurance_amount=0.00&receiver_id=11223344&txn_type=web_accept&discount=0.00&mc_gross_1=5.00&mc_currency=GBP"
+    "0&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&"
     "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
 )
 
@@ -275,7 +292,7 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
-            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5.0</td></tr></table>"
+            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5</td></tr></table>"
             "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
@@ -308,7 +325,7 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
-            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5.0</td></tr></table>"
+            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5</td></tr></table>"
             "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
@@ -345,6 +362,9 @@ class WhenHandlingPaypalIPN:
             "<p>Errors in order: <div>Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c</div></p>"
         )
 
+        assert len(orders[0].errors) == 1
+        assert orders[0].errors[0].error == 'Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c'
+
     def it_creates_a_mixed_order(
         self, mocker, app, client, db_session, sample_book, sample_event_with_dates
     ):
@@ -377,7 +397,7 @@ class WhenHandlingPaypalIPN:
             f"<p>Thank you for your order ({orders[0].id})</p>"
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[0].id}">'
             '</span><span>test_title on 1 Jan at 7PM</span></div>'
-            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5.0</td></tr></table>"
+            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5</td></tr></table>"
             "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
@@ -411,12 +431,12 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
-            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5.0</td></tr></table>"
+            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5</td></tr></table>"
             "<p>No address supplied. Please "
-            "<a href='http://frontend-test/order/missing_address/1122334455/0.0'>complete</a>your order.</p>"
+            "<a href='http://frontend-test/order/missing_address/1122334455'>complete</a>your order.</p>"
         )
 
-    def it_sends_an_email_if_wrong_delivery_id_for_country(self, mocker, app, client, db_session, sample_book):
+    def it_sends_an_email_if_wrong_delivery_zone_for_country(self, mocker, app, client, db_session, sample_book):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
         mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
@@ -440,14 +460,52 @@ class WhenHandlingPaypalIPN:
 
         orders = dao_get_orders()
         assert len(orders) == 1
-        assert orders[0].delivery_status == 'postage_uk_row'
+        assert orders[0].delivery_status == 'extra'
 
         assert mock_send_email.call_args == call(
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td>1</td>"
-            "<td>5.0</td></tr></table><p>Incorrect postage costs. Please <a href='http://frontend-test/order/"
-            f"postage_uk_row/{orders[0].txn_id}/0.0'>complete</a>your order.</p>")
+            "<td>5</td></tr></table><p>Not enough delivery paid, &pound;1.50 due. Please <a href='"
+            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/1.50'>complete</a>your order.</p>")
+
+    def it_sends_an_email_if_delivery_zone_not_recognized(
+        self, mocker, app, client, db_session, sample_book, sample_admin_user
+    ):
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_smtp_email = mocker.patch('app.routes.orders.rest.send_smtp_email')
+
+        _sample_ipn = sample_book_order_ipn.format(
+            book_id=f'book-{sample_book.id}',
+            delivery_id=app.config['DELIVERY_ID'],
+            payer_email="payer@example.com",
+            delivery_zone='Unknown',
+            country_code='US'
+        )
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert orders[0].delivery_status == 'extra'
+
+        assert mock_send_email.call_args == call(
+            'payer@example.com',
+            'New Acropolis Order',
+            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td>1</td>"
+            "<td>5</td></tr></table><p>No delivery fee paid, &pound;6 due. Please <a href='"
+            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/6'>complete</a>your order.</p>"
+            f"<p>Errors in order: <div>Delivery zone: Unknown not found</div></p>")
+        assert mock_send_smtp_email.called
 
     def it_sends_an_email_if_no_delivery_id_for_country(self, mocker, app, client, db_session, sample_book):
         mocker.patch('app.routes.orders.rest.Storage')
@@ -471,12 +529,12 @@ class WhenHandlingPaypalIPN:
 
         orders = dao_get_orders()
         assert len(orders) == 1
-        assert orders[0].delivery_status == 'no_delivery_fee'
+        assert orders[0].delivery_status == 'extra'
         assert mock_send_email.call_args == call(
             'payer@example.com', 'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td>"
-            "<td>1</td><td>5.0</td></tr></table><p>No delivery fee paid. "
-            f"Please <a href='http://frontend-test/order/no_delivery_fee/{orders[0].txn_id}/0.0'>complete</a>"
+            "<td>1</td><td>5</td></tr></table><p>No delivery fee paid, &pound;6 due. "
+            f"Please <a href='http://frontend-test/order/extra/{orders[0].txn_id}/RoW/6'>complete</a>"
             "your order.</p>"
         )
 
@@ -512,15 +570,15 @@ class WhenHandlingPaypalIPN:
         assert mock_send_smtp_email.call_args_list[0] == call(
             'admin@example.com', 'New Acropolis refund',
             f"Transaction ID: {orders[0].txn_id}<br>Order ID: {orders[0].id}<br>"
-            "Refund of &pound;3.0 due as wrong delivery fee paid.<p>Order delivery zones: <table>"
-            "<tr><td>Europe</td><td>4.5</td></tr><tr><td>Europe</td><td>4.5</td></tr></table>Total: &pound;9.0</p>"
-            "<p>Expected delivery zone: RoW - &pound;6.0</p>"
+            "Refund of &pound;3 due as wrong delivery fee paid.<p>Order delivery zones: <table>"
+            "<tr><td>Europe</td><td>4.50</td></tr><tr><td>Europe</td><td>4.50</td></tr></table>Total: &pound;9</p>"
+            "<p>Expected delivery zone: RoW - &pound;6</p>"
         )
         assert len(mock_send_email.call_args_list) == 1
         assert mock_send_email.call_args_list[0] == call(
             'payer@example.com', 'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td>1</td>"
-            f"<td>5.0</td></tr></table><p>Refund of &pound;3.0 due as wrong delivery fee paid"
+            f"<td>5</td></tr></table><p>Refund of &pound;3 due as wrong delivery fee paid"
             f", please send a message to website admin if there is no refund within 5 working days.</p>"
         )
 
@@ -553,32 +611,144 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args == call(
             'payer@example.com', 'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td>1</td>"
-            "<td>5.0</td></tr></table><p>Not enough delivery paid, &pound;0.50 due. Please "
-            f"<a href='http://frontend-test/order/extra/{orders[0].txn_id}/0.5'>complete</a>your order.</p>")
+            "<td>5</td></tr></table><p>Not enough delivery paid, &pound;0.50 due. Please "
+            f"<a href='http://frontend-test/order/extra/{orders[0].txn_id}/Europe/0.50'>complete</a>your order.</p>")
+
+    def it_sends_an_email_if_more_than_1_delivery_not_recognised(
+        self, mocker, app, client, db_session, sample_book, sample_admin_user
+    ):
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_smtp_email = mocker.patch('app.routes.orders.rest.send_smtp_email')
+
+        _sample_ipn = sample_book_order_multiple_delivery_ipn.format(
+            book_id=f'book-{sample_book.id}',
+            delivery_id=app.config['DELIVERY_ID'],
+            payer_email="payer@example.com",
+            delivery_zone='Unknown',
+            country_code='FR'
+        )
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert orders[0].delivery_status == 'extra'
+
+        assert mock_send_email.call_args == call(
+            'payer@example.com', 'New Acropolis Order',
+            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td>1</td>"
+            "<td>5</td></tr></table><p>No delivery fee paid, &pound;4.50 due. Please <a href='"
+            f"http://frontend-test/order/extra/{orders[0].txn_id}/Europe/4.50'>complete</a>your order.</p><p>Errors "
+            "in order: <div>Delivery zone: Unknown not found</div><div>Delivery zone: Unknown not found</div></p>")
+        assert mock_send_smtp_email.called
 
     def it_completes_an_order_that_had_missing_or_incorrect_delivery_fee(
-        self, client, db_session
+        self, mocker, app, client, db_session
     ):
-        order = create_order(delivery_balance=3.0, delivery_status='extra')
-        print(order.serialize())
-        # with requests_mock.mock() as r:
-        #     r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        order = create_order(delivery_balance=3.0, delivery_status='extra', delivery_zone='Europe')
+        _sample_ipn = sample_complete_order_ipn.format(
+            delivery_id=app.config['DELIVERY_ID'],
+            linked_txn_id=order.txn_id,
+            linked_payment='3.00',
+            payer_email="payer@example.com",
+            delivery_zone='Europe',
+            country_code='FR'
+        )
 
-        #     client.get(
-        #         url_for('orders.paypal_ipn'),
-        #         data=_sample_ipn,
-        #         content_type="application/x-www-form-urlencoded"
-        #     )
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
 
-        pass
+            client.get(
+                url_for('orders.paypal_ipn'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
 
-    def it_rejects_an_order_completion_that_doesnt_match_and_sends_email(self):
-        pass
+        completion_order = Order.query.filter(Order.txn_type == 'web_accept').first()
 
-    # also create a celery task to chase up missing payments for completing orders
-    # resend an email to user and an email to admin to notify them, maybe after 7 days
-    # if they do not respond.
-    # also provide option to accept the order even if delivery not paid
+        assert mock_send_email.called
+        assert mock_send_email.call_args == call(
+            'payer@example.com',
+            'New Acropolis Order',
+            f'<p>Thank you for your order ({completion_order.id})</p><div>'
+            f'Outstanding payment for order ({order.txn_id}) of &pound;3 for delivery to Europe has been paid.</div>'
+        )
+
+    def it_sends_more_fee_demands_if_completion_order_not_fulfilled(self, mocker, app, client, db_session):
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        order = create_order(delivery_balance=3.0, delivery_status='extra', delivery_zone='Europe')
+        _sample_ipn = sample_complete_order_ipn.format(
+            delivery_id=app.config['DELIVERY_ID'],
+            linked_txn_id=order.txn_id,
+            linked_payment='2.00',
+            payer_email="payer@example.com",
+            delivery_zone='Europe',
+            country_code='FR'
+        )
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.get(
+                url_for('orders.paypal_ipn'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+
+        completion_order = Order.query.filter(Order.txn_type == 'web_accept').first()
+
+        assert mock_send_email.called
+        assert mock_send_email.call_args == call(
+            'payer@example.com',
+            'New Acropolis Order',
+            f'<p>Thank you for your order ({completion_order.id})</p><div>'
+            f'Outstanding payment for order ({order.txn_id}) of &pound;2 for delivery to Europe has been partially '
+            'paid.</div><div>Not enough delivery paid, &pound;1 due.</div><p>Please '
+            f"<a href='http://frontend-test/order/extra/{completion_order.txn_id}/Europe/1'>"
+            "complete</a>your order.</p>"
+        )
+
+    def it_sends_more_refund_if_completion_order_overpaid(self, mocker, app, client, db_session):
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        order = create_order(delivery_balance=3.0, delivery_status='extra', delivery_zone='Europe')
+        _sample_ipn = sample_complete_order_ipn.format(
+            delivery_id=app.config['DELIVERY_ID'],
+            linked_txn_id=order.txn_id,
+            linked_payment='5.00',
+            payer_email="payer@example.com",
+            delivery_zone='Europe',
+            country_code='FR'
+        )
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.get(
+                url_for('orders.paypal_ipn'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+
+        completion_order = Order.query.filter(Order.txn_type == 'web_accept').first()
+
+        assert mock_send_email.called
+        assert mock_send_email.call_args == call(
+            'payer@example.com',
+            'New Acropolis Order',
+            f'<p>Thank you for your order ({completion_order.id})</p>'
+            f'<p>You have overpaid for delivery on order ({order.txn_id}) by &pound;2, please send a message to '
+            'website admin if there is no refund within 5 working days.</p>'
+        )
 
     def it_does_not_create_an_order_if_payment_not_complete(self, mocker, client, db_session):
         with requests_mock.mock() as r:
@@ -624,7 +794,6 @@ class WhenHandlingPaypalIPN:
         assert mock_logger.call_args == call('Paypal receiver not valid: %s for %s', u'another@example.com', u'112233')
 
     def it_creates_an_order_if_no_event_matched_with_errors(self, mocker, client, db_session, sample_uuid):
-        # mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')
         mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
         sample_ipn = sample_ipns[0].format(
             id=sample_uuid, txn_id='112233', txn_type='Cart')
@@ -761,12 +930,46 @@ class WhenProcessingTicket:
 
 
 class WhenGettingOrders:
-    def it_will_return_latest_orders(self, client):
+    def it_will_return_latest_orders(self, client, db_session, sample_order):
         response = client.get(
             url_for('orders.get_orders')
         )
 
-        print(response.json)
+        assert len(response.json) == 1
+        assert len(response.json[0]['books']) == 1
+        assert response.json[0]['books'][0]['id'] == str(sample_order.books[0].id)
+        assert len(response.json[0]['tickets']) == 1
+        assert response.json[0]['tickets'][0]['id'] == str(sample_order.tickets[0].id)
+        assert response.json[0]['txn_id'] == sample_order.txn_id
+        assert response.json[0]['address_street'] == sample_order.address_street
 
-        # assert False
-        pass
+
+class WhenUpdatingAnOrder:
+    def it_will_update_an_order_address(self, client, sample_order, db_session):
+        data = {
+            'address_country_code': 'FR',
+            'address_street': '1 Grand Rue',
+            'address_city': 'Paris',
+            'address_postal_code': 'N1',
+            'address_country': 'France'
+        }
+        Order.query.filter_by(id=sample_order.id).update(
+            {
+                'address_country_code': None,
+                'address_street': None,
+                'address_city': None,
+                'address_postal_code': None,
+                'address_country': None
+            }
+        )
+        assert not sample_order.address_country_code
+        response = client.post(
+            url_for('orders.update_order_address', txn_id=sample_order.txn_id),
+            data=json.dumps(data),
+            headers=[create_authorization_header()]
+        )
+
+        order_db = Order.query.filter_by(id=sample_order.id).one()
+
+        assert order_db.address_country_code == data['address_country_code']
+        assert response.json['address_country_code'] == data['address_country_code']
