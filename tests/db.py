@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 from app import db
 
-from app.dao import dao_create_record
+from app.dao import dao_create_record, dao_update_record
 from app.dao.articles_dao import dao_create_article
 from app.dao.books_dao import dao_create_book
 from app.dao.blacklist_dao import store_token
@@ -19,8 +19,8 @@ from app.dao.speakers_dao import dao_create_speaker
 from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
 from app.models import (
-    Article, Book, Email, EmailToMember, EmailProvider, Event, EventDate, EventType, Fee, Magazine, Marketing,
-    Member, Order, RejectReason, Speaker, Ticket, User, Venue,
+    Article, Book, BookToOrder, Email, EmailToMember, EmailProvider, Event, EventDate, EventType, Fee,
+    Magazine, Marketing, Member, Order, RejectReason, Speaker, Ticket, User, Venue,
     EVENT, TICKET_STATUS_UNUSED, DRAFT
 )
 
@@ -469,7 +469,6 @@ def create_order(
         'errors': errors
     }
     order = Order(**data)
-
     dao_create_record(order)
 
     return order
