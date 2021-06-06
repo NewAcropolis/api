@@ -13,7 +13,7 @@ import sqlalchemy
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from app import create_app, db as _db, get_env
-from app.models import APPROVED, EVENT, MAGAZINE
+from app.models import APPROVED, EVENT, MAGAZINE, TICKET_STATUS_UNUSED
 from tests.db import (
     create_article,
     create_book,
@@ -26,8 +26,10 @@ from tests.db import (
     create_magazine,
     create_marketing,
     create_member,
+    create_order,
     create_reject_reason,
     create_speaker,
+    create_ticket,
     create_user,
     create_venue
 )
@@ -241,6 +243,18 @@ def sample_user(db):
 @pytest.fixture(scope='function')
 def sample_admin_user(db):
     return create_user(email=TEST_ADMIN_USER, name='Admin User', access_area='admin')
+
+
+@pytest.fixture(scope='function')
+def sample_order(db, sample_book, sample_event_with_dates):
+    event_dates = sample_event_with_dates.get_sorted_event_dates()
+    ticket = create_ticket(
+        status=TICKET_STATUS_UNUSED,
+        event_id=sample_event_with_dates.id,
+        eventdate_id=event_dates[0]['id']
+    )
+
+    return create_order(books=[sample_book], tickets=[ticket])
 
 
 @pytest.fixture(scope='function')
