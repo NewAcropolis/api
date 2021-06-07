@@ -776,6 +776,8 @@ class Order(db.Model):
             tickets=get_serialized_list(self.tickets, delete_created_at=False),
             errors=get_serialized_list(self.errors, delete_created_at=False)
         )
+        if self.linked_txn_id:
+            _json.update(linked_txn_id=self.linked_txn_id)
         return _json
 
     def short_serialize(self):
