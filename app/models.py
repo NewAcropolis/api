@@ -785,6 +785,7 @@ class Order(db.Model):
             'id': str(self.id),
             'txn_id': self.txn_id,
             'txn_type': self.txn_type,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
             'buyer_name': self.buyer_name,
             'payment_status': self.payment_status,
             'payment_total': str(self.payment_total),  # not possible to json serialize a decimal
