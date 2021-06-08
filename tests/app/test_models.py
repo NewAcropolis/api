@@ -193,6 +193,7 @@ class WhenUsingEmailModel:
 
 
 class WhenUsingOrderModel:
+    @freeze_time("2021-06-07T23:00:00")
     def it_shows_order_serialized(self, db_session, sample_book, sample_event_with_dates):
         book = create_book(
             old_id=None,
@@ -218,6 +219,7 @@ class WhenUsingOrderModel:
             'txn_id': order.txn_id,
             'txn_type': order.txn_type,
             'buyer_name': order.buyer_name,
+            'created_at': order.created_at.strftime('%Y-%m-%d %H:%M'),
             'payment_status': order.payment_status,
             'payment_total': str(order.payment_total),
             'address_country_code': order.address_country_code,
