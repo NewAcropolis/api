@@ -40,8 +40,8 @@ else
   echo ${DATABASE_URL##*/} 'created'
 fi
 
-if [ -z "$TRAVIS_COMMIT" ]; then
-  export TRAVIS_COMMIT=$(git rev-parse HEAD)
+if [ -z "$GITHUB_SHA" ]; then
+  export GITHUB_SHA=$(git rev-parse HEAD)
 fi
 
 python app_start.py db upgrade

@@ -61,7 +61,7 @@ class Config(object):
     STANDARD_MAXSIZE = 1500, 800
     FRONTEND_URL = os.environ.get('FRONTEND_URL')
     GOOGLE_APPLICATION_CREDENTIALS = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
-    TRAVIS_COMMIT = os.environ.get('TRAVIS_COMMIT')
+    GITHUB_SHA = os.environ.get('GITHUB_SHA')
 
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
     CELERY_TIMEZONE = 'Europe/London'

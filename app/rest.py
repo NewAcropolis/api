@@ -39,7 +39,7 @@ def get_info():
     resp = {
         'environment': current_app.config['ENVIRONMENT'],
         'info': full_name,
-        'commit': current_app.config['TRAVIS_COMMIT'],
+        'commit': current_app.config['GITHUB_SHA'],
         'workers': 'Running' if workers_running else 'Not running'
     }
 
@@ -54,7 +54,7 @@ def get_info_without_db():
 
     resp = {
         'environment': current_app.config['ENVIRONMENT'],
-        'commit': current_app.config['TRAVIS_COMMIT'],
+        'commit': current_app.config['GITHUB_SHA'],
     }
 
     if current_app.config.get('EMAIL_RESTRICT'):  # pragma: no cover
