@@ -2,6 +2,7 @@ on: [push, pull_request]
 
 jobs:
   test:
+    if: github.ref == 'refs/heads/test-deploy'
     runs-on: ubuntu-18.04
     services:
       postgres:
@@ -28,13 +29,14 @@ jobs:
           sudo mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.off
 
           ./scripts/bootstrap.sh
-      #     pip install coveralls
+          pip install coveralls
       # - name: Run tests
       #   run: ./scripts/run_tests.sh
       # - name: Coveralls
-      #   uses: coverallsapp/github-action@master
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     coveralls
   deploy_to_test:
     if: github.ref == 'refs/heads/test-deploy'
     environment: test
@@ -46,7 +48,6 @@ jobs:
         with:
           python-version: '3.8'
       - name: Deploy to test
-        # if: github.ref == 'refs/heads/test-deploy'
         env:
           deploy_host_development: ${{ secrets.DEPLOY_HOST }}
           user_development: ${{ secrets.USER }}
@@ -85,5 +86,37 @@ jobs:
         run: |
           pip install celery==4.3.0
           ./scripts/deploy.sh development
-
-
+  test_1:
+    if: github.ref == 'refs/heads/add-github-actions'
+    environment: test
+    # needs: test
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Test 2
+        env:
+          user: ${{ secrets.ENVVAR }}
+          
+        run: |
+          if [[ $user == 'Test' ]]; then echo true; fi
+          if [[ $user != 'Test' ]]; then echo false; fi
+  test_2:
+    if: github.ref == 'refs/heads/add-github-actions'
+    environment: test2
+    # needs: test
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Test 2
+        env:
+          user: ${{ secrets.ENVVAR }}
+          
+        run: |
+          if [[ $user == 'Test2' ]]; then echo true; fi
+          if [[ $user != 'Test2' ]]; then echo false; fi
