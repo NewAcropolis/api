@@ -1,7 +1,7 @@
 on: [push, pull_request]
 
 jobs:
-  build_test_deploy:
+  test:
     runs-on: ubuntu-18.04
     services:
       postgres:
@@ -35,48 +35,10 @@ jobs:
       #   uses: coverallsapp/github-action@master
       #   with:
       #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Deploy to test
-        if: github.ref == 'refs/heads/test-deploy'
-        env: # Or as an environment variable
-          deploy_host_development: ${{ secrets.DEPLOY_HOST_DEVELOPMENT }}
-          user_development: ${{ secrets.USER_DEVELOPMENT }}
-          DEPLOY_KEY_development: ${{ secrets.DEPLOY_KEY_DEVELOPMENT }}
-          ADMIN_CLIENT_ID_development: ${{ secrets.ADMIN_CLIENT_ID_DEVELOPMENT }}
-          ADMIN_CLIENT_SECRET_development: ${{ secrets.ADMIN_CLIENT_SECRET_DEVELOPMENT }}
-          ADMIN_USERS_development: ${{ secrets.ADMIN_USERS_DEVELOPMENT }}
-          DATABASE_URL_development: ${{ secrets.DATABASE_URL_DEVELOPMENT }}
-          PAYPAL_URL_development: ${{ secrets.PAYPAL_URL_DEVELOPMENT }}
-          PAYPAL_USER_development: ${{ secrets.PAYPAL_USER_DEVELOPMENT }}
-          PAYPAL_PASSWORD_development: ${{ secrets.PAYPAL_PASSWORD_DEVELOPMENT }}
-          PAYPAL_SIG_development: ${{ secrets.PAYPAL_SIG_DEVELOPMENT }}
-          PAYPAL_RECEIVER_development: ${{ secrets.PAYPAL_RECEIVER_DEVELOPMENT }}
-          PAYPAL_VERIFY_URL_development: ${{ secrets.PAYPAL_VERIFY_URL_DEVELOPMENT }}
-          EMAIL_TOKENS: ${{ secrets.EMAIL_TOKENS }}
-          EMAIL_ANYTIME: 1
-          EMAIL_SALT_development: ${{ secrets.EMAIL_SALT_DEVELOPMENT }}
-          EMAIL_UNSUB_SALT_development: ${{ secrets.EMAIL_UNSUB_SALT_DEVELOPMENT }}
-          TEST_EMAIL_development: ${{ secrets.TEST_EMAIL_DEVELOPMENT }}
-          EMAIL_RESTRICT_development: 1
-          FRONTEND_ADMIN_URL_development: ${{ secrets.FRONTEND_ADMIN_URL_DEVELOPMENT }}
-          API_BASE_URL_development: ${{ secrets.API_BASE_URL_DEVELOPMENT }}
-          FRONTEND_URL_development: ${{ secrets.FRONTEND_URL_DEVELOPMENT }}
-          IMAGES_URL_development: ${{ secrets.IMAGES_URL_DEVELOPMENT }}
-          CELERY_BROKER_URL_development: ${{ secrets.CELERY_BROKER_URL_DEVELOPMENT }}
-          PROJECT_development: ${{ secrets.PROJECT_DEVELOPMENT }}
-          JWT_SECRET_development: ${{ secrets.JWT_SECRET_DEVELOPMENT }}
-          # GA_ID_development: ${{ secrets.GA_ID_DEVELOPMENT }}
-          # INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
-          # RESTART_CELERY: ${{ secrets.RESTART_CELERY_DEVELOPMENT }}
-          GOOGLE_APPLICATION_CREDENTIALS_development: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DEVELOPMENT }}
-          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
-          SMTP_USER_development: ${{ secrets.SMTP_USER_DEVELOPMENT }}
-          SMTP_PASS_development: ${{ secrets.SMTP_PASS_DEVELOPMENT }}
-          
-        run: |
-          ./scripts/deploy.sh development
   deploy_to_test:
+    if: github.ref == 'refs/heads/test-deploy'
     environment: test
-    needs: build_test_deploy
+    needs: test
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
