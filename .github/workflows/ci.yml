@@ -28,7 +28,7 @@ jobs:
           sudo mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.off
 
           ./scripts/bootstrap.sh
-      #     # pip install coveralls
+      #     pip install coveralls
       # - name: Run tests
       #   run: ./scripts/run_tests.sh
       # - name: Coveralls
@@ -36,7 +36,7 @@ jobs:
       #   with:
       #     github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy to test
-        # if: github.ref == 'refs/heads/test-deploy'
+        if: github.ref == 'refs/heads/test-deploy'
         env: # Or as an environment variable
           deploy_host_development: ${{ secrets.DEPLOY_HOST_DEVELOPMENT }}
           user_development: ${{ secrets.USER_DEVELOPMENT }}
@@ -74,4 +74,54 @@ jobs:
           
         run: |
           ./scripts/deploy.sh development
+  deploy_to_test:
+    environment: test
+    needs: build_test_deploy
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Deploy to test
+        # if: github.ref == 'refs/heads/test-deploy'
+        env:
+          deploy_host_development: ${{ secrets.DEPLOY_HOST }}
+          user_development: ${{ secrets.USER }}
+          DEPLOY_KEY_development: ${{ secrets.DEPLOY_KEY }}
+          ADMIN_CLIENT_ID_development: ${{ secrets.ADMIN_CLIENT_ID }}
+          ADMIN_CLIENT_SECRET_development: ${{ secrets.ADMIN_CLIENT_SECRET }}
+          ADMIN_USERS_development: ${{ secrets.ADMIN_USERS }}
+          DATABASE_URL_development: ${{ secrets.DATABASE_URL }}
+          PAYPAL_URL_development: ${{ secrets.PAYPAL_URL }}
+          PAYPAL_USER_development: ${{ secrets.PAYPAL_USER }}
+          PAYPAL_PASSWORD_development: ${{ secrets.PAYPAL_PASSWORD }}
+          PAYPAL_SIG_development: ${{ secrets.PAYPAL_SIG }}
+          PAYPAL_RECEIVER_development: ${{ secrets.PAYPAL_RECEIVER }}
+          PAYPAL_VERIFY_URL_development: ${{ secrets.PAYPAL_VERIFY_URL }}
+          EMAIL_TOKENS: ${{ secrets.EMAIL_TOKENS }}
+          EMAIL_ANYTIME: 1
+          EMAIL_SALT_development: ${{ secrets.EMAIL_SALT }}
+          EMAIL_UNSUB_SALT_development: ${{ secrets.EMAIL_UNSUB_SALT }}
+          TEST_EMAIL_development: ${{ secrets.TEST_EMAIL }}
+          EMAIL_RESTRICT_development: 1
+          FRONTEND_ADMIN_URL_development: ${{ secrets.FRONTEND_ADMIN_URL }}
+          API_BASE_URL_development: ${{ secrets.API_BASE_URL }}
+          FRONTEND_URL_development: ${{ secrets.FRONTEND_URL }}
+          IMAGES_URL_development: ${{ secrets.IMAGES_URL }}
+          CELERY_BROKER_URL_development: ${{ secrets.CELERY_BROKER_URL }}
+          PROJECT_development: ${{ secrets.PROJECT }}
+          JWT_SECRET_development: ${{ secrets.JWT_SECRET }}
+          # GA_ID_development: ${{ secrets.GA_ID_DEVELOPMENT }}
+          # INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
+          # RESTART_CELERY: ${{ secrets.RESTART_CELERY_DEVELOPMENT }}
+          GOOGLE_APPLICATION_CREDENTIALS_development: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_USER_development: ${{ secrets.SMTP_USER }}
+          SMTP_PASS_development: ${{ secrets.SMTP_PASS }}
+          
+        run: |
+          pip install celery==4.3.0
+          ./scripts/deploy.sh development
+
 
