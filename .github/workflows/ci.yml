@@ -29,6 +29,7 @@ jobs:
 
           ./scripts/bootstrap.sh
           pip install coveralls==2.2.0
+          pip install pycodestyle==2.4.0
       - name: Run tests
         run: ./scripts/run_tests.sh
       - name: Coveralls
