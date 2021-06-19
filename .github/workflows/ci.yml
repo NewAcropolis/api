@@ -2,7 +2,6 @@ on: [push, pull_request]
 
 jobs:
   test:
-    if: github.ref == 'refs/heads/test-deploy'
     runs-on: ubuntu-18.04
     services:
       postgres:
@@ -29,14 +28,13 @@ jobs:
           sudo mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.off
 
           ./scripts/bootstrap.sh
-          pip install coveralls
-      # - name: Run tests
-      #   run: ./scripts/run_tests.sh
-      # - name: Coveralls
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     coveralls
+          pip install coveralls==2.2.0
+      - name: Run tests
+        run: ./scripts/run_tests.sh
+      - name: Coveralls
+        run: coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   deploy_to_test:
     if: github.ref == 'refs/heads/test-deploy'
     environment: test
@@ -82,41 +80,54 @@ jobs:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_USER_development: ${{ secrets.SMTP_USER }}
           SMTP_PASS_development: ${{ secrets.SMTP_PASS }}
-          
         run: |
           pip install celery==4.3.0
           ./scripts/deploy.sh development
-  test_1:
-    if: github.ref == 'refs/heads/add-github-actions'
-    environment: test
-    # needs: test
+  deploy_to_preview:
+    if: github.ref == 'refs/heads/master'
+    environment: preview
+    needs: test
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
           python-version: '3.8'
-      - name: Test 2
+      - name: Deploy to preview
         env:
-          user: ${{ secrets.ENVVAR }}
-          
+          deploy_host_preview: ${{ secrets.DEPLOY_HOST }}
+          user_preview: ${{ secrets.USER }}
+          DEPLOY_KEY_preview: ${{ secrets.DEPLOY_KEY }}
+          ADMIN_CLIENT_ID_preview: ${{ secrets.ADMIN_CLIENT_ID }}
+          ADMIN_CLIENT_SECRET_preview: ${{ secrets.ADMIN_CLIENT_SECRET }}
+          ADMIN_USERS_preview: ${{ secrets.ADMIN_USERS }}
+          DATABASE_URL_preview: ${{ secrets.DATABASE_URL }}
+          PAYPAL_URL_preview: ${{ secrets.PAYPAL_URL }}
+          PAYPAL_USER_preview: ${{ secrets.PAYPAL_USER }}
+          PAYPAL_PASSWORD_preview: ${{ secrets.PAYPAL_PASSWORD }}
+          PAYPAL_SIG_preview: ${{ secrets.PAYPAL_SIG }}
+          PAYPAL_RECEIVER_preview: ${{ secrets.PAYPAL_RECEIVER }}
+          PAYPAL_VERIFY_URL_preview: ${{ secrets.PAYPAL_VERIFY_URL }}
+          EMAIL_TOKENS: ${{ secrets.EMAIL_TOKENS }}
+          EMAIL_ANYTIME: 1
+          EMAIL_SALT_preview: ${{ secrets.EMAIL_SALT }}
+          EMAIL_UNSUB_SALT_preview: ${{ secrets.EMAIL_UNSUB_SALT }}
+          TEST_EMAIL_preview: ${{ secrets.TEST_EMAIL }}
+          EMAIL_RESTRICT_preview: 1
+          FRONTEND_ADMIN_URL_preview: ${{ secrets.FRONTEND_ADMIN_URL }}
+          API_BASE_URL_preview: ${{ secrets.API_BASE_URL }}
+          FRONTEND_URL_preview: ${{ secrets.FRONTEND_URL }}
+          IMAGES_URL_preview: ${{ secrets.IMAGES_URL }}
+          CELERY_BROKER_URL_preview: ${{ secrets.CELERY_BROKER_URL }}
+          PROJECT_preview: ${{ secrets.PROJECT }}
+          JWT_SECRET_preview: ${{ secrets.JWT_SECRET }}
+          # GA_ID_preview: ${{ secrets.GA_ID_preview }}
+          # INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
+          # RESTART_CELERY: ${{ secrets.RESTART_CELERY_preview }}
+          GOOGLE_APPLICATION_CREDENTIALS_preview: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_USER_preview: ${{ secrets.SMTP_USER }}
+          SMTP_PASS_preview: ${{ secrets.SMTP_PASS }}          
         run: |
-          if [[ $user == 'Test' ]]; then echo true; fi
-          if [[ $user != 'Test' ]]; then echo false; fi
-  test_2:
-    if: github.ref == 'refs/heads/add-github-actions'
-    environment: test2
-    # needs: test
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-      - name: Test 2
-        env:
-          user: ${{ secrets.ENVVAR }}
-          
-        run: |
-          if [[ $user == 'Test2' ]]; then echo true; fi
-          if [[ $user != 'Test2' ]]; then echo false; fi
+          pip install celery==4.3.0
+          ./scripts/deploy.sh preview
