@@ -62,6 +62,7 @@ jobs:
           PAYPAL_VERIFY_URL_development: ${{ secrets.PAYPAL_VERIFY_URL }}
           EMAIL_TOKENS: ${{ secrets.EMAIL_TOKENS }}
           EMAIL_ANYTIME: 1
+          EMAIL_DOMAIN: ${{ secrets.EMAIL_DOMAIN }}
           EMAIL_SALT_development: ${{ secrets.EMAIL_SALT }}
           EMAIL_UNSUB_SALT_development: ${{ secrets.EMAIL_UNSUB_SALT }}
           TEST_EMAIL_development: ${{ secrets.TEST_EMAIL }}
@@ -110,6 +111,7 @@ jobs:
           PAYPAL_VERIFY_URL_preview: ${{ secrets.PAYPAL_VERIFY_URL }}
           EMAIL_TOKENS: ${{ secrets.EMAIL_TOKENS }}
           EMAIL_ANYTIME: 1
+          EMAIL_DOMAIN: ${{ secrets.EMAIL_DOMAIN }}
           EMAIL_SALT_preview: ${{ secrets.EMAIL_SALT }}
           EMAIL_UNSUB_SALT_preview: ${{ secrets.EMAIL_UNSUB_SALT }}
           TEST_EMAIL_preview: ${{ secrets.TEST_EMAIL }}
