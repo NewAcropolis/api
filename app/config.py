@@ -5,8 +5,6 @@ import sys
 import argparse
 import os
 
-from celery.schedules import crontab
-
 
 def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
@@ -70,20 +68,23 @@ class Config(object):
     CELERY_TASK_SERIALIZER = 'json'
     CELERY_IMPORTS = ("app.na_celery.event_tasks", "app.na_celery.stats_tasks",)
 
-    CELERYBEAT_SCHEDULE = {
-        'send-event-reminder-email': {
-            'task': 'send_event_email_reminder',
-            'schedule': crontab(minute=0, hour='10') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
-        },
-        'send-periodic-emails': {
-            'task': 'send_periodic_emails',
-            'schedule': crontab(minute=0, hour='*') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
-        },
-        'send-num-subscribers-and-social-stats': {
-            'task': 'send_num_subscribers_and_social_stats',
-            'schedule': crontab(hour=7, day_of_month=1) if ENVIRONMENT != 'development' else crontab(minute='*/10'),
-        },
-    }
+    if not os.environ.get('GITHUB_ACTIONS'):  # pragma: no cover
+        from celery.schedules import crontab
+
+        CELERYBEAT_SCHEDULE = {
+            'send-event-reminder-email': {
+                'task': 'send_event_email_reminder',
+                'schedule': crontab(minute=0, hour='10') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
+            },
+            'send-periodic-emails': {
+                'task': 'send_periodic_emails',
+                'schedule': crontab(minute=0, hour='*') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
+            },
+            'send-num-subscribers-and-social-stats': {
+                'task': 'send_num_subscribers_and_social_stats',
+                'schedule': crontab(hour=7, day_of_month=1) if ENVIRONMENT != 'development' else crontab(minute='*/10'),
+            },
+        }
 
     EMAIL_DELAY = 4 if ENVIRONMENT != 'development' else 0  # hours
     EMAIL_LIMIT = 400

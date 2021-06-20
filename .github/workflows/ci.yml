@@ -29,7 +29,6 @@ jobs:
 
           ./scripts/bootstrap.sh
           pip install coveralls==2.2.0
-          pip install pycodestyle==2.4.0
       - name: Run tests
         run: ./scripts/run_tests.sh
       - name: Coveralls
@@ -83,7 +82,6 @@ jobs:
           SMTP_USER_development: ${{ secrets.SMTP_USER }}
           SMTP_PASS_development: ${{ secrets.SMTP_PASS }}
         run: |
-          pip install celery==4.3.0
           ./scripts/deploy.sh development
   deploy_to_preview:
     if: github.ref == 'refs/heads/master'
@@ -132,5 +130,4 @@ jobs:
           SMTP_USER_preview: ${{ secrets.SMTP_USER }}
           SMTP_PASS_preview: ${{ secrets.SMTP_PASS }}          
         run: |
-          pip install celery==4.3.0
           ./scripts/deploy.sh preview
