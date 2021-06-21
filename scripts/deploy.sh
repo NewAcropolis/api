@@ -10,22 +10,22 @@ if [ -z "$environment" ]; then
     fi
 fi 
 
-if [ -z $TRAVIS_BUILD_DIR ]; then
+if [ -z $GITHUB_ACTIONS ]; then
     source $environment-environment.sh
     src=.
 else 
-    src="$TRAVIS_BUILD_DIR"
+    src="$GITHUB_WORKSPACE"
 
     eval "GOOGLE_APPLICATION_CREDENTIALS=\$GOOGLE_APPLICATION_CREDENTIALS_$environment"
-    eval "TRAVIS_KEY=\${TRAVIS_KEY_$environment}"
+    eval "DEPLOY_KEY=\${DEPLOY_KEY_$environment}"
     eval "deploy_host=\${deploy_host_$environment}"
     eval "user=\${user_$environment}"
 
-    echo $TRAVIS_KEY | base64 --decode > travis_rsa
+    echo $DEPLOY_KEY | base64 --decode > deploy_rsa
 
     eval "$(ssh-agent)"
-    chmod 600 travis_rsa
-    ssh-add travis_rsa
+    chmod 600 deploy_rsa
+    ssh-add deploy_rsa
 fi
 
 if [ -z $debug ]; then
@@ -105,7 +105,7 @@ API_BASE_URL=$API_BASE_URL
 FRONTEND_URL=$FRONTEND_URL
 IMAGES_URL=$IMAGES_URL
 GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
-TRAVIS_COMMIT=$TRAVIS_COMMIT
+GITHUB_SHA=$GITHUB_SHA
 CELERY_BROKER_URL=$CELERY_BROKER_URL
 RESTART_CELERY=$RESTART_CELERY
 GA_ID=$GA_ID
@@ -155,7 +155,7 @@ set +a
         export GA_ID=$GA_ID
         export INSTAGRAM_URL="$INSTAGRAM_URL"
         export IMAGES_URL=$IMAGES_URL
-        export TRAVIS_COMMIT=$TRAVIS_COMMIT
+        export GITHUB_SHA=$GITHUB_SHA
         export CELERY_BROKER_URL=$CELERY_BROKER_URL
         export RESTART_CELERY=$RESTART_CELERY
         export SMTP_SERVER=$SMTP_SERVER

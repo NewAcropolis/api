@@ -36,5 +36,5 @@ class WhenAccessingSiteInfo(object):
         assert response.status_code == 200
         assert response.json == {
             'environment': 'test',
-            'commit': app.config['TRAVIS_COMMIT']
+            'commit': app.config['GITHUB_SHA']
         }

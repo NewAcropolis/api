@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - test-deploy
+    tags:
+      - 'v*'
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-18.04
+    services:
+      postgres:
+        image: postgres:9.5
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: na_api_test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      TEST_DATABASE_URI: postgresql://postgres@localhost/na_api_test
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Setup dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends postgresql-client
+          sudo apt-get install build-essential libpoppler-cpp-dev pkg-config
+          sudo apt-get install ghostscript
+          sudo mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.off
+
+          ./scripts/bootstrap.sh
+          pip install coveralls==2.2.0
+      - name: Run tests
+        run: ./scripts/run_tests.sh
+      - name: Coveralls
+        run: coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  deploy_to_test:
+    if: github.ref == 'refs/heads/test-deploy'
+    environment: test
+    needs: test
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Deploy to test
+        env:
+          deploy_host_development: ${{ secrets.DEPLOY_HOST }}
+          user_development: ${{ secrets.USER }}
+          DEPLOY_KEY_development: ${{ secrets.DEPLOY_KEY }}
+          ADMIN_CLIENT_ID_development: ${{ secrets.ADMIN_CLIENT_ID }}
+          ADMIN_CLIENT_SECRET_development: ${{ secrets.ADMIN_CLIENT_SECRET }}
+          ADMIN_USERS_development: ${{ secrets.ADMIN_USERS }}
+          DATABASE_URL_development: ${{ secrets.DATABASE_URL }}
+          PAYPAL_URL_development: ${{ secrets.PAYPAL_URL }}
+          PAYPAL_USER_development: ${{ secrets.PAYPAL_USER }}
+          PAYPAL_PASSWORD_development: ${{ secrets.PAYPAL_PASSWORD }}
+          PAYPAL_SIG_development: ${{ secrets.PAYPAL_SIG }}
+          PAYPAL_RECEIVER_development: ${{ secrets.PAYPAL_RECEIVER }}
+          PAYPAL_VERIFY_URL_development: ${{ secrets.PAYPAL_VERIFY_URL }}
+          EMAIL_TOKENS: ${{ secrets.EMAIL_TOKENS }}
+          EMAIL_ANYTIME: 1
+          EMAIL_DOMAIN: ${{ secrets.EMAIL_DOMAIN }}
+          EMAIL_SALT_development: ${{ secrets.EMAIL_SALT }}
+          EMAIL_UNSUB_SALT_development: ${{ secrets.EMAIL_UNSUB_SALT }}
+          TEST_EMAIL_development: ${{ secrets.TEST_EMAIL }}
+          EMAIL_RESTRICT_development: 1
+          FRONTEND_ADMIN_URL_development: ${{ secrets.FRONTEND_ADMIN_URL }}
+          API_BASE_URL_development: ${{ secrets.API_BASE_URL }}
+          FRONTEND_URL_development: ${{ secrets.FRONTEND_URL }}
+          IMAGES_URL_development: ${{ secrets.IMAGES_URL }}
+          CELERY_BROKER_URL_development: ${{ secrets.CELERY_BROKER_URL }}
+          PROJECT_development: ${{ secrets.PROJECT }}
+          JWT_SECRET_development: ${{ secrets.JWT_SECRET }}
+          # GA_ID_development: ${{ secrets.GA_ID_DEVELOPMENT }}
+          # INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
+          # RESTART_CELERY: ${{ secrets.RESTART_CELERY_DEVELOPMENT }}
+          GOOGLE_APPLICATION_CREDENTIALS_development: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_USER_development: ${{ secrets.SMTP_USER }}
+          SMTP_PASS_development: ${{ secrets.SMTP_PASS }}
+        run: |
+          ./scripts/deploy.sh development
+  deploy_to_preview:
+    if: github.ref == 'refs/heads/master'
+    environment: preview
+    needs: test
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Deploy to preview
+        env:
+          deploy_host_preview: ${{ secrets.DEPLOY_HOST }}
+          user_preview: ${{ secrets.USER }}
+          DEPLOY_KEY_preview: ${{ secrets.DEPLOY_KEY }}
+          ADMIN_CLIENT_ID_preview: ${{ secrets.ADMIN_CLIENT_ID }}
+          ADMIN_CLIENT_SECRET_preview: ${{ secrets.ADMIN_CLIENT_SECRET }}
+          ADMIN_USERS_preview: ${{ secrets.ADMIN_USERS }}
+          DATABASE_URL_preview: ${{ secrets.DATABASE_URL }}
+          PAYPAL_URL_preview: ${{ secrets.PAYPAL_URL }}
+          PAYPAL_USER_preview: ${{ secrets.PAYPAL_USER }}
+          PAYPAL_PASSWORD_preview: ${{ secrets.PAYPAL_PASSWORD }}
+          PAYPAL_SIG_preview: ${{ secrets.PAYPAL_SIG }}
+          PAYPAL_RECEIVER_preview: ${{ secrets.PAYPAL_RECEIVER }}
+          PAYPAL_VERIFY_URL_preview: ${{ secrets.PAYPAL_VERIFY_URL }}
+          EMAIL_TOKENS: ${{ secrets.EMAIL_TOKENS }}
+          EMAIL_ANYTIME: 1
+          EMAIL_DOMAIN: ${{ secrets.EMAIL_DOMAIN }}
+          EMAIL_SALT_preview: ${{ secrets.EMAIL_SALT }}
+          EMAIL_UNSUB_SALT_preview: ${{ secrets.EMAIL_UNSUB_SALT }}
+          TEST_EMAIL_preview: ${{ secrets.TEST_EMAIL }}
+          EMAIL_RESTRICT_preview: 1
+          FRONTEND_ADMIN_URL_preview: ${{ secrets.FRONTEND_ADMIN_URL }}
+          API_BASE_URL_preview: ${{ secrets.API_BASE_URL }}
+          FRONTEND_URL_preview: ${{ secrets.FRONTEND_URL }}
+          IMAGES_URL_preview: ${{ secrets.IMAGES_URL }}
+          CELERY_BROKER_URL_preview: ${{ secrets.CELERY_BROKER_URL }}
+          PROJECT_preview: ${{ secrets.PROJECT }}
+          JWT_SECRET_preview: ${{ secrets.JWT_SECRET }}
+          # GA_ID_preview: ${{ secrets.GA_ID_preview }}
+          # INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
+          # RESTART_CELERY: ${{ secrets.RESTART_CELERY_preview }}
+          GOOGLE_APPLICATION_CREDENTIALS_preview: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_USER_preview: ${{ secrets.SMTP_USER }}
+          SMTP_PASS_preview: ${{ secrets.SMTP_PASS }}          
+        run: |
+          ./scripts/deploy.sh preview

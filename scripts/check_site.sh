@@ -9,7 +9,7 @@ do
     json=$(curl -s -X GET "$1")
     if [ ! -z "$json" ]; then
         commit=$(echo $json | jq -r '.commit')
-        if [ "$commit" = $TRAVIS_COMMIT ]; then
+        if [ "$commit" = "$GITHUB_SHA" ]; then
             workers=$(echo $json | jq -r '.workers')
             if [ "$workers" = "Running" ]; then
                 break
@@ -23,7 +23,7 @@ do
     sleep 10
 done
 
-if [ -z "$commit" -o "$commit" != $TRAVIS_COMMIT ]; then
+if [ -z "$commit" -o "$commit" != $GITHUB_SHA ]; then
     echo 'failed '$commit
     exit 1
 else
