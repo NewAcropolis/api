@@ -1,4 +1,13 @@
-on: [push, pull_request]
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - test-deploy
+    tags:
+      - 'v*'
+  pull_request:
 
 jobs:
   test:
