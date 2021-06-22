@@ -83,9 +83,9 @@ jobs:
           CELERY_BROKER_URL_development: ${{ secrets.CELERY_BROKER_URL }}
           PROJECT_development: ${{ secrets.PROJECT }}
           JWT_SECRET_development: ${{ secrets.JWT_SECRET }}
-          # GA_ID_development: ${{ secrets.GA_ID_DEVELOPMENT }}
+          # GA_ID_development: ${{ secrets.GA_ID }}
           # INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
-          # RESTART_CELERY: ${{ secrets.RESTART_CELERY_DEVELOPMENT }}
+          # RESTART_CELERY: ${{ secrets.RESTART_CELERY }}
           GOOGLE_APPLICATION_CREDENTIALS_development: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_USER_development: ${{ secrets.SMTP_USER }}
@@ -131,12 +131,60 @@ jobs:
           CELERY_BROKER_URL_preview: ${{ secrets.CELERY_BROKER_URL }}
           PROJECT_preview: ${{ secrets.PROJECT }}
           JWT_SECRET_preview: ${{ secrets.JWT_SECRET }}
-          # GA_ID_preview: ${{ secrets.GA_ID_preview }}
-          # INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
-          # RESTART_CELERY: ${{ secrets.RESTART_CELERY_preview }}
+          GA_ID_preview: ${{ secrets.GA_ID }}
+          INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
+          # RESTART_CELERY: ${{ secrets.RESTART_CELERY }}
           GOOGLE_APPLICATION_CREDENTIALS_preview: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_USER_preview: ${{ secrets.SMTP_USER }}
           SMTP_PASS_preview: ${{ secrets.SMTP_PASS }}          
         run: |
           ./scripts/deploy.sh preview
+  deploy_to_live:
+    if: startsWith(github.ref, 'refs/tags/')
+    environment: live
+    needs: test
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Deploy to live
+        env:
+          deploy_host_live: ${{ secrets.DEPLOY_HOST }}
+          user_live: ${{ secrets.USER }}
+          DEPLOY_KEY_live: ${{ secrets.DEPLOY_KEY }}
+          ADMIN_CLIENT_ID_live: ${{ secrets.ADMIN_CLIENT_ID }}
+          ADMIN_CLIENT_SECRET_live: ${{ secrets.ADMIN_CLIENT_SECRET }}
+          ADMIN_USERS_live: ${{ secrets.ADMIN_USERS }}
+          DATABASE_URL_live: ${{ secrets.DATABASE_URL }}
+          PAYPAL_URL_live: ${{ secrets.PAYPAL_URL }}
+          PAYPAL_USER_live: ${{ secrets.PAYPAL_USER }}
+          PAYPAL_PASSWORD_live: ${{ secrets.PAYPAL_PASSWORD }}
+          PAYPAL_SIG_live: ${{ secrets.PAYPAL_SIG }}
+          PAYPAL_RECEIVER_live: ${{ secrets.PAYPAL_RECEIVER }}
+          PAYPAL_VERIFY_URL_live: ${{ secrets.PAYPAL_VERIFY_URL }}
+          EMAIL_TOKENS: ${{ secrets.EMAIL_TOKENS }}
+          EMAIL_ANYTIME: 1
+          EMAIL_DOMAIN: ${{ secrets.EMAIL_DOMAIN }}
+          EMAIL_SALT_live: ${{ secrets.EMAIL_SALT }}
+          EMAIL_UNSUB_SALT_live: ${{ secrets.EMAIL_UNSUB_SALT }}
+          TEST_EMAIL_live: ${{ secrets.TEST_EMAIL }}
+          EMAIL_RESTRICT_live: 1
+          FRONTEND_ADMIN_URL_live: ${{ secrets.FRONTEND_ADMIN_URL }}
+          API_BASE_URL_live: ${{ secrets.API_BASE_URL }}
+          FRONTEND_URL_live: ${{ secrets.FRONTEND_URL }}
+          IMAGES_URL_live: ${{ secrets.IMAGES_URL }}
+          CELERY_BROKER_URL_live: ${{ secrets.CELERY_BROKER_URL }}
+          PROJECT_live: ${{ secrets.PROJECT }}
+          JWT_SECRET_live: ${{ secrets.JWT_SECRET }}
+          GA_ID_live: ${{ secrets.GA_ID }}
+          INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
+          # RESTART_CELERY: ${{ secrets.RESTART_CELERY }}
+          GOOGLE_APPLICATION_CREDENTIALS_live: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_USER_live: ${{ secrets.SMTP_USER }}
+          SMTP_PASS_live: ${{ secrets.SMTP_PASS }}          
+        run: |
+          ./scripts/deploy.sh live
