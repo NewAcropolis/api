@@ -171,7 +171,7 @@ jobs:
           EMAIL_SALT_live: ${{ secrets.EMAIL_SALT }}
           EMAIL_UNSUB_SALT_live: ${{ secrets.EMAIL_UNSUB_SALT }}
           TEST_EMAIL_live: ${{ secrets.TEST_EMAIL }}
-          EMAIL_RESTRICT_live: 1
+          EMAIL_RESTRICT_live: 0
           FRONTEND_ADMIN_URL_live: ${{ secrets.FRONTEND_ADMIN_URL }}
           API_BASE_URL_live: ${{ secrets.API_BASE_URL }}
           FRONTEND_URL_live: ${{ secrets.FRONTEND_URL }}
