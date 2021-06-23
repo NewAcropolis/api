@@ -8,8 +8,6 @@ on:
     tags:
       - 'v*'
   pull_request:
-  release:
-    types: [created]
 
 jobs:
   test:
@@ -143,8 +141,7 @@ jobs:
         run: |
           ./scripts/deploy.sh preview
   deploy_to_live:
-    # if: startsWith(github.ref, 'refs/tags/')
-    if: github.event_name == 'release' && github.event.action == 'created'
+    if: startsWith(github.ref, 'refs/tags/')
     environment: live
     needs: test
     runs-on: ubuntu-18.04
@@ -190,5 +187,4 @@ jobs:
           SMTP_USER_live: ${{ secrets.SMTP_USER }}
           SMTP_PASS_live: ${{ secrets.SMTP_PASS }}          
         run: |
-          # ./scripts/deploy.sh live
-          echo "deploy"
+          ./scripts/deploy.sh live
