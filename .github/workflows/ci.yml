@@ -87,6 +87,7 @@ jobs:
           # INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
           # RESTART_CELERY: ${{ secrets.RESTART_CELERY }}
           GOOGLE_APPLICATION_CREDENTIALS_development: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_STORE: ${{ secrets.GOOGLE_STORE }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_USER_development: ${{ secrets.SMTP_USER }}
           SMTP_PASS_development: ${{ secrets.SMTP_PASS }}
@@ -135,6 +136,7 @@ jobs:
           INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
           # RESTART_CELERY: ${{ secrets.RESTART_CELERY }}
           GOOGLE_APPLICATION_CREDENTIALS_preview: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_STORE: ${{ secrets.GOOGLE_STORE }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_USER_preview: ${{ secrets.SMTP_USER }}
           SMTP_PASS_preview: ${{ secrets.SMTP_PASS }}          
@@ -183,6 +185,7 @@ jobs:
           INSTAGRAM_URL: ${{ secrets.INSTAGRAM_URL }}
           # RESTART_CELERY: ${{ secrets.RESTART_CELERY }}
           GOOGLE_APPLICATION_CREDENTIALS_live: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_STORE: ${{ secrets.GOOGLE_STORE }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_USER_live: ${{ secrets.SMTP_USER }}
           SMTP_PASS_live: ${{ secrets.SMTP_PASS }}          
