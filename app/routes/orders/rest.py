@@ -106,6 +106,7 @@ def paypal_ipn():
         'content-type': 'application/x-www-form-urlencoded',
         'user-agent': 'Python-IPN-Verification-Script'
     }
+    current_app.logger.info("params: %r", params)  # debug
     r = requests.post(VERIFY_URL, params=params, headers=headers, verify=True)
     r.raise_for_status()
 
