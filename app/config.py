@@ -104,6 +104,7 @@ class Config(object):
     FACEBOOK_URL = "https://www.facebook.com/pg/newacropolisuk/community/"
     INSTAGRAM_URL = os.environ.get('INSTAGRAM_URL')
     POSTAGE_COUNTRY_CODE = "GB"
+    TEST_VERIFY = os.environ.get('TEST_VERIFY') == '1'
 
 
 class Development(Config):
