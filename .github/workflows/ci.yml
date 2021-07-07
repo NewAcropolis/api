@@ -35,6 +35,7 @@ jobs:
           sudo apt-get install build-essential libpoppler-cpp-dev pkg-config
           sudo apt-get install ghostscript
           sudo mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.off
+          psql $TEST_DATABASE_URI -c 'show timezone;'
 
           ./scripts/bootstrap.sh
           pip install coveralls==2.2.0
