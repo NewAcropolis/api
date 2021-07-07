@@ -164,6 +164,7 @@ set +a
         export SMTP_SERVER=$SMTP_SERVER
         export SMTP_USER=$SMTP_USER
         export SMTP_PASS=$SMTP_PASS
+        export TEST_VERIFY=$TEST_VERIFY
         export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
 
         ./scripts/bootstrap.sh
