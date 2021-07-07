@@ -96,24 +96,30 @@ def _get_nice_cost(cost):
 
 @orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
 def paypal_ipn():
-    VERIFY_URL = current_app.config['PAYPAL_VERIFY_URL']
-
     params = request.form.to_dict(flat=False)
     current_app.logger.info('IPN params: %r', params)
 
-    params['cmd'] = '_notify-validate'
-    headers = {
-        'content-type': 'application/x-www-form-urlencoded',
-        'user-agent': 'Python-IPN-Verification-Script'
-    }
-    current_app.logger.info("params: %r", params)  # debug
-    r = requests.post(VERIFY_URL, params=params, headers=headers, verify=True)
-    r.raise_for_status()
+    if current_app.config['TEST_VERIFY'] and current_app.config['ENVIRONMENT'] != 'live':
+        v_response = 'VERIFIED'
+        current_app.logger.info('Test paypal verify')
+    else:
+        VERIFY_URL = current_app.config['PAYPAL_VERIFY_URL']
+
+        params['cmd'] = '_notify-validate'
+        headers = {
+            'content-type': 'application/x-www-form-urlencoded',
+            'user-agent': 'Python-IPN-Verification-Script'
+        }
+        current_app.logger.info("params: %r", params)  # debug
+
+        r = requests.post(VERIFY_URL, params=params, headers=headers, verify=True)
+        r.raise_for_status()
+        v_response = r.text
+        if v_response == 'VERIFIED':
+            current_app.logger.info('VERIFIED: %s', params['txn_id'])
 
     # Check return message and take action as needed
-    if r.text == 'VERIFIED':
-        current_app.logger.info('VERIFIED: %s', params['txn_id'])
-
+    if v_response == 'VERIFIED':
         status = product_message = delivery_message = error_message = ''
         diff = 0.0
         data = {}
@@ -235,19 +241,20 @@ def paypal_ipn():
                                 order_data['delivery_balance']
                             )
 
-                        # if admin_message:
                         for user in dao_get_admin_users():
                             send_smtp_email(user.email, f'New Acropolis {status}', admin_message)
+                    else:
+                        status = statuses.DELIVERY_PAID
+
+                dao_update_record(
+                    Order, order.id,
+                    delivery_status=status,
+                    delivery_zone=address_delivery_zone['name'] if address_delivery_zone else None,
+                    delivery_balance=str(abs(diff))
+                )
 
                 if delivery_message:
                     order_data['delivery_status'] = status
-                    dao_update_record(
-                        Order, order.id,
-                        delivery_status=status,
-                        delivery_zone=address_delivery_zone['name'] if address_delivery_zone else None,
-                        delivery_balance=str(abs(diff))
-                    )
-
                     if status == 'refund':
                         delivery_message = f"<p>{delivery_message}, please send a message " \
                             "to website admin if there is no refund within 5 working days.</p>"
@@ -317,7 +324,7 @@ def paypal_ipn():
             message + product_message + delivery_message + error_message
         )
 
-    elif r.text == 'INVALID':
+    elif v_response == 'INVALID':
         current_app.logger.info('INVALID %r', params['txn_id'])
     else:
         current_app.logger.info('UNKNOWN response %r', params['txn_id'])
