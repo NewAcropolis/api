@@ -397,7 +397,7 @@ def parse_ipn(ipn):
             'Order: %s, payment not complete: %s', order_data['txn_id'], order_data['payment_status'])
         return none_response
 
-    if receiver_email != current_app.config['PAYPAL_RECEIVER']:
+    if receiver_email.replace(' ', '+') != current_app.config['PAYPAL_RECEIVER']:
         current_app.logger.error('Paypal receiver not valid: %s for %s', receiver_email, order_data['txn_id'])
         order_data['payment_status'] = 'Invalid receiver'
         return none_response
