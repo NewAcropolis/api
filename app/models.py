@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
+from app.utils.time import get_local_time
 
 ANON_PROCESS = 'anon_process'
 ANON_REMINDER = 'anon_reminder'
@@ -53,7 +54,7 @@ class Article(db.Model):
             'author': self.author,
             'content': self.content,
             'image_filename': self.image_filename,
-            'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
+            'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d') if self.created_at else None,
         }
 
     def serialize_summary(self):
@@ -96,7 +97,7 @@ class Product:
             'price': str(self.price),
             'buy_code': str(self.buy_code),
             'image_filename': self.image_filename,
-            'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
+            'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d') if self.created_at else None,
         }
 
 
@@ -275,10 +276,10 @@ class Email(db.Model):
             'replace_all': self.replace_all,
             'email_type': self.email_type,
             'email_state': self.email_state,
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
+            'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d %H:%M'),
             'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d') if self.send_starts_at else None,
             'expires': self.expires.strftime('%Y-%m-%d') if self.expires else self.get_expired_date(),
-            'send_after': self.send_after.strftime('%Y-%m-%d %H:%M') if self.send_after else None,
+            'send_after': get_local_time(self.send_after).strftime('%Y-%m-%d %H:%M') if self.send_after else None,
             'emails_sent_counts': self.get_emails_sent_counts()
         }
 
@@ -785,7 +786,7 @@ class Order(db.Model):
             'id': str(self.id),
             'txn_id': self.txn_id,
             'txn_type': self.txn_type,
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
+            'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d %H:%M'),
             'buyer_name': self.buyer_name,
             'payment_status': self.payment_status,
             'payment_total': str(self.payment_total),  # not possible to json serialize a decimal
@@ -870,8 +871,8 @@ class Ticket(db.Model):
             'eventdate_id': str(self.eventdate_id),
             'name': self.name,
             'price': self.price,
-            'last_updated': self.last_updated.strftime('%Y-%m-%d %H:%M'),
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
+            'last_updated': get_local_time(self.last_updated).strftime('%Y-%m-%d %H:%M'),
+            'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d %H:%M'),
             'status': self.status,
             'ticket_number': self.ticket_number
         }
