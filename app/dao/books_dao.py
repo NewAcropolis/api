@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from app import db
 from app.dao.decorators import transactional
 from app.models import Book
