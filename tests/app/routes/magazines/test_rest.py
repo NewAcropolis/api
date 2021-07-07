@@ -1,11 +1,12 @@
 import base64
 import os
+from datetime import timedelta
 from flask import json, url_for
 from mock import Mock, call
 import pytest
 import requests_mock
 
-from tests.conftest import create_authorization_header
+from tests.conftest import create_authorization_header, get_later_time
 from tests.db import create_magazine
 
 
@@ -183,7 +184,8 @@ class WhenGettingLatestMagazine:
 
     def it_gets_the_latest_magazine(self, client, db_session):
         create_magazine(old_id='1', title='title', filename='new filename')
-        magazine = create_magazine(old_id='2', title='title 2', filename='new filename 2')
+        magazine = create_magazine(
+            old_id='2', title='title 2', filename='new filename 2', created_at=get_later_time())
 
         response = client.get(
             url_for('magazines.get_latest_magazine', old_id=magazine.old_id),

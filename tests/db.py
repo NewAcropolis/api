@@ -23,6 +23,7 @@ from app.models import (
     Magazine, Marketing, Member, Order, RejectReason, Speaker, Ticket, User, Venue,
     EVENT, TICKET_STATUS_UNUSED, DRAFT
 )
+from app.utils.time import get_local_time
 
 
 def create_event(
@@ -259,6 +260,9 @@ def create_email(
             create_event_date(event_id=str(event.id), event_datetime='2019-06-21 19:00')
         event_id = str(event.id)
 
+    if not created_at:
+        created_at = get_local_time()
+
     data = {
         'event_id': event_id,
         'magazine_id': magazine_id,
@@ -272,7 +276,8 @@ def create_email(
         'created_at': created_at,
         'send_starts_at': send_starts_at,
         'expires': expires,
-        'send_after': send_after
+        'send_after': send_after,
+        'created_at': created_at
     }
     email = Email(**data)
 
@@ -284,13 +289,17 @@ def create_magazine(
     old_id=None,
     title='title',
     old_filename=None,
-    filename='new filename'
+    filename='new filename',
+    created_at=None
 ):
+    if not created_at:
+        created_at = get_local_time()
     data = {
         'old_id': old_id,
         'title': title,
         'old_filename': old_filename,
         'filename': filename,
+        'created_at': created_at
     }
 
     magazine = Magazine(**data)
@@ -371,7 +380,7 @@ def create_email_to_member(email_id=None, member_id=None, status_code=200, email
             email_provider = create_email_provider()
         email_provider_id = email_provider.id
     if not created_at:
-        created_at = datetime.now()
+        created_at = get_local_time()
 
     data = {
         'created_at': created_at,

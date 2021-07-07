@@ -12,6 +12,7 @@ from app.dao.magazines_dao import dao_get_magazine_by_id
 from app.dao.members_dao import dao_get_member_by_id
 from app.errors import InvalidRequest
 from app.models import Email, EmailToMember, APPROVED, ANNOUNCEMENT, EVENT, MAGAZINE
+from app.utils.time import get_local_time
 
 
 def _get_nearest_bi_monthly_send_date(created_at=None):
@@ -72,7 +73,7 @@ def dao_update_email(email_id, **kwargs):
 @transactional
 def dao_add_member_sent_to_email(email_id, member_id, status_code=200, email_provider_id=None, created_at=None):
     if not created_at:
-        created_at = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+        created_at = datetime.strftime(get_local_time(), "%Y-%m-%d %H:%M:%S")
 
     email = dao_get_email_by_id(email_id)
     member = dao_get_member_by_id(member_id)

@@ -5,6 +5,7 @@ import requests
 from urllib.parse import parse_qs
 
 from app.errors import PaypalException
+from app.utils.time import get_local_time
 
 PAYPAL_SEARCH_BACK_FROM = 90
 
@@ -30,7 +31,7 @@ class PayPal:
         search_data = self.base_data.copy()
         search_data.update({
             'METHOD': 'BMButtonSearch',
-            'STARTDATE': datetime.now() - timedelta(days=PAYPAL_SEARCH_BACK_FROM)
+            'STARTDATE': get_local_time() - timedelta(days=PAYPAL_SEARCH_BACK_FROM)
         })
 
         response = requests.post(

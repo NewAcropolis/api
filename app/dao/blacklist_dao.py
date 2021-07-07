@@ -7,6 +7,7 @@ from app import db
 from app.dao.decorators import transactional
 from app.routes.authentication.errors import TokenNotFound
 from app.models import TokenBlacklist
+from app.utils.time import get_local_time
 
 
 @transactional
@@ -51,7 +52,7 @@ def unrevoke_token(token_id, user):
 
 @transactional
 def prune_database():
-    now = datetime.now()
+    now = get_local_time()
     expired = TokenBlacklist.query.filter(TokenBlacklist.expires < now).all()
     for token in expired:
         db.session.delete(token)

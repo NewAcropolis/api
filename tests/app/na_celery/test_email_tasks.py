@@ -35,7 +35,7 @@ class WhenProcessingSendEmailsTask:
             'total_active_members': 1
         }
 
-    @freeze_time("2020-10-09T19:00:00")
+    @freeze_time("2020-10-09T19:00:00", tz_offset=-1)
     def it_only_sends_to_3_emails_if_not_live_environment(
         self, mocker, db_session, sample_email, sample_member, sample_email_provider
     ):

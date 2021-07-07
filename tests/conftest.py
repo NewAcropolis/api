@@ -33,6 +33,7 @@ from tests.db import (
     create_user,
     create_venue
 )
+from app.utils.time import get_local_time
 
 TEST_DATABASE_URI = os.environ.get("TEST_DATABASE_URI", "postgresql://localhost/na_api_" + get_env() + '_test')
 TEST_ADMIN_USER = 'admin@example.com'
@@ -325,3 +326,7 @@ def get_unixtime_start_and_expiry(year=2017, month=12, day=10, hour=23, minute=1
     added_time = 900
     unixtime_expiry = unixtime + added_time
     return unixtime, unixtime_expiry
+
+
+def get_later_time(secs=1):
+    return get_local_time() + datetime.timedelta(seconds=secs)

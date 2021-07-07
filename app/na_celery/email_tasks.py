@@ -10,6 +10,7 @@ from app.dao.members_dao import dao_get_members_not_sent_to
 from app.dao.users_dao import dao_get_admin_users
 from app.errors import InvalidRequest
 from app.models import EVENT, MAGAZINE, APPROVED
+from app.utils.time import get_local_time
 
 
 def send_emails(email_id):
@@ -70,8 +71,7 @@ def send_emails(email_id):
 
 @celery.task(name='send_periodic_emails')
 def send_periodic_emails():
-    tz_London = pytz.timezone('Europe/London')
-    current_time = datetime.strftime(datetime.now(tz_London), "%H:%M:%S")
+    current_time = datetime.strftime(get_local_time(), "%H:%M:%S")
 
     if current_app.config.get('EMAIL_ANYTIME'):
         current_app.logger.info('Email anytime config set')

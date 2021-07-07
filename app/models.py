@@ -9,6 +9,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
+from app.utils.time import get_local_time
+
 
 ANON_PROCESS = 'anon_process'
 ANON_REMINDER = 'anon_reminder'
@@ -43,7 +45,7 @@ class Article(db.Model):
     author = db.Column(db.String(255))
     image_filename = db.Column(db.String(255))
     content = db.Column(db.Text())
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
 
     def serialize(self):
         return {
@@ -88,7 +90,7 @@ class Product:
     price = db.Column(db.Numeric(3, 2), nullable=True)
     buy_code = db.Column(db.String(50))
     image_filename = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
 
     def serialize(self):
         return {
@@ -126,7 +128,7 @@ class EmailToMember(db.Model):
     )
     email_id = db.Column(UUID(as_uuid=True), db.ForeignKey('emails.id'))
     member_id = db.Column(UUID(as_uuid=True), db.ForeignKey('members.id'))
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
     status_code = db.Column(db.Integer)
     email_provider_id = db.Column(UUID(as_uuid=True), db.ForeignKey('email_providers.id'))
 
@@ -156,7 +158,7 @@ class EmailProvider(db.Model):
     smtp_user = db.Column(db.String)
     smtp_password = db.Column(db.String)
     available = db.Column(db.Boolean)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
 
     def serialize(self):
         return {
@@ -203,7 +205,7 @@ class Email(db.Model):
         nullable=False,
         index=True,
     )
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
     send_starts_at = db.Column(db.DateTime)
     send_after = db.Column(db.DateTime)
     expires = db.Column(db.DateTime)
@@ -291,7 +293,7 @@ class Magazine(db.Model):
     topics = db.Column(db.String)
     filename = db.Column(db.String, unique=True)
     old_filename = db.Column(db.String, unique=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
 
     def serialize(self):
         return {
@@ -329,7 +331,7 @@ class Member(db.Model):
     name = db.Column(db.String)
     email = db.Column(db.String, unique=True, nullable=False)
     active = db.Column(db.Boolean)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
     marketing_id = db.Column(UUID(as_uuid=True), db.ForeignKey('marketings.id'), nullable=False)
     old_marketing_id = db.Column(db.Integer)
     is_course_member = db.Column(db.Boolean, default=False)
@@ -379,7 +381,7 @@ class Event(db.Model):
     conc_fee = db.Column(db.Integer, nullable=True)
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
     event_dates = db.relationship(
         "EventDate",
         backref=db.backref("event"),
@@ -500,8 +502,8 @@ class EventDate(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    event_datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
+    event_datetime = db.Column(db.DateTime, default=get_local_time())
     end_time = db.Column(db.Time, nullable=True)
     duration = db.Column(db.Integer, nullable=True)
     soldout = db.Column(db.Boolean, default=False)
@@ -546,7 +548,7 @@ class EventType(db.Model):
     duration = db.Column(db.Integer)
     repeat = db.Column(db.Integer)
     repeat_interval = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
 
     def serialize(self):
         def fees():
@@ -582,10 +584,10 @@ class Fee(db.Model):
     conc_fee = db.Column(db.Integer, nullable=False)
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
-    valid_from = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    valid_from = db.Column(db.DateTime, nullable=False, default=get_local_time())
     event_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_types.id'), nullable=False)
     event_type = db.relationship(EventType, backref=db.backref("fees", order_by=valid_from.desc()))
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
 
     def serialize(self):
         return {
@@ -607,7 +609,7 @@ class RejectReason(db.Model):
     reason = db.Column(db.String(255), nullable=False)
     resolved = db.Column(db.Boolean, default=False)
     created_by = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
 
     def serialize(self):
         return {
@@ -625,7 +627,7 @@ class Speaker(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = db.Column(db.String(100))
     name = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
     # should only expect 1 parent at most, so a parent cannot be a parent
     parent_id = db.Column(UUID(as_uuid=True), primary_key=False, default=None, nullable=True)
 
@@ -649,7 +651,7 @@ class TokenBlacklist(db.Model):
     user_identity = db.Column(db.String(50), nullable=False)
     revoked = db.Column(db.Boolean, nullable=False)
     expires = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_local_time())
 
     def serialize(self):
         return {
@@ -672,7 +674,7 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=True)
     active = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
+    created_at = db.Column(db.DateTime, default=get_local_time())
     last_login = db.Column(db.DateTime)
     access_area = db.Column(db.String())
     session_id = db.Column(db.String())
@@ -738,7 +740,7 @@ class Order(db.Model):
     txn_id = db.Column(db.String)
     linked_txn_id = db.Column(db.String)
     txn_type = db.Column(db.String)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
+    created_at = db.Column(db.DateTime, default=get_local_time())
     payment_status = db.Column(db.String)
     payment_total = db.Column(db.Numeric(scale=2))
     params = db.Column(db.String)
@@ -855,8 +857,8 @@ class Ticket(db.Model):
     eventdate_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_dates.id'))
     name = db.Column(db.String)
     price = db.Column(db.Numeric(scale=2))
-    last_updated = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=get_local_time())
+    created_at = db.Column(db.DateTime, default=get_local_time())
     status = db.Column(db.String, db.ForeignKey('ticket_statuses.status'), default=TICKET_STATUS_UNUSED)
     ticket_number = db.Column(db.Integer)
     event = db.relationship("Event", backref=db.backref("tickets", uselist=False))

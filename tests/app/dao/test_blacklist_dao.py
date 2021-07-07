@@ -9,6 +9,7 @@ from flask_jwt_extended import (
 from app.routes.authentication.errors import TokenNotFound
 from app.dao.blacklist_dao import store_token, is_token_revoked, get_user_tokens, unrevoke_token, prune_database
 from app.models import TokenBlacklist
+from app.utils.time import get_local_time
 from tests.conftest import get_unixtime_start_and_expiry
 from tests.db import create_token_blacklist
 
@@ -75,7 +76,7 @@ class WhenUsingBlacklistDAO(object):
             unrevoke_token(uuid.uuid4(), 'noone')
 
     def it_prunes_database(self, db_session, sample_decoded_token):
-        now = datetime.now()
+        now = get_local_time()
 
         start, expiry = get_unixtime_start_and_expiry(
             year=now.year, month=now.month, day=now.day, hour=now.hour, minute=now.minute)

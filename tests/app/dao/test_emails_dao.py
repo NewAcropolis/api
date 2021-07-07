@@ -18,7 +18,9 @@ from app.dao.emails_dao import (
 )
 from app.errors import InvalidRequest
 from app.models import Email, EmailToMember, ANON_REMINDER, ANNOUNCEMENT, MAGAZINE, APPROVED, READY
+from app.utils.time import get_local_time
 
+from tests.conftest import get_later_time
 from tests.db import create_email, create_email_provider, create_email_to_member, create_magazine, create_member
 
 
@@ -162,7 +164,8 @@ class WhenUsingEmailsDAO(object):
         later_magazine = create_magazine(title='ignored magazine')
         event_email = create_email()
         create_email(email_type=MAGAZINE, magazine_id=sample_magazine.id)
-        later_magazine_email = create_email(email_type=MAGAZINE, magazine_id=later_magazine.id)
+        later_magazine_email = create_email(
+            email_type=MAGAZINE, magazine_id=later_magazine.id, created_at=get_later_time())
 
         emails = dao_get_latest_emails()
 
@@ -179,7 +182,7 @@ class WhenUsingEmailsDAO(object):
     def it_gets_emails_count_only_for_today_only(self, db, db_session):
         email = create_email()
         member = create_member(email='test1@example.com', name='Test1')
-        created_at = datetime.now() - timedelta(days=1)
+        created_at = get_local_time() - timedelta(days=1)
         create_email_to_member(created_at=created_at, email_id=email.id, member_id=member.id)
 
         email_to_member = create_email_to_member()

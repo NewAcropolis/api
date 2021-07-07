@@ -31,6 +31,7 @@ from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.dao.events_dao import dao_get_event_by_old_id, dao_get_event_by_id
 
 from app.errors import register_errors, InvalidRequest
+from app.utils.time import get_local_time, TIMEZONE
 
 from app.models import (
     Email, EmailToMember, Member,
@@ -128,8 +129,8 @@ def update_email(email_id):
 
             response = send_smtp_email(emails_to, '{} email needs to be corrected'.format(event.title), message)
         elif data.get('email_state') == APPROVED:
-            later = datetime.utcnow() + timedelta(hours=current_app.config['EMAIL_DELAY'])
-            if later < email.send_starts_at:
+            later = get_local_time() + timedelta(hours=current_app.config['EMAIL_DELAY'])
+            if later < email.send_starts_at.replace(tzinfo=TIMEZONE):
                 later = email.send_starts_at + timedelta(hours=9)
 
             dao_update_email(email_id, send_after=later)
