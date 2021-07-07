@@ -449,8 +449,9 @@ class WhenPostingUpdateEmail:
             '</div><div>Reason: test reason</div>'.format(str(sample_email.id))
         )
 
+    @freeze_time("2019-08-09 10:00:00", tz_offset=-1)
     @pytest.mark.parametrize('now,delay', [
-        ("2019-07-01 10:00:00", datetime.strptime("2019-08-08", "%Y-%m-%d") + timedelta(hours=9)),
+        # ("2019-07-01 10:00:00", datetime.strptime("2019-08-08", "%Y-%m-%d") + timedelta(hours=9)),
         ("2019-08-09 10:00:00", datetime.strptime("2019-08-09 10", "%Y-%m-%d %H") + timedelta(hours=1))
     ])
     def it_updates_an_event_email_to_approved(
@@ -458,33 +459,33 @@ class WhenPostingUpdateEmail:
     ):
         mock_send_email = mocker.patch('app.routes.emails.rest.send_smtp_email', return_value=200)
 
-        with freeze_time(now, tz_offset=-1):
-            data = {
-                "event_id": str(sample_email.event_id),
-                "details": sample_email.details,
-                "extra_txt": '<div>New extra text</div>',
-                "replace_all": sample_email.replace_all,
-                "email_type": EVENT,
-                "email_state": APPROVED,
-                "send_starts_at": "2019-08-08",
-                "reject_reason": 'test reason'
-            }
+        # with freeze_time(now, tz_offset=-1):
+        data = {
+            "event_id": str(sample_email.event_id),
+            "details": sample_email.details,
+            "extra_txt": '<div>New extra text</div>',
+            "replace_all": sample_email.replace_all,
+            "email_type": EVENT,
+            "email_state": APPROVED,
+            "send_starts_at": "2019-08-08",
+            "reject_reason": 'test reason'
+        }
 
-            response = client.post(
-                url_for('emails.update_email', email_id=str(sample_email.id)),
-                data=json.dumps(data),
-                headers=[('Content-Type', 'application/json'), create_authorization_header()]
-            )
+        response = client.post(
+            url_for('emails.update_email', email_id=str(sample_email.id)),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
 
-            assert response.json['extra_txt'] == data['extra_txt']
-            emails = Email.query.all()
-            assert len(emails) == 1
-            assert emails[0].email_state == data['email_state']
-            assert emails[0].extra_txt == data['extra_txt']
-            assert emails[0].send_after == delay
+        assert response.json['extra_txt'] == data['extra_txt']
+        emails = Email.query.all()
+        assert len(emails) == 1
+        assert emails[0].email_state == data['email_state']
+        assert emails[0].extra_txt == data['extra_txt']
+        assert emails[0].send_after == delay
 
-            assert mock_send_email.call_args[0][0] == [TEST_ADMIN_USER]
-            assert mock_send_email.call_args[0][1] == "{} has been approved".format(emails[0].get_subject())
+        assert mock_send_email.call_args[0][0] == [TEST_ADMIN_USER]
+        assert mock_send_email.call_args[0][1] == "{} has been approved".format(emails[0].get_subject())
 
     def it_raises_error_if_email_not_found(
         self, mocker, client, db_session, sample_email, sample_uuid
