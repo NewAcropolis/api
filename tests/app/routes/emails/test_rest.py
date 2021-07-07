@@ -450,15 +450,15 @@ class WhenPostingUpdateEmail:
         )
 
     @pytest.mark.parametrize('now,delay', [
-        ("2019-07-01 10:00:00+01:00", datetime.strptime("2019-08-08", "%Y-%m-%d") + timedelta(hours=9)),
-        ("2019-08-09 10:00:00+01:00", datetime.strptime("2019-08-09 10", "%Y-%m-%d %H") + timedelta(hours=1))
+        ("2019-07-01 10:00:00", datetime.strptime("2019-08-08", "%Y-%m-%d") + timedelta(hours=9)),
+        ("2019-08-09 10:00:00", datetime.strptime("2019-08-09 10", "%Y-%m-%d %H") + timedelta(hours=1))
     ])
     def it_updates_an_event_email_to_approved(
         self, mocker, app, client, db, db_session, sample_admin_user, sample_email, now, delay
     ):
         mock_send_email = mocker.patch('app.routes.emails.rest.send_smtp_email', return_value=200)
 
-        with freeze_time(now):
+        with freeze_time(now, tz_offset=-1):
             data = {
                 "event_id": str(sample_email.event_id),
                 "details": sample_email.details,
