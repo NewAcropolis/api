@@ -129,8 +129,9 @@ def update_email(email_id):
 
             response = send_smtp_email(emails_to, '{} email needs to be corrected'.format(event.title), message)
         elif data.get('email_state') == APPROVED:
-            print('ge local time', get_local_time(), current_app.config['EMAIL_DELAY'])
+            print('get local time', get_local_time(), current_app.config['EMAIL_DELAY'])
             later = get_local_time() + timedelta(hours=current_app.config['EMAIL_DELAY'])
+            print('later', later)
             if later < email.send_starts_at.replace(tzinfo=TIMEZONE):
                 later = email.send_starts_at + timedelta(hours=9)
 
