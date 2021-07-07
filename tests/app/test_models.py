@@ -1,6 +1,7 @@
 from freezegun import freeze_time
 
 from app.models import MAGAZINE, TICKET_STATUS_UNUSED, Event, Fee, Speaker
+from app.utils.time import get_local_time
 from tests.db import (
     create_article,
     create_book,
@@ -130,7 +131,7 @@ class WhenUsingBookModel(object):
             'title': book.title,
             'description': book.description,
             'image_filename': book.image_filename,
-            'created_at': book.created_at.strftime('%Y-%m-%d')
+            'created_at': get_local_time(book.created_at).strftime('%Y-%m-%d')
         }
 
 
@@ -146,7 +147,7 @@ class WhenUsingEmailModel:
             'magazine_id': None,
             'old_id': email.old_id,
             'old_event_id': email.old_event_id,
-            'created_at': '2019-06-01 10:00',
+            'created_at': get_local_time(email.created_at).strftime('%Y-%m-%d %H:%M'),
             'extra_txt': u'test extra text',
             'details': u'test event details',
             'replace_all': False,
@@ -154,7 +155,7 @@ class WhenUsingEmailModel:
             'email_state': u'draft',
             'send_starts_at': '2019-06-02',
             'expires': '2019-06-21',
-            'send_after': '2019-06-02 12:00',
+            'send_after': get_local_time(email.send_after).strftime('%Y-%m-%d %H:%M'),
             'emails_sent_counts': {
                 'success': 0,
                 'failed': 0,
@@ -175,7 +176,7 @@ class WhenUsingEmailModel:
             'magazine_id': str(sample_magazine.id),
             'old_id': email.old_id,
             'old_event_id': None,
-            'created_at': '2019-06-30 10:00',
+            'created_at': get_local_time(email.created_at).strftime('%Y-%m-%d %H:%M'),
             'extra_txt': u'test extra text',
             'details': u'test event details',
             'replace_all': False,
@@ -219,7 +220,7 @@ class WhenUsingOrderModel:
             'txn_id': order.txn_id,
             'txn_type': order.txn_type,
             'buyer_name': order.buyer_name,
-            'created_at': order.created_at.strftime('%Y-%m-%d %H:%M'),
+            'created_at': get_local_time(order.created_at).strftime('%Y-%m-%d %H:%M'),
             'payment_status': order.payment_status,
             'payment_total': str(order.payment_total),
             'address_country_code': order.address_country_code,
@@ -262,8 +263,8 @@ class WhenUsingOrderModel:
                     'eventdate_id': str(ticket.eventdate_id),
                     'name': ticket.name,
                     'price': ticket.price,
-                    'last_updated': ticket.last_updated.strftime('%Y-%m-%d %H:%M'),
-                    'created_at': ticket.created_at.strftime('%Y-%m-%d %H:%M'),
+                    'last_updated': get_local_time(ticket.last_updated).strftime('%Y-%m-%d %H:%M'),
+                    'created_at': get_local_time(ticket.created_at).strftime('%Y-%m-%d %H:%M'),
                     'status': ticket.status,
                     'ticket_number': ticket.ticket_number
                 }
