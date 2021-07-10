@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
+from app.utils.time import get_local_time
 
 ANON_PROCESS = 'anon_process'
 ANON_REMINDER = 'anon_reminder'
@@ -53,7 +54,7 @@ class Article(db.Model):
             'author': self.author,
             'content': self.content,
             'image_filename': self.image_filename,
-            'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
+            'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d') if self.created_at else None,
         }
 
     def serialize_summary(self):
@@ -78,6 +79,11 @@ class Article(db.Model):
         }
 
 
+BOOK = 'book'
+GIFT = 'gift'
+PRODUCT_TYPES = [BOOK, GIFT]
+
+
 class Product:
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     price = db.Column(db.Numeric(3, 2), nullable=True)
@@ -91,7 +97,7 @@ class Product:
             'price': str(self.price),
             'buy_code': str(self.buy_code),
             'image_filename': self.image_filename,
-            'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
+            'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d') if self.created_at else None,
         }
 
 
@@ -270,10 +276,10 @@ class Email(db.Model):
             'replace_all': self.replace_all,
             'email_type': self.email_type,
             'email_state': self.email_state,
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
+            'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d %H:%M'),
             'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d') if self.send_starts_at else None,
             'expires': self.expires.strftime('%Y-%m-%d') if self.expires else self.get_expired_date(),
-            'send_after': self.send_after.strftime('%Y-%m-%d %H:%M') if self.send_after else None,
+            'send_after': get_local_time(self.send_after).strftime('%Y-%m-%d %H:%M') if self.send_after else None,
             'emails_sent_counts': self.get_emails_sent_counts()
         }
 
@@ -375,7 +381,12 @@ class Event(db.Model):
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    event_dates = db.relationship("EventDate", backref=db.backref("events"), cascade="all,delete,delete-orphan")
+    event_dates = db.relationship(
+        "EventDate",
+        backref=db.backref("event"),
+        cascade="all,delete,delete-orphan",
+        order_by='EventDate.event_datetime'
+    )
     event_state = db.Column(
         db.String(255),
         db.ForeignKey('event_states.name'),
@@ -707,6 +718,15 @@ class Venue(db.Model):
         }
 
 
+# UK = 2, EU = 4.50, ROW = 6
+DELIVERY_FEE_UK_EU = 'uk-eu', 2.50
+DELIVERY_FEE_UK_ROW = 'uk-row', 4
+DELIVERY_FEE_EU_ROW = 'eu-row', 1.50
+DELIVERY_REFUND_EU_UK = 'eu-uk', 2.50
+DELIVERY_REFUND_ROW_UK = 'row-uk', 4
+DELIVERY_REFUND_ROW_EU = 'row-eu', 1.5
+
+
 class Order(db.Model):
     __tablename__ = "orders"
 
@@ -717,11 +737,86 @@ class Order(db.Model):
     email_address = db.Column(db.String)
     buyer_name = db.Column(db.String)
     txn_id = db.Column(db.String)
+    linked_txn_id = db.Column(db.String)
     txn_type = db.Column(db.String)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     payment_status = db.Column(db.String)
-    payment_total = db.Column(db.Numeric(precision=2))
+    payment_total = db.Column(db.Numeric(scale=2))
     params = db.Column(db.String)
+    address_street = db.Column(db.String)
+    address_city = db.Column(db.String)
+    address_postal_code = db.Column(db.String)
+    address_state = db.Column(db.String)
+    address_country = db.Column(db.String)
+    address_country_code = db.Column(db.String)
+    delivery_zone = db.Column(db.String)
+    delivery_status = db.Column(db.String(20))
+    delivery_balance = db.Column(db.Numeric(scale=2), default=0.0)
+    books = db.relationship("Book", secondary="book_to_order", order_by='Book.title')
+    tickets = db.relationship("Ticket", back_populates="order")
+    errors = db.relationship(
+        "OrderError",
+        backref=db.backref("order"),
+        cascade="all,delete,delete-orphan",
+        order_by='OrderError.error'
+    )
+
+    def serialize(self):
+        def get_serialized_list(array, delete_created_at=True):
+            _list = []
+            for item in array:
+                _json = item.serialize()
+                if 'created_at' in _json and delete_created_at:
+                    del(_json['created_at'])
+                _list.append(_json)
+            return _list
+
+        _json = self.short_serialize()
+        _json.update(
+            books=get_serialized_list(self.books),
+            tickets=get_serialized_list(self.tickets, delete_created_at=False),
+            errors=get_serialized_list(self.errors, delete_created_at=False)
+        )
+        if self.linked_txn_id:
+            _json.update(linked_txn_id=self.linked_txn_id)
+        return _json
+
+    def short_serialize(self):
+        return {
+            'id': str(self.id),
+            'txn_id': self.txn_id,
+            'txn_type': self.txn_type,
+            'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d %H:%M'),
+            'buyer_name': self.buyer_name,
+            'payment_status': self.payment_status,
+            'payment_total': str(self.payment_total),  # not possible to json serialize a decimal
+            'address_country_code': self.address_country_code,
+            'address_street': self.address_street,
+            'address_city': self.address_city,
+            'address_postal_code': self.address_postal_code,
+            'address_state': self.address_state,
+            'address_country': self.address_country,
+            'delivery_zone': self.delivery_zone,
+            'delivery_status': self.delivery_status,
+            'delivery_balance': str(self.delivery_balance),
+        }
+
+
+class OrderError(db.Model):
+    __tablename__ = 'order_errors'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
+    error = db.Column(db.String)
+
+
+class BookToOrder(db.Model):
+    __tablename__ = 'book_to_order'
+    __table_args__ = (
+        PrimaryKeyConstraint('book_id', 'order_id'),
+    )
+    book_id = db.Column(UUID(as_uuid=True), db.ForeignKey('books.id'))
+    order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
+    quantity = db.Column(db.Integer)
 
 
 TICKET_FULL = 'Full'
@@ -755,13 +850,29 @@ class Ticket(db.Model):
     event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'))
     old_id = db.Column(db.Integer)
     order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
+    order = db.relationship("Order", back_populates="tickets")
     old_order_id = db.Column(db.Integer)
     ticket_type = db.Column(db.String, db.ForeignKey('ticket_types._type'))
     eventdate_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_dates.id'))
     name = db.Column(db.String)
-    price = db.Column(db.Numeric(precision=2))
+    price = db.Column(db.Numeric(scale=2))
     last_updated = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     status = db.Column(db.String, db.ForeignKey('ticket_statuses.status'), default=TICKET_STATUS_UNUSED)
     ticket_number = db.Column(db.Integer)
     event = db.relationship("Event", backref=db.backref("tickets", uselist=False))
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'event_id': str(self.event_id),
+            'old_id': self.old_id,
+            'ticket_type': self.ticket_type,
+            'eventdate_id': str(self.eventdate_id),
+            'name': self.name,
+            'price': str(self.price) if self.price else None,
+            'last_updated': get_local_time(self.last_updated).strftime('%Y-%m-%d %H:%M'),
+            'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d %H:%M'),
+            'status': self.status,
+            'ticket_number': self.ticket_number
+        }

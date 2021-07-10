@@ -1002,6 +1002,22 @@ function SendEmailStats {
     -H "Authorization: Bearer $TKN"
 }
 
+function SendSubscribersSocialStats {
+    echo "*** Send subscribers and social stats ***"
+
+    curl -X GET $api_server'/stats/subscribers_and_social' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
+function SendEmailStats {
+    echo "*** Send email stats ***"
+
+    curl -X GET $api_server'/stats/emails/11/2020' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
 function ImportMembers {
     echo "*** Import members ***"
 
@@ -1030,6 +1046,31 @@ function TestPaypalIPN {
     -d "$sample_ipn"
 }
 
+sample_ipn_delivery="_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&item_number1=$BOOK_ID&item_number2=$DELIVERY_ID&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&option_name2_1=Course+Member+name&option_name2_2=Course+Member+name&option_selection1_1=Full&payment_status=Completed&option_selection1_2=Full&charset=windows-1252&address_zip=n1+1aa&mc_shipping=0.00&first_name=TestName&mc_fee=0.54&address_country_code=GB&address_name=Test+Name&notify_version=3.9&custom=&payer_status=unverified&business=test%40test.com&address_country=United+Kingdom&num_cart_items=2&mc_handling1=0.00&mc_handling2=0.00&address_city=London&verify_sign=AUl-w13NMy4f84hsUb1AfdPySBVSAn5cuQjLRnnAnlH2cpx64MuK5l34&payer_email=$ADMIN_USER&btn_id1=123456789&btn_id2=012345678&option_name1_1=Type&option_name1_2=Type&txn_id=1122334455&payment_type=instant&option_selection2_1=-&last_name=Test&address_state=&option_selection2_2=-&item_name1=Philosophy+Test&receiver_email=test%40example.com&item_name2=Test+Book&payment_fee=&shipping_discount=0.00&quantity1=1&insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=5.00&mc_currency=GBP&mc_gross_2=5.00&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
+
+function GetOrder {
+    echo "*** Get order with transaction ID ***"
+
+    curl $api_server'/order/'$TXN_ID \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" 
+}
+
+function GetOrders {
+    echo "*** Get orders ***"
+
+    curl $api_server'/orders' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" 
+}
+
+function GetBooks {
+    echo "*** Get books ***"
+
+    curl $api_server'/books' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" 
+}
 
 function Logout {
     echo "*** Logout ***"
@@ -1281,6 +1322,18 @@ case "$arg" in
 
         -uem)
             UpdateEmailToReady
+        ;;
+
+        -go)
+            GetOrder
+        ;;
+
+        -gos)
+            GetOrders
+        ;;
+
+        -gbs)
+            GetBooks
         ;;
 
         -uema)

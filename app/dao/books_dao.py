@@ -20,4 +20,13 @@ def dao_get_books():
 
 
 def dao_get_book_by_id(book_id):
-    return Book.query.filter_by(id=book_id).one()
+    return Book.query.filter_by(id=book_id).first()
+
+
+def dao_get_book_by_old_id(old_book_id):
+    return Book.query.filter_by(old_id=old_book_id).first()
+
+
+@transactional
+def dao_create_book_to_order(book_to_order):
+    db.session.add(book_to_order)

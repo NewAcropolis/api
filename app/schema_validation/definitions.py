@@ -18,7 +18,7 @@ date = {
 
 time = {
     "type": "string",
-    "pattern": "^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$",
+    "pattern": "^([0-9]{2}:[0-9]{2}(:[0-9]{2})?)?$",
     "validationMessage": "is not a time in format HH:MM(:SS)?",
 }
 

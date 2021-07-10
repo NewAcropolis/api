@@ -1,7 +1,17 @@
 from freezegun import freeze_time
 
-from app.models import MAGAZINE, Event, Fee, Speaker
-from tests.db import create_article, create_book, create_event, create_email, create_fee, create_speaker
+from app.models import MAGAZINE, TICKET_STATUS_UNUSED, Event, Fee, Speaker
+from app.utils.time import get_local_time
+from tests.db import (
+    create_article,
+    create_book,
+    create_event,
+    create_email,
+    create_fee,
+    create_order,
+    create_speaker,
+    create_ticket
+)
 
 
 class WhenUsingEventModel(object):
@@ -121,7 +131,7 @@ class WhenUsingBookModel(object):
             'title': book.title,
             'description': book.description,
             'image_filename': book.image_filename,
-            'created_at': book.created_at.strftime('%Y-%m-%d')
+            'created_at': get_local_time(book.created_at).strftime('%Y-%m-%d')
         }
 
 
@@ -137,7 +147,7 @@ class WhenUsingEmailModel:
             'magazine_id': None,
             'old_id': email.old_id,
             'old_event_id': email.old_event_id,
-            'created_at': '2019-06-01 10:00',
+            'created_at': get_local_time(email.created_at).strftime('%Y-%m-%d %H:%M'),
             'extra_txt': u'test extra text',
             'details': u'test event details',
             'replace_all': False,
@@ -145,7 +155,7 @@ class WhenUsingEmailModel:
             'email_state': u'draft',
             'send_starts_at': '2019-06-02',
             'expires': '2019-06-21',
-            'send_after': '2019-06-02 12:00',
+            'send_after': get_local_time(email.send_after).strftime('%Y-%m-%d %H:%M'),
             'emails_sent_counts': {
                 'success': 0,
                 'failed': 0,
@@ -166,7 +176,7 @@ class WhenUsingEmailModel:
             'magazine_id': str(sample_magazine.id),
             'old_id': email.old_id,
             'old_event_id': None,
-            'created_at': '2019-06-30 10:00',
+            'created_at': get_local_time(email.created_at).strftime('%Y-%m-%d %H:%M'),
             'extra_txt': u'test extra text',
             'details': u'test event details',
             'replace_all': False,
@@ -180,4 +190,84 @@ class WhenUsingEmailModel:
                 'failed': 0,
                 'total_active_members': 0
             }
+        }
+
+
+class WhenUsingOrderModel:
+    @freeze_time("2021-06-07T23:00:00")
+    def it_shows_order_serialized(self, db_session, sample_book, sample_event_with_dates):
+        book = create_book(
+            old_id=None,
+            price='7.00',
+            buy_code='112233AABBCC',
+            title='Nature',
+            author='Mr White',
+            description='Some info about Nature\r\n\"Something in quotes\"',
+            image_filename='nature.jpg'
+        )
+
+        event_dates = sample_event_with_dates.get_sorted_event_dates()
+        ticket = create_ticket(
+            status=TICKET_STATUS_UNUSED,
+            event_id=sample_event_with_dates.id,
+            eventdate_id=event_dates[0]['id']
+        )
+
+        order = create_order(books=[sample_book, book], tickets=[ticket])
+
+        assert order.serialize() == {
+            'id': str(order.id),
+            'txn_id': order.txn_id,
+            'txn_type': order.txn_type,
+            'buyer_name': order.buyer_name,
+            'created_at': get_local_time(order.created_at).strftime('%Y-%m-%d %H:%M'),
+            'payment_status': order.payment_status,
+            'payment_total': str(order.payment_total),
+            'address_country_code': order.address_country_code,
+            'address_street': order.address_street,
+            'address_city': order.address_city,
+            'address_postal_code': order.address_postal_code,
+            'address_state': order.address_state,
+            'address_country': order.address_country,
+            'delivery_zone': order.delivery_zone,
+            'delivery_status': order.delivery_status,
+            'delivery_balance': str(order.delivery_balance),
+            'books': [
+                {
+                    'id': str(book.id),
+                    'price': str(book.price),
+                    'buy_code': book.buy_code,
+                    'image_filename': book.image_filename,
+                    'old_id': book.old_id,
+                    'title': book.title,
+                    'author': book.author,
+                    'description': book.description
+                },
+                {
+                    'id': str(sample_book.id),
+                    'price': str(sample_book.price),
+                    'buy_code': sample_book.buy_code,
+                    'image_filename': sample_book.image_filename,
+                    'old_id': sample_book.old_id,
+                    'title': sample_book.title,
+                    'author': sample_book.author,
+                    'description': sample_book.description
+                },
+            ],
+            'tickets': [
+                {
+                    'id': str(ticket.id),
+                    'event_id': str(ticket.event_id),
+                    'old_id': ticket.old_id,
+                    'ticket_type': ticket.ticket_type,
+                    'eventdate_id': str(ticket.eventdate_id),
+                    'name': ticket.name,
+                    'price': ticket.price,
+                    'last_updated': get_local_time(ticket.last_updated).strftime('%Y-%m-%d %H:%M'),
+                    'created_at': get_local_time(ticket.created_at).strftime('%Y-%m-%d %H:%M'),
+                    'status': ticket.status,
+                    'ticket_number': ticket.ticket_number
+                }
+            ],
+            'errors': []
         }

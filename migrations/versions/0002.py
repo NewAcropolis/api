@@ -11,7 +11,6 @@ revision = '0002 Insert event_types and fees'
 down_revision = '0001 Add event_types,events,fees'
 
 import uuid
-from datetime import datetime
 
 from alembic import op
 
