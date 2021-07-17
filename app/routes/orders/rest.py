@@ -429,7 +429,7 @@ def parse_ipn(ipn):
             price = float("{0:.2f}".format(float(ipn['mc_gross_%d' % counter]) / quantity))
 
             if ipn['item_number%d' % counter].startswith('delivery'):
-                delivery_zone = ipn['item_name%d' % counter]
+                delivery_zone = ipn['option_selection1_%d' % counter]
                 if 'delivery_zone' not in order_data.keys():
                     order_data['delivery_zone'] = delivery_zone
                 else:
