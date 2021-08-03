@@ -150,6 +150,31 @@ class WhenGettingLatestEmails:
         assert json_latest_emails[3] == past_email.serialize()
 
 
+class WhenGettingApprovedEmails:
+    @freeze_time("2019-07-11T10:00:00")
+    def it_returns_approved_emails(self, client, db, db_session):
+        event = create_event(title='Event 1')
+        event_2 = create_event(title='Event 2')
+
+        event_date = create_event_date(event_id=str(event.id), event_datetime='2019-07-20 19:00')
+        event_date_2 = create_event_date(event_id=str(event_2.id), event_datetime='2019-07-13 19:00')
+
+        approved_email = create_email(
+            event_id=str(event.id), created_at='2019-07-01 11:00', send_starts_at='2019-07-10',
+            send_after='2019-07-01 11:00', expires='2019-07-20', email_state='approved')
+        create_email(
+            event_id=str(event_2.id), created_at='2019-07-02 11:00', send_starts_at='2019-07-01', expires='2019-07-12')
+
+        response = client.get(
+            url_for('emails.get_approved_emails'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        json_latest_emails = json.loads(response.get_data(as_text=True))
+
+        assert len(json_latest_emails) == 1
+        assert json_latest_emails[0] == approved_email.serialize()
+
+
 class WhenPostingImportingEmails:
     def it_creates_emails_for_imported_emails(
         self, client, db_session, sample_old_emails, sample_event_with_dates

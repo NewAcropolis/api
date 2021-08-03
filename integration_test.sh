@@ -961,6 +961,14 @@ function GetFutureEmails {
     -H "Authorization: Bearer $TKN"
 }
 
+function GetApprovedEmails {
+    echo "*** Get approved emails ***"
+
+    curl -X GET $api_server'/emails/approved' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
 function ImportMarketings {
     echo "*** Import marketings ***"
 
@@ -1238,6 +1246,10 @@ case "$arg" in
 
         -gfe)
             GetFutureEmails
+        ;;
+
+        -gae)
+            GetApprovedEmails
         ;;
 
         -gm)

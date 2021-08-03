@@ -19,6 +19,7 @@ from app.comms.email import get_email_html, send_email, send_smtp_email
 from app.dao.emails_dao import (
     dao_create_email,
     dao_create_email_to_member,
+    dao_get_approved_emails_for_sending,
     dao_get_future_emails,
     dao_get_latest_emails,
     dao_get_email_by_id,
@@ -343,3 +344,11 @@ def send_email_by_id(email_id):  # pragma:no cover
         return 'Sent email'
     except Exception as e:
         return f'Error sending email: {str(e)}'
+
+
+@emails_blueprint.route('/emails/approved')
+@jwt_required
+def get_approved_emails():
+    emails = dao_get_approved_emails_for_sending()
+
+    return jsonify([e.serialize() for e in emails])
