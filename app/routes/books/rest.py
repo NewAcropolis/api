@@ -12,12 +12,12 @@ from flask_jwt_extended import jwt_required
 from app.dao.books_dao import (
     dao_create_book,
     dao_get_books,
-    # dao_update_book,
+    dao_update_book,
     dao_get_book_by_id
 )
-from app.errors import register_errors
+from app.errors import register_errors, InvalidRequest
 
-from app.routes.books.schemas import post_import_books_schema
+from app.routes.books.schemas import post_import_books_schema, post_update_book_schema
 
 from app.models import Book
 from app.schema_validation import validate
@@ -40,6 +40,22 @@ def get_books():
 def get_book_by_id(book_id):
     book = dao_get_book_by_id(book_id)
     return jsonify(book.serialize())
+
+
+@book_blueprint.route('/book/<uuid:book_id>', methods=['POST'])
+@jwt_required
+def update_book(book_id):
+    data = request.get_json()
+
+    validate(data, post_update_book_schema)
+
+    fetched_book = dao_get_book_by_id(book_id)
+    if not fetched_book:
+        raise InvalidRequest(f'book not found: {book_id}', 404)
+
+    dao_update_book(book_id, **data)
+
+    return jsonify(fetched_book.serialize()), 201
 
 
 @books_blueprint.route('/books/import', methods=['POST'])
