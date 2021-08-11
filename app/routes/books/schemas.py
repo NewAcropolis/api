@@ -31,3 +31,17 @@ post_import_books_schema = {
         "book": post_import_book_schema
     }
 }
+
+post_update_book_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for updating book",
+    "type": "object",
+    "properties": {
+        "description": {"type": "string"},
+        'title': {"type": "string"},
+        'author': {"type": "string"},
+        'price': money,
+        'buy_code': {"type": "string"},
+        'image_filename': {"type": "string"},
+    }
+}

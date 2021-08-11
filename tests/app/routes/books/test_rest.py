@@ -88,6 +88,37 @@ class WhenPostingImportBooks(object):
             assert json_books[i]["author"] == sample_books_for_import[i]["Author"]
 
 
+class WhenPostingUpdateBook:
+
+    def it_updates_a_book(self, client, db_session, sample_book):
+        data = {
+            'buy_code': 'NEW_BUY_CODE',
+            'price': '5.00'
+        }
+
+        response = client.post(
+            url_for('book.update_book', book_id=sample_book.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+        assert response.json['buy_code'] == data['buy_code']
+        assert response.json['price'] == data['price']
+
+    def it_returns_invalid_request(self, client, db_session, sample_uuid):
+        data = {
+            'buy_code': 'NEW_BUY_CODE',
+            'price': '5.00'
+        }
+
+        response = client.post(
+            url_for('book.update_book', book_id=sample_uuid),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 404
+
+
 class WhenGettingBooks:
 
     def it_returns_all_books(self, client, db_session, sample_book):
