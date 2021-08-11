@@ -45,7 +45,7 @@ def get_book_by_id(book_id):
 @book_blueprint.route('/book/<uuid:book_id>', methods=['POST'])
 @jwt_required
 def update_book(book_id):
-    data = request.get_json()
+    data = request.get_json(force=True)
 
     validate(data, post_update_book_schema)
 
