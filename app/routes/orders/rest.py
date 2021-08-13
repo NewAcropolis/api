@@ -56,8 +56,9 @@ register_errors(orders_blueprint)
 
 
 @orders_blueprint.route('/orders', methods=['GET'])
-def get_orders():
-    orders = dao_get_orders()
+@orders_blueprint.route('/orders/<int:year>', methods=['GET'])
+def get_orders(year=None):
+    orders = dao_get_orders(year)
 
     return jsonify([o.serialize() for o in orders])
 

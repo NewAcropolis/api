@@ -1,6 +1,6 @@
 from app import db
 from app.dao.decorators import transactional
-from app.models import Book
+from app.models import Book, BookToOrder
 
 
 @transactional
@@ -30,3 +30,9 @@ def dao_get_book_by_old_id(old_book_id):
 @transactional
 def dao_create_book_to_order(book_to_order):
     db.session.add(book_to_order)
+
+
+@transactional
+def dao_update_book_to_order_quantity(book_id, order_id, quantity):
+    t = BookToOrder.query.filter_by(book_id=book_id, order_id=order_id).one()
+    t.quantity = quantity

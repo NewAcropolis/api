@@ -4,7 +4,7 @@ from app import db
 
 from app.dao import dao_create_record, dao_update_record
 from app.dao.articles_dao import dao_create_article
-from app.dao.books_dao import dao_create_book
+from app.dao.books_dao import dao_create_book, dao_update_book_to_order_quantity
 from app.dao.blacklist_dao import store_token
 from app.dao.emails_dao import dao_create_email, dao_create_email_to_member
 from app.dao.email_providers_dao import dao_create_email_provider
@@ -422,6 +422,7 @@ def create_reject_reason(event_id=None, reason='Test reason', resolved=False, cr
 
 def create_order(
     old_id=1,
+    created_at=None,
     member_id=None,
     old_member_id=1,
     email_address='test@example.com',
@@ -446,6 +447,7 @@ def create_order(
 ):
     data = {
         'old_id': old_id,
+        'created_at': created_at,
         'member_id': member_id,
         'old_member_id': old_member_id,
         'email_address': email_address,
@@ -470,6 +472,10 @@ def create_order(
     }
     order = Order(**data)
     dao_create_record(order)
+
+    if books:
+        for book in books:
+            dao_update_book_to_order_quantity(book.id, order.id, 1)
 
     return order
 

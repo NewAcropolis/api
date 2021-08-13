@@ -231,7 +231,9 @@ class WhenUsingOrderModel:
             'address_country': order.address_country,
             'delivery_zone': order.delivery_zone,
             'delivery_status': order.delivery_status,
+            'delivery_sent': order.delivery_sent,
             'delivery_balance': str(order.delivery_balance),
+            'notes': order.notes,
             'books': [
                 {
                     'id': str(book.id),
@@ -241,7 +243,8 @@ class WhenUsingOrderModel:
                     'old_id': book.old_id,
                     'title': book.title,
                     'author': book.author,
-                    'description': book.description
+                    'description': book.description,
+                    'quantity': 1
                 },
                 {
                     'id': str(sample_book.id),
@@ -251,7 +254,8 @@ class WhenUsingOrderModel:
                     'old_id': sample_book.old_id,
                     'title': sample_book.title,
                     'author': sample_book.author,
-                    'description': sample_book.description
+                    'description': sample_book.description,
+                    'quantity': 1
                 },
             ],
             'tickets': [
@@ -266,7 +270,38 @@ class WhenUsingOrderModel:
                     'last_updated': get_local_time(ticket.last_updated).strftime('%Y-%m-%d %H:%M'),
                     'created_at': get_local_time(ticket.created_at).strftime('%Y-%m-%d %H:%M'),
                     'status': ticket.status,
-                    'ticket_number': ticket.ticket_number
+                    'ticket_number': ticket.ticket_number,
+                    'event': {
+                        'booking_code': None,
+                        'conc_fee': 3,
+                        'description': 'test description',
+                        'event_state': 'draft',
+                        'event_type': 'workshop',
+                        'event_type_id': str(sample_event_with_dates.event_type_id),
+                        'fee': 5,
+                        'has_expired': True,
+                        'id': str(sample_event_with_dates.id),
+                        'image_filename': None,
+                        'multi_day_conc_fee': 10,
+                        'multi_day_fee': 12,
+                        'old_id': 1,
+                        'reject_reasons': [],
+                        'sub_title': None,
+                        'title': 'test_title',
+                        'venue': {'address': '10 London Street, N1 1NN',
+                                  'default': True,
+                                  'directions': 'By bus: 100, 111, 123',
+                                  'id': str(sample_event_with_dates.venue.id),
+                                  'name': 'Head office',
+                                  'old_id': 1}
+                    },
+                    'event_date': {
+                        'end_time': None,
+                        'event_datetime': '2018-01-01 19:00',
+                        'event_id': str(ticket.event_id),
+                        'id': str(ticket.event_date.id),
+                        'speakers': []
+                    },
                 }
             ],
             'errors': []
