@@ -1080,6 +1080,24 @@ function GetBooks {
     -H "Authorization: Bearer $TKN" 
 }
 
+BOOK_ID='UUID'
+update_book=$(cat << EOF
+    {
+        "buy_code": "BUYCODE"
+    }
+EOF
+)
+
+function UpdateBook {
+    echo "*** Update book ***"
+    echo "$BOOK_ID $update_book"
+    curl -X POST $api_server'/book/'$BOOK_ID \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$update_book"
+}
+
+
 function Logout {
     echo "*** Logout ***"
 
@@ -1346,6 +1364,10 @@ case "$arg" in
 
         -gbs)
             GetBooks
+        ;;
+
+        -ub)
+            UpdateBook
         ;;
 
         -uema)
