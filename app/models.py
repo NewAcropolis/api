@@ -445,7 +445,7 @@ class Event(db.Model):
         if dates:
             return dates[-1]['event_datetime'].split(' ')[0]
 
-    def serialize(self):
+    def serialize(self, with_dates=True):
         def sorted_event_dates():
             dates = [e.serialize() for e in self.event_dates]
             dates.sort(key=lambda k: k['event_datetime'])
@@ -462,7 +462,7 @@ class Event(db.Model):
 
         _sorted_event_dates = sorted_event_dates()
 
-        return {
+        _event_json = {
             'id': str(self.id),
             'old_id': self.old_id,
             'event_type': self.event_type.event_type,
@@ -477,11 +477,16 @@ class Event(db.Model):
             'multi_day_fee': self.multi_day_fee,
             'multi_day_conc_fee': self.multi_day_conc_fee,
             'venue': self.venue.serialize() if self.venue else None,
-            'event_dates': sorted_event_dates(),
+            # 'event_dates': sorted_event_dates(),
             'event_state': self.event_state,
             'reject_reasons': serlialized_reject_reasons(),
             'has_expired': has_expired(_sorted_event_dates)
         }
+
+        if with_dates:
+            _event_json.update({'event_dates': sorted_event_dates()})
+
+        return _event_json
 
     def __repr__(self):
         return '<Event: id {}>'.format(self.id)
@@ -752,6 +757,7 @@ class Order(db.Model):
     delivery_zone = db.Column(db.String)
     delivery_status = db.Column(db.String(20))
     delivery_balance = db.Column(db.Numeric(scale=2), default=0.0)
+    delivery_sent = db.Column(db.Boolean)
     books = db.relationship("Book", secondary="book_to_order", order_by='Book.title')
     tickets = db.relationship("Ticket", back_populates="order")
     errors = db.relationship(
@@ -760,6 +766,7 @@ class Order(db.Model):
         cascade="all,delete,delete-orphan",
         order_by='OrderError.error'
     )
+    notes = db.Column(db.String)
 
     def serialize(self):
         def get_serialized_list(array, delete_created_at=True):
@@ -772,8 +779,14 @@ class Order(db.Model):
             return _list
 
         _json = self.short_serialize()
+
+        books_json = get_serialized_list(self.books)
+        for book in books_json:
+            book_to_order = BookToOrder.query.filter_by(book_id=book['id'], order_id=self.id).one()
+            book['quantity'] = book_to_order.quantity
+
         _json.update(
-            books=get_serialized_list(self.books),
+            books=books_json,
             tickets=get_serialized_list(self.tickets, delete_created_at=False),
             errors=get_serialized_list(self.errors, delete_created_at=False)
         )
@@ -799,6 +812,8 @@ class Order(db.Model):
             'delivery_zone': self.delivery_zone,
             'delivery_status': self.delivery_status,
             'delivery_balance': str(self.delivery_balance),
+            'delivery_sent': self.delivery_sent,
+            'notes': self.notes,
         }
 
 
@@ -861,14 +876,17 @@ class Ticket(db.Model):
     status = db.Column(db.String, db.ForeignKey('ticket_statuses.status'), default=TICKET_STATUS_UNUSED)
     ticket_number = db.Column(db.Integer)
     event = db.relationship("Event", backref=db.backref("tickets", uselist=False))
+    event_date = db.relationship("EventDate", backref=db.backref("tickets", uselist=False))
 
     def serialize(self):
         return {
             'id': str(self.id),
             'event_id': str(self.event_id),
+            'event': self.event.serialize(with_dates=False),
             'old_id': self.old_id,
             'ticket_type': self.ticket_type,
             'eventdate_id': str(self.eventdate_id),
+            'event_date': self.event_date.serialize(),
             'name': self.name,
             'price': str(self.price) if self.price else None,
             'last_updated': get_local_time(self.last_updated).strftime('%Y-%m-%d %H:%M'),
