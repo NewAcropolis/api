@@ -11,3 +11,14 @@ post_update_order_address_schema = {
     },
     "required": ["address_street", "address_city", "address_postal_code", "address_country_code"]
 }
+
+post_update_order_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for update order",
+    "type": "object",
+    "properties": {
+        "delivery_sent": {"type": "boolean"},
+        "notes": {"type": "string"},
+    },
+    "required": ["delivery_sent", "notes"]
+}
