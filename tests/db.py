@@ -422,6 +422,7 @@ def create_reject_reason(event_id=None, reason='Test reason', resolved=False, cr
 
 def create_order(
     old_id=1,
+    created_at=None,
     member_id=None,
     old_member_id=1,
     email_address='test@example.com',
@@ -446,6 +447,7 @@ def create_order(
 ):
     data = {
         'old_id': old_id,
+        'created_at': created_at,
         'member_id': member_id,
         'old_member_id': old_member_id,
         'email_address': email_address,
