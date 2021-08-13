@@ -36,7 +36,7 @@ from app.models import (
     DELIVERY_FEE_UK_EU, DELIVERY_FEE_UK_ROW, DELIVERY_FEE_EU_ROW,
     DELIVERY_REFUND_EU_UK, DELIVERY_REFUND_ROW_UK, DELIVERY_REFUND_ROW_EU
 )
-from app.routes.orders.schemas import post_update_order_address_schema
+from app.routes.orders.schemas import post_update_order_address_schema, post_update_order_schema
 from app.schema_validation import validate
 from app.utils.storage import Storage
 
@@ -46,13 +46,13 @@ orders_blueprint = Blueprint('orders', __name__)
 register_errors(orders_blueprint)
 
 
-# @orders_blueprint.route('/order/<string:txn_id>', methods=['GET'])
-# def get_order(txn_id):
-#     order = dao_get_order_with_txn_id(txn_id)
-#     if order:
-#         return jsonify(order.serialize())
-#     else:
-#         return jsonify({'message': f'Transaction ID: {txn_id} not found'}), 404
+@orders_blueprint.route('/order/<string:txn_id>', methods=['GET'])
+def get_order(txn_id):
+    order = dao_get_order_with_txn_id(txn_id)
+    if order:
+        return jsonify(order.serialize())
+    else:
+        return jsonify({'message': f'Transaction ID: {txn_id} not found'}), 404
 
 
 @orders_blueprint.route('/orders', methods=['GET'])
@@ -63,10 +63,17 @@ def get_orders(year=None):
     return jsonify([o.serialize() for o in orders])
 
 
-# @orders_blueprint.route('/orders/complete', methods=['GET', 'POST'])
-# def orders_complete():
-#     current_app.logger.info("Orders complete: %r", request.args)
-#     return 'orders complete'
+@orders_blueprint.route('/order/<string:txn_id>', methods=['POST'])
+@jwt_required
+def update_order(txn_id):
+    data = request.get_json(force=True)
+
+    validate(data, post_update_order_schema)
+
+    order = dao_get_order_with_txn_id(txn_id)
+    dao_update_record(Order, order.id, **data)
+
+    return jsonify(order.serialize())
 
 
 @orders_blueprint.route('/order/update_address/<string:txn_id>', methods=['POST'])

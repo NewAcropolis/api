@@ -986,6 +986,28 @@ class WhenGettingOrders:
         assert response.json[0]['address_street'] == sample_order.address_street
 
 
+class WhenGettingAnOrder:
+    def it_will_the_order_using_txn_id(self, client, db_session, sample_order):
+        create_order()  # another order
+        response = client.get(
+            url_for('orders.get_order', txn_id=sample_order.txn_id)
+        )
+
+        assert len(response.json['books']) == 1
+        assert response.json['books'][0]['id'] == str(sample_order.books[0].id)
+        assert len(response.json['tickets']) == 1
+        assert response.json['tickets'][0]['id'] == str(sample_order.tickets[0].id)
+        assert response.json['txn_id'] == sample_order.txn_id
+        assert response.json['address_street'] == sample_order.address_street
+
+    def it_will_raise_exception_wrong_txn_id(self, client, db_session, sample_uuid):
+        response = client.get(
+            url_for('orders.get_order', txn_id=sample_uuid)
+        )
+
+        assert response.status_code == 404
+
+
 class WhenUpdatingAnOrder:
     def it_will_update_an_order_address(self, client, sample_order, db_session):
         data = {
@@ -1015,3 +1037,20 @@ class WhenUpdatingAnOrder:
 
         assert order_db.address_country_code == data['address_country_code']
         assert response.json['address_country_code'] == data['address_country_code']
+
+    def it_will_update_an_order(self, client, sample_order, db_session):
+        data = {
+            'delivery_sent': True,
+            'notes': 'New notes',
+        }
+        assert not sample_order.delivery_sent
+        response = client.post(
+            url_for('orders.update_order', txn_id=sample_order.txn_id),
+            data=json.dumps(data),
+            headers=[create_authorization_header()]
+        )
+
+        order_db = Order.query.filter_by(id=sample_order.id).one()
+
+        assert order_db.delivery_sent is True
+        assert response.json['notes'] == data['notes']
