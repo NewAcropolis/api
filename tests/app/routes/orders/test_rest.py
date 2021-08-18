@@ -297,6 +297,45 @@ class WhenHandlingPaypalIPN:
                 assert 'http://test/images/qr_codes/{}'.format(
                     str(tickets[n].id)) in mock_send_email.call_args_list[i][0][2]
 
+    def it_creates_orders_and_event_tickets_with_remote_login(
+        self, mocker, client, db_session, sample_event_with_dates
+    ):
+        sample_event_with_dates.remote_access = '111'
+        sample_event_with_dates.remote_pw = 'pwd'
+
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+
+        txn_ids = ['112233']
+        txn_types = ['cart']
+        num_tickets = [1]
+
+        for i in range(len(txn_ids)):
+            _sample_ipn = sample_ipns[i].format(
+                id=sample_event_with_dates.id, txn_id=txn_ids[i], txn_type=txn_types[i])
+
+            with requests_mock.mock() as r:
+                r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+                client.post(
+                    url_for('orders.paypal_ipn'),
+                    data=_sample_ipn,
+                    content_type="application/x-www-form-urlencoded"
+                )
+
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert orders[0].txn_id == txn_ids[0]
+        assert orders[0].txn_type == txn_types[0]
+
+        tickets = dao_get_tickets_for_order(orders[0].id)
+        assert len(tickets) == num_tickets[0]
+
+        assert 'http://test/images/qr_codes/{}'.format(
+            str(tickets[0].id)) in mock_send_email.call_args_list[0][0][2]
+        assert "Meeting id: 111, Password: pwd" in str(mock_send_email.call_args_list[0][0][2])
+
     @pytest.mark.parametrize(
         'country_code,delivery_zone', [
             ('GB', 'UK'),

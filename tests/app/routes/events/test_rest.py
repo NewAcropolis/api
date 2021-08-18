@@ -175,6 +175,8 @@ class WhenGettingEvents:
         assert len(data) == 1
 
     def it_returns_event_by_id(self, client, sample_event_with_dates, db_session):
+        sample_event_with_dates.remote_access = '111'
+        sample_event_with_dates.remote_pw = 'pwd'
         response = client.get(
             url_for('events.get_event_by_id', event_id=sample_event_with_dates.id),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
@@ -182,6 +184,8 @@ class WhenGettingEvents:
 
         data = json.loads(response.get_data(as_text=True))
         assert data['id'] == str(sample_event_with_dates.id)
+        assert data['remote_access'] == '111'
+        assert data['remote_pw'] == 'pwd'
 
     @freeze_time("2018-01-10T19:00:00")
     def it_returns_all_future_events(self, client, sample_event_with_dates, sample_event_type, db_session):
@@ -615,6 +619,41 @@ class WhenPostingCreatingAnEvent:
         assert len(json_events["event_dates"][0]["speakers"]) == 0
         assert len(json_events["event_dates"][1]["speakers"]) == 0
 
+    def it_creates_an_event_with_remote_access_login(
+        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
+    ):
+        mocker.patch("app.utils.storage.Storage.blob_exists", return_value=True)
+        data = {
+            "event_type_id": sample_req_event_data['event_type'].id,
+            "title": "Test title",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "test_img.png",
+            "event_dates": [
+                {
+                    "event_date": "2019-03-01 19:00:00",
+                }
+            ],
+            "venue_id": sample_req_event_data['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+            "remote_access": "111",
+            "remote_pw": "pwd"
+        }
+
+        response = client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 201
+
+        json_events = json.loads(response.get_data(as_text=True))
+        assert json_events["title"] == data["title"]
+        assert json_events["remote_access"] == data["remote_access"]
+        assert json_events["remote_pw"] == data["remote_pw"]
+
     def it_raises_400_when_missing_required_fields(self, client):
         response = client.post(
             url_for('events.create_event'),
@@ -880,7 +919,9 @@ class WhenPostingUpdatingAnEvent:
             "venue_id": sample_req_event_data_with_event['venue'].id,
             "fee": 15,
             "conc_fee": 12,
-            "event_state": READY
+            "event_state": READY,
+            "remote_access": "123",
+            "remote_pw": "pwd"
         }
 
         old_event_date_id = sample_req_event_data_with_event['event'].event_dates[0].id
@@ -910,6 +951,8 @@ class WhenPostingUpdatingAnEvent:
         # use existing event date
         assert event_dates[0].id != old_event_date_id
         assert mock_smtp.called
+        assert json_events['remote_access'] == "123"
+        assert json_events['remote_pw'] == "pwd"
 
     def it_updates_an_event_image_without_checking_if_storage_not_set(
         self, mocker, client, db_session, sample_req_event_data_with_event,
