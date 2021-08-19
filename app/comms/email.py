@@ -90,7 +90,9 @@ def get_email_html(email_type, **kwargs):
             description=h.unescape(event.description),
             details=kwargs.get('details'),
             extra_txt=kwargs.get('extra_txt'),
-            unsubcode=unsubcode
+            unsubcode=unsubcode,
+            remote_access=kwargs.get('remote_access'),
+            remote_pw=kwargs.get('remote_pw'),
         )
     elif email_type == MAGAZINE:
         magazine = dao_get_magazine_by_id(kwargs.get('magazine_id'))
@@ -162,7 +164,8 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
         return 200, None
     if current_app.config['ENVIRONMENT'] != 'live' or current_app.config.get('EMAIL_RESTRICT'):
         message = message.replace('<body>', '<body><div>Test email, intended for {}</div>'.format(to))
-        to = current_app.config['TEST_EMAIL']
+        if current_app.config['TEST_EMAIL'] not in to:
+            to = current_app.config['TEST_EMAIL']
 
     if not from_email:
         from_email = 'noreply@{}'.format(current_app.config['EMAIL_DOMAIN'])
