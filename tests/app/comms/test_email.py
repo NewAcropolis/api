@@ -80,13 +80,19 @@ class WhenSendingAnEmail:
             "'from_email': 'noreply@example.com', 'from_name': 'New Acropolis', 'subject': 'test subject', "
             "'message': 'test message'}")
 
-    def it_sends_email_to_test_email_if_email_restricted(self, mocker, db_session, mock_config_restricted):
+    @pytest.mark.parametrize('email,expected_email', [
+        ('someone@other.com', 'test@example.com'),
+        ('someone+test@example.com', 'someone+test@example.com'),
+    ])
+    def it_sends_email_to_test_email_if_email_restricted(
+        self, mocker, db_session, mock_config_restricted, email, expected_email
+    ):
         mock_logger = mocker.patch('app.comms.email.current_app.logger.info')
 
-        send_email('someone@example.com', 'test subject', 'test message')
+        send_email(email, 'test subject', 'test message')
 
         assert mock_logger.call_args == call(
-            "No email providers configured, email would have sent: {'to': 'test@example.com', "
+            "No email providers configured, email would have sent: {'to': '" + expected_email + "', "
             "'from_email': 'noreply@example.com', 'from_name': 'New Acropolis', 'subject': 'test subject', "
             "'message': 'test message'}")
 
