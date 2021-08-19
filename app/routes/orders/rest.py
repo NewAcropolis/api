@@ -302,6 +302,12 @@ def paypal_ipn():
                     message += "<span>{} on {}</span></div>".format(
                         event.title, event_date.event_datetime.strftime('%-d %b at %-I{}%p'.format(minutes)))
 
+                    if event_date.event.remote_access:
+                        message += f"<br><div>Meeting id: {event_date.event.remote_access}"
+                        if event_date.event.remote_pw:
+                            message += f", Password: {event_date.event.remote_pw}"
+                        message += "</div>"
+
         if errors:
             error_message = ''
             for error in errors:

@@ -67,6 +67,8 @@ post_create_event_schema = {
         },
         "venue_id": {"type": "string"},
         "state": {"type": ["string", "null"]},
+        "remote_access": {"type": "string"},
+        "remote_pw": {"type": "string"},
     },
     "definitions": {
         "type": "object",

@@ -398,6 +398,8 @@ class Event(db.Model):
     reject_reasons = db.relationship("RejectReason", backref=db.backref("event", uselist=True))
     venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
     venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
+    remote_access = db.Column(db.String())
+    remote_pw = db.Column(db.String())
 
     def serialize_event_dates(self):
         def serialize_speakers(speakers):
@@ -477,14 +479,20 @@ class Event(db.Model):
             'multi_day_fee': self.multi_day_fee,
             'multi_day_conc_fee': self.multi_day_conc_fee,
             'venue': self.venue.serialize() if self.venue else None,
-            # 'event_dates': sorted_event_dates(),
             'event_state': self.event_state,
             'reject_reasons': serlialized_reject_reasons(),
-            'has_expired': has_expired(_sorted_event_dates)
+            'has_expired': has_expired(_sorted_event_dates),
         }
 
         if with_dates:
             _event_json.update({'event_dates': sorted_event_dates()})
+
+        if self.remote_access:
+            _event_json.update(
+                {
+                    'remote_access': self.remote_access,
+                    'remote_pw': self.remote_pw
+                })
 
         return _event_json
 

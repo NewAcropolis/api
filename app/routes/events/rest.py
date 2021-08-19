@@ -92,7 +92,9 @@ def create_event():
         multi_day_fee=data.get('multi_day_fee'),
         multi_day_conc_fee=data.get('multi_day_conc_fee'),
         venue_id=data.get('venue_id'),
-        event_state=data.get('event_state', DRAFT)
+        event_state=data.get('event_state', DRAFT),
+        remote_access=data.get('remote_access'),
+        remote_pw=data.get('remote_pw'),
     )
 
     for event_date in data.get('event_dates'):
