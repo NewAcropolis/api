@@ -82,6 +82,7 @@ class WhenSendingAnEmail:
 
     @pytest.mark.parametrize('email,expected_email', [
         ('someone@other.com', 'test@example.com'),
+        ('someone+test+again@example.com', 'test@example.com'),
         ('someone+test@example.com', 'someone+test@example.com'),
     ])
     def it_sends_email_to_test_email_if_email_restricted(

@@ -163,8 +163,8 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
         current_app.logger.info("Emails disabled, unset EMAIL_DISABLED env var to re-enable")
         return 200, None
     if current_app.config['ENVIRONMENT'] != 'live' or current_app.config.get('EMAIL_RESTRICT'):
-        message = message.replace('<body>', '<body><div>Test email, intended for {}</div>'.format(to))
-        if current_app.config['TEST_EMAIL'] not in to:
+        if f"test@{current_app.config['EMAIL_DOMAIN']}" not in to:
+            message = message.replace('<body>', '<body><div>Test email, intended for {}</div>'.format(to))
             to = current_app.config['TEST_EMAIL']
 
     if not from_email:
