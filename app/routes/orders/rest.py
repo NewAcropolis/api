@@ -165,7 +165,7 @@ def paypal_ipn():
                 Order,
                 linked_order.id,
                 delivery_status=status,
-                payment_total=order_data['payment_total'],
+                payment_total=linked_order.payment_total + Decimal(order_data['payment_total']),
                 delivery_balance=abs(diff)
             )
 
