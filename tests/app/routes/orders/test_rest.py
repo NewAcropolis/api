@@ -765,6 +765,9 @@ class WhenHandlingPaypalIPN:
         order_json = completion_order.serialize()
         assert order_json['linked_txn_id'] == order.txn_id
 
+        completed_order = Order.query.filter(Order.txn_id == order.txn_id).one()
+        assert completed_order.payment_total == 13.0
+
     def it_sends_more_fee_demands_if_completion_order_not_fulfilled(self, mocker, app, client, db_session):
         mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
         order = create_order(delivery_balance=3.0, delivery_status='extra', delivery_zone='Europe')
