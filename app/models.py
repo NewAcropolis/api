@@ -766,6 +766,7 @@ class Order(db.Model):
     delivery_status = db.Column(db.String(20))
     delivery_balance = db.Column(db.Numeric(scale=2), default=0.0)
     delivery_sent = db.Column(db.Boolean)
+    refund_issued = db.Column(db.Boolean)
     books = db.relationship("Book", secondary="book_to_order", order_by='Book.title')
     tickets = db.relationship("Ticket", back_populates="order")
     errors = db.relationship(
@@ -821,6 +822,7 @@ class Order(db.Model):
             'delivery_status': self.delivery_status,
             'delivery_balance': str(self.delivery_balance),
             'delivery_sent': self.delivery_sent,
+            'refund_issued': self.refund_issued,
             'notes': self.notes,
         }
 
