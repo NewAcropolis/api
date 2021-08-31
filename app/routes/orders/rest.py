@@ -59,8 +59,25 @@ def get_order(txn_id):
 @orders_blueprint.route('/orders/<int:year>', methods=['GET'])
 def get_orders(year=None):
     orders = dao_get_orders(year)
+    json_orders = [o.serialize() for o in orders]
 
-    return jsonify([o.serialize() for o in orders])
+    linked_orders = {}
+    for o in json_orders:
+        if 'linked_txn_id' in o:
+            if o['linked_txn_id'] not in linked_orders:
+                linked_orders[o['linked_txn_id']] = [o]
+            else:
+                linked_orders[o['linked_txn_id']].append(o)
+
+    for k in linked_orders:
+        for o in linked_orders[k]:
+            json_orders.remove(o)
+
+    for o in json_orders:
+        if o['txn_id'] in linked_orders:
+            o['linked_transactions'] = linked_orders[o['txn_id']]
+
+    return jsonify(json_orders)
 
 
 @orders_blueprint.route('/order/<string:txn_id>', methods=['POST'])
@@ -198,8 +215,8 @@ def paypal_ipn():
                         dao_create_book_to_order(book_to_order)
 
                         product_message += (
-                            f'<tr><td>{product["title"]}</td><td>{product["quantity"]}</td>'
-                            f'<td>{_get_nice_cost(product["price"])}</td></tr>'
+                            f'<tr><td>{product["title"]}</td><td> x {product["quantity"]}</td>'
+                            f'<td> = {_get_nice_cost(product["price"] * product["quantity"])}</td></tr>'
                         )
                 product_message = f'<table>{product_message}</table>'
                 address_delivery_zone = None
@@ -238,8 +255,6 @@ def paypal_ipn():
                             status = "refund"
                             delivery_message = f"Refund of &pound;{order_data['delivery_balance']} " \
                                 "due as wrong delivery fee paid"
-                            admin_message = f"Transaction ID: {order.txn_id}<br>Order ID: {order.id}" \
-                                f"<br>{delivery_message}.{admin_message}"
                         elif diff < 0:
                             _diff = _get_nice_cost(diff)
 
@@ -248,6 +263,9 @@ def paypal_ipn():
                                 "No delivery fee paid" if total_cost == 0 else "Not enough delivery paid",
                                 order_data['delivery_balance']
                             )
+
+                        admin_message = f"Transaction ID: {order.txn_id}<br>Order ID: {order.id}" \
+                            f"<br>{delivery_message}.{admin_message}"
 
                         for user in dao_get_admin_users():
                             send_smtp_email(user.email, f'New Acropolis {status}', admin_message)
@@ -328,7 +346,7 @@ def paypal_ipn():
             delivery_message = (
                 f"<p>{delivery_message}Please "
                 f"<a href='{current_app.config['FRONTEND_URL']}/order/{order_data['delivery_status']}/"
-                f"{order_data['txn_id']}{_delivery_zone_balance}'>complete</a>"
+                f"{order_data['txn_id']}{_delivery_zone_balance}'>complete</a> "
                 "your order.</p>"
             )
 

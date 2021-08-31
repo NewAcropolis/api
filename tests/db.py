@@ -443,7 +443,8 @@ def create_order(
     delivery_balance=0.0,
     books=[],
     tickets=[],
-    errors=[]
+    errors=[],
+    linked_txn_id=None
 ):
     data = {
         'old_id': old_id,
@@ -470,6 +471,9 @@ def create_order(
         'tickets': tickets,
         'errors': errors
     }
+    if linked_txn_id:
+        data.update(linked_txn_id=linked_txn_id)
+
     order = Order(**data)
     dao_create_record(order)
 

@@ -371,7 +371,7 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
-            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5</td></tr></table>"
+            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
             "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
@@ -404,7 +404,7 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
-            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5</td></tr></table>"
+            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
             "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
@@ -476,7 +476,7 @@ class WhenHandlingPaypalIPN:
             f"<p>Thank you for your order ({orders[0].id})</p>"
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[0].id}">'
             '</span><span>test_title on 1 Jan at 7PM</span></div>'
-            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5</td></tr></table>"
+            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
             "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
@@ -510,9 +510,9 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
-            "<table><tr><td>The Spirits of Nature</td><td>1</td><td>5</td></tr></table>"
+            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
             "<p>No address supplied. Please "
-            "<a href='http://frontend-test/order/missing_address/1122334455'>complete</a>your order.</p>"
+            "<a href='http://frontend-test/order/missing_address/1122334455'>complete</a> your order.</p>"
         )
 
     def it_sends_an_email_if_wrong_delivery_zone_for_country(self, mocker, app, client, db_session, sample_book):
@@ -544,9 +544,9 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args == call(
             'payer@example.com',
             'New Acropolis Order',
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td>1</td>"
-            "<td>5</td></tr></table><p>Not enough delivery paid, &pound;1.50 due. Please <a href='"
-            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/1.50'>complete</a>your order.</p>")
+            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
+            "<td> = 5</td></tr></table><p>Not enough delivery paid, &pound;1.50 due. Please <a href='"
+            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/1.50'>complete</a> your order.</p>")
 
     def it_sends_an_email_if_delivery_zone_not_recognized(
         self, mocker, app, client, db_session, sample_book, sample_admin_user
@@ -580,9 +580,9 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args == call(
             'payer@example.com',
             'New Acropolis Order',
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td>1</td>"
-            "<td>5</td></tr></table><p>No delivery fee paid, &pound;6 due. Please <a href='"
-            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/6'>complete</a>your order.</p>"
+            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
+            "<td> = 5</td></tr></table><p>No delivery fee paid, &pound;6 due. Please <a href='"
+            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/6'>complete</a> your order.</p>"
             f"<p>Errors in order: <div>Delivery zone: Unknown not found</div></p>")
         assert mock_send_smtp_email.called
 
@@ -612,9 +612,8 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args == call(
             'payer@example.com', 'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td>"
-            "<td>1</td><td>5</td></tr></table><p>No delivery fee paid, &pound;6 due. "
-            f"Please <a href='http://frontend-test/order/extra/{orders[0].txn_id}/RoW/6'>complete</a>"
-            "your order.</p>"
+            "<td> x 1</td><td> = 5</td></tr></table><p>No delivery fee paid, &pound;6 due. "
+            f"Please <a href='http://frontend-test/order/extra/{orders[0].txn_id}/RoW/6'>complete</a> your order.</p>"
         )
 
     def it_sends_payer_and_admin_emails_if_more_than_1_delivery_id_refund(
@@ -656,8 +655,8 @@ class WhenHandlingPaypalIPN:
         assert len(mock_send_email.call_args_list) == 1
         assert mock_send_email.call_args_list[0] == call(
             'payer@example.com', 'New Acropolis Order',
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td>1</td>"
-            f"<td>5</td></tr></table><p>Refund of &pound;3 due as wrong delivery fee paid"
+            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
+            f"<td> = 5</td></tr></table><p>Refund of &pound;3 due as wrong delivery fee paid"
             f", please send a message to website admin if there is no refund within 5 working days.</p>"
         )
 
@@ -689,9 +688,9 @@ class WhenHandlingPaypalIPN:
 
         assert mock_send_email.call_args == call(
             'payer@example.com', 'New Acropolis Order',
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td>1</td>"
-            "<td>5</td></tr></table><p>Not enough delivery paid, &pound;0.50 due. Please "
-            f"<a href='http://frontend-test/order/extra/{orders[0].txn_id}/Europe/0.50'>complete</a>your order.</p>")
+            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
+            "<td> = 5</td></tr></table><p>Not enough delivery paid, &pound;0.50 due. Please "
+            f"<a href='http://frontend-test/order/extra/{orders[0].txn_id}/Europe/0.50'>complete</a> your order.</p>")
 
     def it_sends_an_email_if_more_than_1_delivery_not_recognised(
         self, mocker, app, client, db_session, sample_book, sample_admin_user
@@ -724,9 +723,9 @@ class WhenHandlingPaypalIPN:
 
         assert mock_send_email.call_args == call(
             'payer@example.com', 'New Acropolis Order',
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td>1</td>"
-            "<td>5</td></tr></table><p>No delivery fee paid, &pound;4.50 due. Please <a href='"
-            f"http://frontend-test/order/extra/{orders[0].txn_id}/Europe/4.50'>complete</a>your order.</p><p>Errors "
+            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
+            "<td> = 5</td></tr></table><p>No delivery fee paid, &pound;4.50 due. Please <a href='"
+            f"http://frontend-test/order/extra/{orders[0].txn_id}/Europe/4.50'>complete</a> your order.</p><p>Errors "
             "in order: <div>Delivery zone: Unknown not found</div><div>Delivery zone: Unknown not found</div></p>")
         assert mock_send_smtp_email.called
 
@@ -798,8 +797,8 @@ class WhenHandlingPaypalIPN:
             f'<p>Thank you for your order ({completion_order.id})</p><div>'
             f'Outstanding payment for order ({order.txn_id}) of &pound;2 for delivery to Europe has been partially '
             'paid.</div><div>Not enough delivery paid, &pound;1 due.</div><p>Please '
-            f"<a href='http://frontend-test/order/extra/{completion_order.txn_id}/Europe/1'>"
-            "complete</a>your order.</p>"
+            f"<a href='http://frontend-test/order/extra/{completion_order.txn_id}/Europe/1'>complete</a>"
+            " your order.</p>"
         )
 
     def it_sends_more_refund_if_completion_order_overpaid(self, mocker, app, client, db_session):
@@ -1015,6 +1014,16 @@ class WhenProcessingTicket:
 
 class WhenGettingOrders:
     def it_will_return_latest_orders(self, client, db_session, sample_order):
+        create_order(
+            txn_id='2223334455',
+            payment_total=1,
+            linked_txn_id=sample_order.txn_id
+        )
+        create_order(
+            txn_id='3334455666',
+            payment_total=1,
+            linked_txn_id=sample_order.txn_id
+        )
         response = client.get(
             url_for('orders.get_orders')
         )
@@ -1026,6 +1035,9 @@ class WhenGettingOrders:
         assert response.json[0]['tickets'][0]['id'] == str(sample_order.tickets[0].id)
         assert response.json[0]['txn_id'] == sample_order.txn_id
         assert response.json[0]['address_street'] == sample_order.address_street
+        assert len(response.json[0]['linked_transactions']) == 2
+        assert response.json[0]['payment_total'] == '10.0'
+        assert response.json[0]['delivery_balance'] == '0.0'
 
 
 class WhenGettingAnOrder:
