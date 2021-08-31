@@ -232,6 +232,7 @@ class WhenUsingOrderModel:
             'delivery_zone': order.delivery_zone,
             'delivery_status': order.delivery_status,
             'delivery_sent': order.delivery_sent,
+            'refund_issued': order.refund_issued,
             'delivery_balance': str(order.delivery_balance),
             'notes': order.notes,
             'books': [
