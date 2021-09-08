@@ -904,3 +904,23 @@ class Ticket(db.Model):
             'status': self.status,
             'ticket_number': self.ticket_number
         }
+
+
+class ReservedPlace(db.Model):
+    __tablename__ = "reserved_places"
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    eventdate_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_dates.id'))
+    name = db.Column(db.String)
+    email = db.Column(db.String)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def serialize(self):
+        event_date = EventDate.query.filter_by(id=self.eventdate_id).one()
+
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'event_date': event_date.event_datetime.strftime('%Y-%m-%d %H:%M')
+        }

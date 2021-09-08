@@ -15,6 +15,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from app.comms.email import send_smtp_email
 from app.dao.events_dao import (
     dao_create_event,
+    dao_create_reserve_place,
     dao_delete_event,
     dao_get_events,
     dao_get_event_by_id,
@@ -32,11 +33,14 @@ from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 
 from app.errors import register_errors, InvalidRequest, PaypalException
-from app.models import Event, EventDate, RejectReason, APPROVED, DRAFT, READY, REJECTED
+from app.models import Event, EventDate, RejectReason, ReservedPlace, APPROVED, DRAFT, READY, REJECTED
 
 from app.na_celery import paypal_tasks
 from app.routes import is_running_locally
-from app.routes.events.schemas import post_create_event_schema, post_update_event_schema, post_import_events_schema
+from app.routes.events.schemas import (
+    post_create_event_schema, post_update_event_schema, post_import_events_schema,
+    post_reserve_place_schema
+)
 
 from app.schema_validation import validate
 
@@ -529,3 +533,19 @@ def import_events():
         res['errors'] = errors
 
     return jsonify(res), 201 if events else 400 if errors else 200
+
+
+@events_blueprint.route('/event/reserve', methods=['POST'])
+@jwt_required
+def reserve_place():
+    data = request.get_json(force=True)
+    validate(data, post_reserve_place_schema)
+    reserved_place = ReservedPlace(
+        eventdate_id=data['eventdate_id'],
+        name=data['name'],
+        email=data['email']
+    )
+    current_app.logger.info("Reserved place %r", reserved_place.serialize())
+
+    dao_create_reserve_place(reserved_place)
+    return jsonify(reserved_place.serialize())

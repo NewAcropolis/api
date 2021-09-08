@@ -4,12 +4,17 @@ from sqlalchemy import and_
 
 from app import db
 from app.dao.decorators import transactional
-from app.models import Event, EventDate
+from app.models import Event, EventDate, ReservedPlace
 
 
 @transactional
 def dao_create_event(event):
     db.session.add(event)
+
+
+@transactional
+def dao_create_reserve_place(reserve_place):
+    db.session.add(reserve_place)
 
 
 @transactional

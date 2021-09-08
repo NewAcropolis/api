@@ -9,7 +9,7 @@ from freezegun import freeze_time
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.errors import PaypalException
-from app.models import Event, EventDate, RejectReason, APPROVED, DRAFT, READY, REJECTED
+from app.models import Event, EventDate, RejectReason, ReservedPlace, APPROVED, DRAFT, READY, REJECTED
 
 from tests.conftest import create_authorization_header, TEST_ADMIN_USER
 from tests.db import create_event, create_event_date, create_event_type, create_speaker, DATA_MAP
@@ -1648,6 +1648,27 @@ class WhenPostingUpdatingAnEvent:
         json_resp = json.loads(response.get_data(as_text=True))
 
         assert json_resp['message'] == 'event not found: {}'.format(sample_uuid)
+
+
+class WhenPostingReservePlace:
+
+    def it_reserves_a_place(self, client, db_session, sample_event_with_dates):
+        data = {
+            'name': 'Mr White',
+            'email': 'someone@other.com',
+            'eventdate_id': str(sample_event_with_dates.event_dates[0].id)
+        }
+        response = client.post(
+            url_for('events.reserve_place'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        reserved_places = ReservedPlace.query.all()
+
+        assert response.json['name'] == data['name']
+        assert response.json['event_date'] == '2018-01-01 19:00'
+        assert len(reserved_places) == 1
+        assert reserved_places[0].name == data['name']
 
 
 class WhenTestingPaypal:
