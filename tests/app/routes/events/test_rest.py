@@ -1670,6 +1670,85 @@ class WhenPostingReservePlace:
         assert len(reserved_places) == 1
         assert reserved_places[0].name == data['name']
 
+    def it_doesnt_reserve_a_place_again(self, client, db_session, sample_event_with_dates):
+        data = {
+            'name': 'Mr White',
+            'email': 'someone@other.com',
+            'eventdate_id': str(sample_event_with_dates.event_dates[0].id)
+        }
+        response = client.post(
+            url_for('events.reserve_place'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        response = client.post(
+            url_for('events.reserve_place'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        reserved_places = ReservedPlace.query.all()
+
+        assert response.json['error'] == data['name'] + " has already reserved a place"
+        assert len(reserved_places) == 1
+
+
+class WhenGettingReservePlace:
+
+    def it_gets_all_reserved_places(
+        self, client, db_session, sample_event_date_without_event, sample_event_with_dates
+    ):
+        another_event_date = create_event_date(event_datetime='2021-09-09 19:00')
+        create_event(
+            title='test_title 2',
+            description='test description 2',
+            event_dates=[sample_event_date_without_event, another_event_date]
+        )
+
+        data = {
+            'name': 'Mr White',
+            'email': 'someone@other.com',
+            'eventdate_id': str(sample_event_with_dates.event_dates[0].id)
+        }
+        client.post(
+            url_for('events.reserve_place'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        data_2 = {
+            'name': 'Mr Blue',
+            'email': 'someone@another.com',
+            'eventdate_id': str(sample_event_with_dates.event_dates[0].id)
+        }
+
+        client.post(
+            url_for('events.reserve_place'),
+            data=json.dumps(data_2),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        data_3 = {
+            'name': 'Mr Blue',
+            'email': 'someone@another.com',
+            'eventdate_id': str(another_event_date.id)
+        }
+
+        client.post(
+            url_for('events.reserve_place'),
+            data=json.dumps(data_3),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        response = client.get(
+            url_for('events.get_reserved_places', eventdate_id=str(sample_event_with_dates.event_dates[0].id)),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert len(response.json) == 2
+        assert response.json[0]['event_date'] == response.json[1]['event_date'] == '2018-01-02 19:00'
+
 
 class WhenTestingPaypal:
 

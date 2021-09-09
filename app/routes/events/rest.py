@@ -16,6 +16,8 @@ from app.comms.email import send_smtp_email
 from app.dao.events_dao import (
     dao_create_event,
     dao_create_reserve_place,
+    dao_has_reserved_place,
+    dao_get_reserved_places,
     dao_delete_event,
     dao_get_events,
     dao_get_event_by_id,
@@ -540,6 +542,14 @@ def import_events():
 def reserve_place():
     data = request.get_json(force=True)
     validate(data, post_reserve_place_schema)
+
+    if dao_has_reserved_place(data['name'], data['email'], data['eventdate_id']):
+        return jsonify(
+            {
+                "error": f"{data['name']} has already reserved a place"
+            }
+        )
+
     reserved_place = ReservedPlace(
         eventdate_id=data['eventdate_id'],
         name=data['name'],
@@ -549,3 +559,10 @@ def reserve_place():
 
     dao_create_reserve_place(reserved_place)
     return jsonify(reserved_place.serialize())
+
+
+@events_blueprint.route('/event/reserved/<uuid:eventdate_id>', methods=['GET'])
+@jwt_required
+def get_reserved_places(eventdate_id):
+    reserved_places = dao_get_reserved_places(eventdate_id)
+    return jsonify([r.serialize() for r in reserved_places])

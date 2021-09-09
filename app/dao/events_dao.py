@@ -17,6 +17,18 @@ def dao_create_reserve_place(reserve_place):
     db.session.add(reserve_place)
 
 
+def dao_get_reserved_places(eventdate_id):
+    return ReservedPlace.query.filter_by(eventdate_id=eventdate_id).order_by(ReservedPlace.name).all()
+
+
+def dao_has_reserved_place(name, email, eventdate_id):
+    return ReservedPlace.query.filter_by(
+        name=name,
+        email=email,
+        eventdate_id=eventdate_id
+    ).first()
+
+
 @transactional
 def dao_delete_event(event_id):
     event = Event.query.filter_by(id=event_id).one()
