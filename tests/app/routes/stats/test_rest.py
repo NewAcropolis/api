@@ -41,6 +41,7 @@ class WhenGettingSubscribersAndSocialStats:
             'app.routes.stats.rest.dao_get_emails_sent_count',
             return_value=10
         )
+        mocker.patch('requests.post')
         response = client.get(
             url_for('stats.send_email_stats', month=12, year=2020),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]

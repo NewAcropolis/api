@@ -19,6 +19,7 @@ class WhenProcessingSendEmailsTask:
     def it_calls_send_email_to_task(self, mocker, db, db_session, sample_email, sample_member, sample_email_provider):
         mock_send_email = mocker.patch(
             'app.na_celery.email_tasks.send_email', return_value=(200, sample_email_provider.id))
+        mocker.patch('requests.post')
         send_emails(sample_email.id)
 
         assert mock_send_email.call_args[0][0] == sample_member.email
@@ -224,6 +225,7 @@ class WhenProcessingSendEmailsTask:
             'ENVIRONMENT': 'live',
             'EMAIL_RESTRICT': None
         })
+        mocker.patch('requests.post')
         email_provider = create_email_provider(daily_limit=2)
 
         member_1 = create_member(name='Test 1', email='test1@example.com')
