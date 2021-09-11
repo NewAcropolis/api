@@ -12,7 +12,7 @@ import time
 from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.comms.email import send_smtp_email
+from app.comms.email import send_email, send_smtp_email
 from app.dao.events_dao import (
     dao_create_event,
     dao_create_reserve_place,
@@ -31,6 +31,7 @@ from app.dao.event_dates_dao import dao_create_event_date, dao_get_event_date_by
 from app.dao.event_types_dao import dao_get_event_type_by_old_id, dao_get_event_type_by_id
 from app.dao.reject_reasons_dao import dao_create_reject_reason, dao_update_reject_reason
 from app.dao.speakers_dao import dao_get_speaker_by_name, dao_get_speaker_by_id
+from app.dao.tickets_dao import dao_get_tickets_for_event_date
 from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 
@@ -558,11 +559,27 @@ def reserve_place():
     current_app.logger.info("Reserved place %r", reserved_place.serialize())
 
     dao_create_reserve_place(reserved_place)
-    return jsonify(reserved_place.serialize())
+
+    reserved_place_json = reserved_place.serialize()
+
+    send_email(
+        data['email'],
+        f"Reserved place for: {reserved_place_json['event_title']}",
+        f"{reserved_place_json['name']},<br>Thank you for your reservation of {reserved_place_json['event_title']} "
+        f"on {reserved_place_json['event_date']}"
+    )
+
+    return jsonify(reserved_place_json)
 
 
-@events_blueprint.route('/event/reserved/<uuid:eventdate_id>', methods=['GET'])
+@events_blueprint.route('/event/tickets_and_reserved/<uuid:eventdate_id>', methods=['GET'])
 @jwt_required
-def get_reserved_places(eventdate_id):
+def get_tickets_and_reserved_places(eventdate_id):
     reserved_places = dao_get_reserved_places(eventdate_id)
-    return jsonify([r.serialize() for r in reserved_places])
+    tickets = dao_get_tickets_for_event_date(eventdate_id)
+
+    tickets_and_reserved_places = {
+        "reserved_places": [r.serialize() for r in reserved_places],
+        "tickets": [t.serialize() for t in tickets],
+    }
+    return jsonify(tickets_and_reserved_places)
