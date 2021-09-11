@@ -917,10 +917,12 @@ class ReservedPlace(db.Model):
 
     def serialize(self):
         event_date = EventDate.query.filter_by(id=self.eventdate_id).one()
+        event_title = Event.query.filter_by(id=event_date.event_id).one()
 
         return {
             'id': self.id,
             'name': self.name,
             'email': self.email,
-            'event_date': event_date.event_datetime.strftime('%Y-%m-%d %H:%M')
+            'event_date': event_date.event_datetime.strftime('%Y-%m-%d %H:%M'),
+            'event_title': event_title.title
         }
