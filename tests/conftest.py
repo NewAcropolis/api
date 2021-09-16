@@ -81,7 +81,8 @@ def app():
         'INSTAGRAM_URL': 'http://example.instagram',
         'DISABLE_STATS': False,
         'EMAIL_DISABLED': None,
-        'SMTP_SERVER': 'test.smtp.server'
+        'SMTP_SERVER': 'test.smtp.server',
+        'TEST_VERIFY': None,
     })
 
     ctx = _app.app_context()

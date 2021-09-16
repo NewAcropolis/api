@@ -124,7 +124,8 @@ def paypal_ipn():
     params = request.form.to_dict(flat=False)
     current_app.logger.info('IPN params: %r', params)
 
-    if current_app.config['TEST_VERIFY'] and current_app.config['ENVIRONMENT'] != 'live':
+    # if current_app.config['TEST_VERIFY'] and current_app.config['ENVIRONMENT'] != 'live':
+    if current_app.config['TEST_VERIFY']:
         v_response = 'VERIFIED'
         current_app.logger.info('Test paypal verify')
     else:
