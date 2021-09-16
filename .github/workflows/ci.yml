@@ -190,7 +190,6 @@ jobs:
           GOOGLE_STORE: ${{ secrets.GOOGLE_STORE }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_USER_live: ${{ secrets.SMTP_USER }}
-          SMTP_PASS_live: ${{ secrets.SMTP_PASS }}
-          TEST_VERIFY: 1  # temporary measure to replay IPN
+          SMTP_PASS_live: ${{ secrets.SMTP_PASS }}          
         run: |
           ./scripts/deploy.sh live
