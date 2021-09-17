@@ -897,7 +897,7 @@ class Ticket(db.Model):
             'ticket_type': self.ticket_type,
             'eventdate_id': str(self.eventdate_id),
             'event_date': self.event_date.serialize(),
-            'name': self.name,
+            'name': self.name if self.name else self.order.buyer_name,
             'price': str(self.price) if self.price else None,
             'last_updated': get_local_time(self.last_updated).strftime('%Y-%m-%d %H:%M'),
             'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d %H:%M'),

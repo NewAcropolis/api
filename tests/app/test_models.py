@@ -266,7 +266,7 @@ class WhenUsingOrderModel:
                     'old_id': ticket.old_id,
                     'ticket_type': ticket.ticket_type,
                     'eventdate_id': str(ticket.eventdate_id),
-                    'name': ticket.name,
+                    'name': order.buyer_name,
                     'price': ticket.price,
                     'last_updated': get_local_time(ticket.last_updated).strftime('%Y-%m-%d %H:%M'),
                     'created_at': get_local_time(ticket.created_at).strftime('%Y-%m-%d %H:%M'),
