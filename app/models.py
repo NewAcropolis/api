@@ -897,10 +897,32 @@ class Ticket(db.Model):
             'ticket_type': self.ticket_type,
             'eventdate_id': str(self.eventdate_id),
             'event_date': self.event_date.serialize(),
-            'name': self.name,
+            'name': self.name if self.name else self.order.buyer_name,
             'price': str(self.price) if self.price else None,
             'last_updated': get_local_time(self.last_updated).strftime('%Y-%m-%d %H:%M'),
             'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d %H:%M'),
             'status': self.status,
             'ticket_number': self.ticket_number
+        }
+
+
+class ReservedPlace(db.Model):
+    __tablename__ = "reserved_places"
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    eventdate_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_dates.id'))
+    name = db.Column(db.String)
+    email = db.Column(db.String)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def serialize(self):
+        event_date = EventDate.query.filter_by(id=self.eventdate_id).one()
+        event_title = Event.query.filter_by(id=event_date.event_id).one()
+
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'event_date': event_date.event_datetime.strftime('%Y-%m-%d %H:%M'),
+            'event_title': event_title.title
         }

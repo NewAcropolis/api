@@ -236,3 +236,16 @@ post_update_event_schema = {
         "reject_reason": reject_reason_schema
     },
 }
+
+
+post_reserve_place_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for updating event",
+    "type": "object",
+    "properties": {
+        "eventdate_id": uuid,
+        "name": {"type": "string"},
+        "email": {"format": "email"},
+    },
+    "required": ["eventdate_id", "name", "email"]
+}

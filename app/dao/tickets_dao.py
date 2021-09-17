@@ -8,6 +8,10 @@ def dao_get_tickets_for_order(order_id):
     return Ticket.query.filter_by(order_id=order_id).order_by(Ticket.created_at).all()
 
 
+def dao_get_tickets_for_event_date(eventdate_id):
+    return Ticket.query.filter_by(eventdate_id=eventdate_id).order_by(Ticket.created_at).all()
+
+
 @transactional
 def dao_update_ticket(ticket_id, **kwargs):
     try:
