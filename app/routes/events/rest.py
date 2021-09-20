@@ -12,7 +12,7 @@ import time
 from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.comms.email import send_email, send_smtp_email
+from app.comms.email import get_email_html, send_email, send_smtp_email
 from app.dao.events_dao import (
     dao_create_event,
     dao_create_reserve_place,
@@ -36,7 +36,7 @@ from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 
 from app.errors import register_errors, InvalidRequest, PaypalException
-from app.models import Event, EventDate, RejectReason, ReservedPlace, APPROVED, DRAFT, READY, REJECTED
+from app.models import Event, EventDate, RejectReason, ReservedPlace, APPROVED, DRAFT, READY, REJECTED, BASIC
 
 from app.na_celery import paypal_tasks
 from app.routes import is_running_locally
@@ -562,11 +562,16 @@ def reserve_place():
 
     reserved_place_json = reserved_place.serialize()
 
+    message = f"{reserved_place_json['name']},<br>"\
+        f"Thank you for your reservation of {reserved_place_json['event_title']} "\
+        f"on {reserved_place_json['nice_event_date']}"
+
+    message_html = get_email_html(BASIC, message=message)
+
     send_email(
         data['email'],
         f"Reserved place for: {reserved_place_json['event_title']}",
-        f"{reserved_place_json['name']},<br>Thank you for your reservation of {reserved_place_json['event_title']} "
-        f"on {reserved_place_json['event_date']}"
+        message_html
     )
 
     return jsonify(reserved_place_json)

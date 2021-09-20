@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
-from app.utils.time import get_local_time
+from app.utils.time import get_local_time, make_ordinal
 
 ANON_PROCESS = 'anon_process'
 ANON_REMINDER = 'anon_reminder'
@@ -924,5 +924,13 @@ class ReservedPlace(db.Model):
             'name': self.name,
             'email': self.email,
             'event_date': event_date.event_datetime.strftime('%Y-%m-%d %H:%M'),
+            'nice_event_date': "{day}, {day_number} of {month} at {time}".format(
+                day=event_date.event_datetime.strftime('%A'),
+                day_number=make_ordinal(event_date.event_datetime.strftime('%-d')),
+                month=event_date.event_datetime.strftime('%B'),
+                time=event_date.event_datetime.strftime(
+                    "%-I:%M %p" if event_date.event_datetime.strftime("%M") != '00' else "%-I %p"
+                )
+            ),
             'event_title': event_title.title
         }
