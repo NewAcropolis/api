@@ -1671,10 +1671,11 @@ class WhenPostingReservePlace:
         assert len(reserved_places) == 1
         assert reserved_places[0].name == data['name']
         assert mock_send_email.called_once()
-        assert mock_send_email.call_args == call(
-            'someone@other.com',
-            'Reserved place for: test_title',
-            'Mr White,<br>Thank you for your reservation of test_title on 2018-01-01 19:00'
+        assert mock_send_email.call_args[0][0] == 'someone@other.com'
+        assert mock_send_email.call_args[0][1] == 'Reserved place for: test_title'
+        assert (
+            'Mr White,<br>Thank you for your reservation of test_title on Monday, 1st of January at 7 PM' in
+            mock_send_email.call_args[0][2]
         )
 
     def it_doesnt_reserve_a_place_again(self, client, db_session, sample_event_with_dates):
