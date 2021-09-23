@@ -121,8 +121,18 @@ def _get_nice_cost(cost):
 
 @orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
 def paypal_ipn():
+    message = ''
     params = request.form.to_dict(flat=False)
     current_app.logger.info('IPN params: %r', params)
+
+    def get_data(params):
+        data = {}
+        for key in params.keys():
+            if isinstance(params[key], list):
+                data[key] = params[key][0]
+            else:
+                data[key] = params[key]
+        return data
 
     if current_app.config['TEST_VERIFY'] and current_app.config['ENVIRONMENT'] != 'live':
         v_response = 'VERIFIED'
@@ -147,184 +157,183 @@ def paypal_ipn():
     if v_response == 'VERIFIED':
         status = product_message = delivery_message = error_message = ''
         diff = 0.0
-        data = {}
-        for key in params.keys():
-            if isinstance(params[key], list):
-                data[key] = params[key][0]
-            else:
-                data[key] = params[key]
+        data = get_data(params)
 
         order_data, tickets, events, products, delivery_zones, errors = parse_ipn(data)
-
-        if not order_data:
-            return 'Paypal IPN no order created'
         order_data['params'] = json.dumps(params)
 
         order = Order(**order_data)
         dao_create_record(order)
 
-        message = f"<p>Thank you for your order ({order.id})</p>"
-
-        if order_data['txn_type'] == 'web_accept' and order_data['linked_txn_id']:
-            linked_order = dao_get_order_with_txn_id(order_data['linked_txn_id'])
-
-            diff = linked_order.delivery_balance - Decimal(order_data['payment_total'])
-            if diff == 0:
-                status = statuses.DELIVERY_EXTRA_PAID
-            elif diff > 0:
-                status = statuses.DELIVERY_EXTRA
-                current_app.logger.warning('Delivery balance not paid in full')
-            elif diff < 0:
-                status = statuses.DELIVERY_REFUND
-                current_app.logger.warning('Delivery balance overpaid')
-
-            dao_update_record(
-                Order,
-                linked_order.id,
-                delivery_status=status,
-                payment_total=linked_order.payment_total + Decimal(order_data['payment_total']),
-                delivery_balance=abs(diff)
-            )
-
-            order_data['delivery_status'] = status
-            order_data['delivery_zone'] = linked_order.delivery_zone
-            order_data['delivery_balance'] = abs(diff)
-
-            _payment_total = _get_nice_cost(order.payment_total)
-            _diff = _get_nice_cost(diff)
-            if status == statuses.DELIVERY_EXTRA_PAID:
-                message += f"<div>Outstanding payment for order ({order_data['linked_txn_id']}) of &pound;" \
-                    f"{_payment_total} for delivery to {order_data['delivery_zone']} has been paid.</div>"
-            elif status == statuses.DELIVERY_EXTRA:
-                message += f"<div>Outstanding payment for order ({order_data['linked_txn_id']}) of &pound;" \
-                    f"{_payment_total} for delivery to {order_data['delivery_zone']} has been " \
-                    f"partially paid.</div><div>Not enough delivery paid, &pound;{_diff} due.</div>"
-            elif status == statuses.DELIVERY_REFUND:
-                message += f"<p>You have overpaid for delivery on order ({order_data['linked_txn_id']}) " \
-                    f"by &pound;{_diff}, please send a message to website admin if there is " \
-                    "no refund within 5 working days.</p>"
+        if order_data['payment_status'] != 'Completed':
+            err_msg = f"Payment not Completed: {order_data['payment_status']}"
+            errors = [err_msg]
         else:
-            if products:
-                for product in products:
-                    if product['type'] == BOOK:
-                        book_to_order = BookToOrder(
-                            book_id=product['book_id'],
-                            order_id=order.id,
-                            quantity=product['quantity']
-                        )
-                        dao_create_book_to_order(book_to_order)
+            message = f"<p>Thank you for your order ({order.id})</p>"
 
-                        product_message += (
-                            f'<tr><td>{product["title"]}</td><td> x {product["quantity"]}</td>'
-                            f'<td> = {_get_nice_cost(product["price"] * product["quantity"])}</td></tr>'
-                        )
-                product_message = f'<table>{product_message}</table>'
-                address_delivery_zone = None
+            if order_data['txn_type'] == 'web_accept' and order_data['linked_txn_id']:
+                linked_order = dao_get_order_with_txn_id(order_data['linked_txn_id'])
 
-                if 'address_country_code' not in order_data:
-                    delivery_message = "No address supplied. "
-                    status = "missing_address"
-                else:
-                    address_delivery_zone = get_delivery_zone(order_data['address_country_code'])
-                    admin_message = ""
-
-                    total_cost = 0
-                    for dz in delivery_zones:
-                        _d = [_dz for _dz in DELIVERY_ZONES if _dz['name'] == dz]
-                        if _d:
-                            d = _d[0]
-                            total_cost += d['price']
-                            _price = _get_nice_cost(d['price'])
-                            admin_message += f"<tr><td>{d['name']}</td><td>{_price}</td></tr>"
-                        else:
-                            errors.append(f'Delivery zone: {dz} not found')
-                            admin_message += f"<tr><td>{dz}</td><td>Not found</td></tr>"
-                    _total_cost = _get_nice_cost(total_cost)
-                    _price = _get_nice_cost(address_delivery_zone['price'])
-                    diff = total_cost - address_delivery_zone['price']
-
-                    if diff != 0:
-                        admin_message = f"<p>Order delivery zones: <table>{admin_message}" \
-                            f"</table>Total: &pound;{_total_cost}</p>"
-
-                        admin_message += "<p>Expected delivery zone: " \
-                            f"{address_delivery_zone['name']} - &pound;{_price}</p>"
-
-                        order_data['delivery_balance'] = _get_nice_cost(diff)
-                        if diff > 0:
-                            status = "refund"
-                            delivery_message = f"Refund of &pound;{order_data['delivery_balance']} " \
-                                "due as wrong delivery fee paid"
-                        elif diff < 0:
-                            _diff = _get_nice_cost(diff)
-
-                            status = "extra"
-                            delivery_message = "{}, &pound;{} due. ".format(
-                                "No delivery fee paid" if total_cost == 0 else "Not enough delivery paid",
-                                order_data['delivery_balance']
-                            )
-
-                        admin_message = f"Transaction ID: {order.txn_id}<br>Order ID: {order.id}" \
-                            f"<br>{delivery_message}.{admin_message}"
-
-                        for user in dao_get_admin_users():
-                            send_smtp_email(user.email, f'New Acropolis {status}', admin_message)
-                    else:
-                        status = statuses.DELIVERY_PAID
+                diff = linked_order.delivery_balance - Decimal(order_data['payment_total'])
+                if diff == 0:
+                    status = statuses.DELIVERY_EXTRA_PAID
+                elif diff > 0:
+                    status = statuses.DELIVERY_EXTRA
+                    current_app.logger.warning('Delivery balance not paid in full')
+                elif diff < 0:
+                    status = statuses.DELIVERY_REFUND
+                    current_app.logger.warning('Delivery balance overpaid')
 
                 dao_update_record(
-                    Order, order.id,
+                    Order,
+                    linked_order.id,
                     delivery_status=status,
-                    delivery_zone=address_delivery_zone['name'] if address_delivery_zone else None,
-                    delivery_balance=str(abs(diff))
+                    payment_total=linked_order.payment_total + Decimal(order_data['payment_total']),
+                    delivery_balance=abs(diff)
                 )
 
-                if delivery_message:
-                    order_data['delivery_status'] = status
-                    if status == 'refund':
-                        delivery_message = f"<p>{delivery_message}, please send a message " \
-                            "to website admin if there is no refund within 5 working days.</p>"
+                order_data['delivery_status'] = status
+                order_data['delivery_zone'] = linked_order.delivery_zone
+                order_data['delivery_balance'] = abs(diff)
+
+                _payment_total = _get_nice_cost(order.payment_total)
+                _diff = _get_nice_cost(diff)
+                if status == statuses.DELIVERY_EXTRA_PAID:
+                    message += f"<div>Outstanding payment for order ({order_data['linked_txn_id']}) of &pound;" \
+                        f"{_payment_total} for delivery to {order_data['delivery_zone']} has been paid.</div>"
+                elif status == statuses.DELIVERY_EXTRA:
+                    message += f"<div>Outstanding payment for order ({order_data['linked_txn_id']}) of &pound;" \
+                        f"{_payment_total} for delivery to {order_data['delivery_zone']} has been " \
+                        f"partially paid.</div><div>Not enough delivery paid, &pound;{_diff} due.</div>"
+                elif status == statuses.DELIVERY_REFUND:
+                    message += f"<p>You have overpaid for delivery on order ({order_data['linked_txn_id']}) " \
+                        f"by &pound;{_diff}, please send a message to website admin if there is " \
+                        "no refund within 5 working days.</p>"
+            else:
+                if products:
+                    for product in products:
+                        if product['type'] == BOOK:
+                            book_to_order = BookToOrder(
+                                book_id=product['book_id'],
+                                order_id=order.id,
+                                quantity=product['quantity']
+                            )
+                            dao_create_book_to_order(book_to_order)
+
+                            product_message += (
+                                f'<tr><td>{product["title"]}</td><td> x {product["quantity"]}</td>'
+                                f'<td> = {_get_nice_cost(product["price"] * product["quantity"])}</td></tr>'
+                            )
+                    product_message = f'<table>{product_message}</table>'
+                    address_delivery_zone = None
+
+                    if 'address_country_code' not in order_data:
+                        delivery_message = "No address supplied. "
+                        status = "missing_address"
                     else:
-                        order_data['delivery_zone'] = address_delivery_zone['name'] if address_delivery_zone else None
-                else:
-                    product_message = (
-                        f'{product_message}<br><div>Delivery to: {order_data["address_street"]},'
-                        f'{order_data["address_city"]}, '
-                        f'{order_data["address_postal_code"]}, {order_data["address_country"]}</div>'
+                        address_delivery_zone = get_delivery_zone(order_data['address_country_code'])
+                        admin_message = ""
+
+                        total_cost = 0
+                        for dz in delivery_zones:
+                            _d = [_dz for _dz in DELIVERY_ZONES if _dz['name'] == dz]
+                            if _d:
+                                d = _d[0]
+                                total_cost += d['price']
+                                _price = _get_nice_cost(d['price'])
+                                admin_message += f"<tr><td>{d['name']}</td><td>{_price}</td></tr>"
+                            else:
+                                errors.append(f'Delivery zone: {dz} not found')
+                                admin_message += f"<tr><td>{dz}</td><td>Not found</td></tr>"
+                        _total_cost = _get_nice_cost(total_cost)
+                        _price = _get_nice_cost(address_delivery_zone['price'])
+                        diff = total_cost - address_delivery_zone['price']
+
+                        if diff != 0:
+                            admin_message = f"<p>Order delivery zones: <table>{admin_message}" \
+                                f"</table>Total: &pound;{_total_cost}</p>"
+
+                            admin_message += "<p>Expected delivery zone: " \
+                                f"{address_delivery_zone['name']} - &pound;{_price}</p>"
+
+                            order_data['delivery_balance'] = _get_nice_cost(diff)
+                            if diff > 0:
+                                status = "refund"
+                                delivery_message = f"Refund of &pound;{order_data['delivery_balance']} " \
+                                    "due as wrong delivery fee paid"
+                            elif diff < 0:
+                                _diff = _get_nice_cost(diff)
+
+                                status = "extra"
+                                delivery_message = "{}, &pound;{} due. ".format(
+                                    "No delivery fee paid" if total_cost == 0 else "Not enough delivery paid",
+                                    order_data['delivery_balance']
+                                )
+
+                            admin_message = f"Transaction ID: {order.txn_id}<br>Order ID: {order.id}" \
+                                f"<br>{delivery_message}.{admin_message}"
+
+                            for user in dao_get_admin_users():
+                                send_smtp_email(user.email, f'New Acropolis {status}', admin_message)
+                        else:
+                            status = statuses.DELIVERY_PAID
+
+                    dao_update_record(
+                        Order, order.id,
+                        delivery_status=status,
+                        delivery_zone=address_delivery_zone['name'] if address_delivery_zone else None,
+                        delivery_balance=str(abs(diff))
                     )
 
-            for i, _ticket in enumerate(tickets):
-                _ticket['order_id'] = order.id
-                ticket = Ticket(**_ticket)
-                dao_create_record(ticket)
-                tickets[i]['ticket_id'] = ticket.id
+                    if delivery_message:
+                        order_data['delivery_status'] = status
+                        if status == 'refund':
+                            delivery_message = f"<p>{delivery_message}, please send a message " \
+                                "to website admin if there is no refund within 5 working days.</p>"
+                        else:
+                            order_data['delivery_zone'] = address_delivery_zone['name']\
+                                if address_delivery_zone else None
+                    else:
+                        product_message = (
+                            f'{product_message}<br><div>Delivery to: {order_data["address_street"]},'
+                            f'{order_data["address_city"]}, '
+                            f'{order_data["address_postal_code"]}, {order_data["address_country"]}</div>'
+                        )
 
-            if tickets:
-                storage = Storage(current_app.config['STORAGE'])
-                for i, event in enumerate(events):
-                    link_to_post = '{}{}'.format(
-                        current_app.config['API_BASE_URL'], url_for('.use_ticket', ticket_id=tickets[i]['ticket_id']))
-                    img = pyqrcode.create(link_to_post)
-                    buffer = io.BytesIO()
-                    img.png(buffer, scale=2)
+                if tickets:
+                    for i, _ticket in enumerate(tickets):
+                        _ticket['order_id'] = order.id
+                        ticket = Ticket(**_ticket)
+                        dao_create_record(ticket)
+                        tickets[i]['ticket_id'] = ticket.id
 
-                    img_b64 = base64.b64encode(buffer.getvalue())
-                    target_image_filename = '{}/{}'.format('qr_codes', str(tickets[i]['ticket_id']))
-                    storage.upload_blob_from_base64string('qr.code', target_image_filename, img_b64)
+                    storage = Storage(current_app.config['STORAGE'])
+                    for i, event in enumerate(events):
+                        link_to_post = '{}{}'.format(
+                            current_app.config['API_BASE_URL'],
+                            url_for('.use_ticket', ticket_id=tickets[i]['ticket_id'])
+                        )
+                        img = pyqrcode.create(link_to_post)
+                        buffer = io.BytesIO()
+                        img.png(buffer, scale=2)
 
-                    message += '<div><span><img src="{}/{}"></span>'.format(
-                        current_app.config['IMAGES_URL'], target_image_filename)
+                        img_b64 = base64.b64encode(buffer.getvalue())
+                        target_image_filename = '{}/{}'.format('qr_codes', str(tickets[i]['ticket_id']))
+                        storage.upload_blob_from_base64string('qr.code', target_image_filename, img_b64)
 
-                    event_date = dao_get_event_date_by_id(tickets[i]['eventdate_id'])
-                    minutes = ':%M' if event_date.event_datetime.minute > 0 else ''
-                    message += "<span>{} on {}</span></div>".format(
-                        event.title, event_date.event_datetime.strftime('%-d %b at %-I{}%p'.format(minutes)))
+                        message += '<div><span><img src="{}/{}"></span>'.format(
+                            current_app.config['IMAGES_URL'], target_image_filename)
 
-                    if event_date.event.remote_access:
-                        message += f"<br><div>Meeting id: {event_date.event.remote_access}"
-                        if event_date.event.remote_pw:
-                            message += f", Password: {event_date.event.remote_pw}"
-                        message += "</div>"
+                        event_date = dao_get_event_date_by_id(tickets[i]['eventdate_id'])
+                        minutes = ':%M' if event_date.event_datetime.minute > 0 else ''
+                        message += "<span>{} on {}</span></div>".format(
+                            event.title, event_date.event_datetime.strftime('%-d %b at %-I{}%p'.format(minutes)))
+
+                        if event_date.event.remote_access:
+                            message += f"<br><div>Meeting id: {event_date.event.remote_access}"
+                            if event_date.event.remote_pw:
+                                message += f", Password: {event_date.event.remote_pw}"
+                            message += "</div>"
 
         if errors:
             error_message = ''
@@ -355,11 +364,21 @@ def paypal_ipn():
             'New Acropolis Order',
             message + product_message + delivery_message + error_message
         )
-
-    elif v_response == 'INVALID':
-        current_app.logger.info('INVALID %r', params['txn_id'])
     else:
-        current_app.logger.info('UNKNOWN response %r', params['txn_id'])
+        if v_response == 'INVALID':
+            current_app.logger.info('INVALID %r', params['txn_id'])
+        else:
+            current_app.logger.info('UNKNOWN response %r', params['txn_id'])
+
+        data = get_data(params)
+
+        order_data, tickets, events, products, delivery_zones, errors = parse_ipn(data)
+
+        order_data['params'] = json.dumps(params)
+
+        order = Order(**order_data)
+        order.errors.append(OrderError(error=f"{v_response} verification"))
+        dao_create_record(order)
 
     return 'Paypal IPN'
 
@@ -394,7 +413,7 @@ def parse_ipn(ipn):
     order_data = {}
     receiver_email = None
     errors = []
-    none_response = None, None, None, None, None, errors
+    short_response = order_data, None, None, None, None, errors
     tickets = []
     events = []
     products = []
@@ -424,22 +443,26 @@ def parse_ipn(ipn):
         if key in order_mapping.keys():
             order_data[order_mapping[key]] = ipn[key]
 
+    order_data['buyer_name'] = '{} {}'.format(order_data['first_name'], order_data['last_name'])
+    del order_data['first_name']
+    del order_data['last_name']
+
     if order_data['payment_status'] != 'Completed':
         current_app.logger.error(
             'Order: %s, payment not complete: %s', order_data['txn_id'], order_data['payment_status'])
-        return none_response
+        return short_response
 
     if receiver_email.replace(' ', '+') != current_app.config['PAYPAL_RECEIVER']:
         current_app.logger.error('Paypal receiver not valid: %s for %s', receiver_email, order_data['txn_id'])
         order_data['payment_status'] = 'Invalid receiver'
-        return none_response
+        return short_response
 
     order_found = dao_get_order_with_txn_id(order_data['txn_id'])
     if order_found:
-        msg = 'Order: %s, payment already made', order_data['txn_id']
+        msg = f"Order: {order_data['txn_id']}, payment already made"
         current_app.logger.error(msg)
         errors.append(msg)
-        return none_response
+        return short_response
 
     if ipn['txn_type'] == 'paypal_here':
         _event_date = datetime.strptime(ipn['payment_date'], '%H:%M:%S %b %d, %Y PST').strftime('%Y-%m-%d')
@@ -532,9 +555,5 @@ def parse_ipn(ipn):
                     }
                     tickets.append(ticket)
             counter += 1
-
-    order_data['buyer_name'] = '{} {}'.format(order_data['first_name'], order_data['last_name'])
-    del order_data['first_name']
-    del order_data['last_name']
 
     return order_data, tickets, events, products, delivery_zones, errors
