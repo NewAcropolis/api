@@ -833,6 +833,12 @@ class OrderError(db.Model):
     order_id = db.Column(UUID(as_uuid=True), db.ForeignKey('orders.id'))
     error = db.Column(db.String)
 
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'error': self.error
+        }
+
 
 class BookToOrder(db.Model):
     __tablename__ = 'book_to_order'
