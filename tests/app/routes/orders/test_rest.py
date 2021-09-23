@@ -119,6 +119,25 @@ sample_book_order_ipn = (
     "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
 )
 
+sample_double_book_order_ipn = (
+    "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
+    "item_number1={book_id}&item_number2={delivery_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
+    "payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&option_name2_1=Course+Member+name&option_name2_2=Course+Member+name&"
+    "option_selection1_1=Full&payment_status=Completed&option_selection1_2={delivery_zone}&charset=windows-1252&"
+    "address_zip=n1+1aa&mc_shipping=0.00&first_name=TestName&mc_fee=0.54&"
+    "address_country_code={country_code}&address_name=Test+Name"
+    "&notify_version=3.9&custom=&payer_status=unverified&business=test%40test.com&address_country=United+Kingdom"
+    "&um_cart_items=3&mc_handling1=0.00&nmc_handling2=0.00&address_city=London&verify_sign=AXl-"
+    "x13NMy7f84hsUb1AfdPySBVSAn5cuQjLRnnBnlH2cpx64XuK5l34&payer_email={payer_email}&btn_id1=123456789&"
+    "btn_id2=012345678&option_name1_1=Type&option_name1_2=Type&txn_id=1122334455&payment_type=instant&"
+    "option_selection2_1=-&last_name=Test&address_state=&option_selection2_2=-&item_name1=Philosophy+Test"
+    "&receiver_email=receiver%40example.com&item_name2=Postage&payment_fee=&shipping_discount=0.00&quantity1=1&"
+    "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=5.00&mc_currency=GBP"
+    "&mc_gross_2=5.00&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&"
+    "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa&item_number3={book_id}&item_name3=Philosophy+Test2"
+    "&mc_gross_3=5.00&quantity3=1"
+)
+
 sample_book_order_without_delivery_ipn = (
     "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
     "item_number1={book_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
@@ -443,6 +462,44 @@ class WhenHandlingPaypalIPN:
 
         assert len(orders[0].errors) == 1
         assert orders[0].errors[0].error == 'Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c'
+
+    def it_creates_a_book_order_for_random_uuid_with_multiple_errors(
+        self, app, mocker, client, db_session, sample_uuid,
+    ):
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+
+        _sample_ipn = sample_double_book_order_ipn.format(
+            book_id=f'book-{sample_uuid}', delivery_id=app.config['DELIVERY_ID'],
+            payer_email="payer@example.com",
+            delivery_zone='UK',
+            country_code='GB'
+        )
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert mock_send_email.called
+        assert mock_send_email.call_args == call(
+            'payer@example.com',
+            'New Acropolis Order',
+            f"<p>Thank you for your order ({orders[0].id})</p>"
+            "<p>Errors in order: <div>Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c</div>"
+            "<div>Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c</div></p>"
+        )
+
+        assert len(orders[0].errors) == 2
+        assert orders[0].errors[0].error == 'Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c'
+        assert orders[0].errors[1].error == 'Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c'
 
     def it_creates_a_mixed_order(
         self, mocker, app, client, db_session, sample_book, sample_event_with_dates
@@ -843,7 +900,8 @@ class WhenHandlingPaypalIPN:
                 content_type="application/x-www-form-urlencoded"
             )
         orders = dao_get_orders()
-        assert not orders
+        assert len(orders) == 1
+        assert orders[0].errors[0].error == 'Payment not Completed: Incomplete'
 
     @pytest.mark.parametrize('resp', ['INVALID', 'UNKNOWN'])
     def it_does_not_create_an_order_if_not_verified(self, mocker, client, db_session, sample_event_with_dates, resp):
@@ -859,7 +917,9 @@ class WhenHandlingPaypalIPN:
                 content_type="application/x-www-form-urlencoded"
             )
         orders = dao_get_orders()
-        assert not orders
+        assert len(orders) == 1
+        assert len(orders[0].errors) == 1
+        assert orders[0].errors[0].error == f"{resp} verification"
 
     def it_does_not_create_an_order_if_wrong_receiver(self, mocker, client, db_session, sample_event):
         mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')
@@ -873,7 +933,8 @@ class WhenHandlingPaypalIPN:
                 content_type="application/x-www-form-urlencoded"
             )
         orders = dao_get_orders()
-        assert not orders
+        assert len(orders) == 1
+        assert len(orders[0].errors) == 1
         assert mock_logger.call_args == call('Paypal receiver not valid: %s for %s', u'another@example.com', u'112233')
 
     def it_creates_an_order_if_no_event_matched_with_errors(self, mocker, client, db_session, sample_uuid):
@@ -915,7 +976,9 @@ class WhenHandlingPaypalIPN:
         assert len(orders[0].errors) == 1
         assert orders[0].errors[0].error == f"Event date 3 not found for: {sample_event_with_dates.id}"
 
-    def it_does_not_create_orders_with_duplicate_txn_ids(self, mocker, client, db_session, sample_event_with_dates):
+    def it_does_not_create_orders_with_duplicate_txn_ids(
+        self, mocker, client, db_session, sample_event_with_dates, mock_storage
+    ):
         txn_ids = ['112233', '112233']
         txn_types = ['cart', 'cart']
 
@@ -933,9 +996,11 @@ class WhenHandlingPaypalIPN:
                 )
 
         orders = dao_get_orders()
-        assert len(orders) == 1
+        assert len(orders) == 2
         assert orders[0].txn_id == txn_ids[0]
         assert orders[0].txn_type == txn_types[0]
+        assert len(orders[1].errors) == 1
+        assert orders[1].errors[0].error == 'Order: 112233, payment already made'
 
         tickets = dao_get_tickets_for_order(orders[0].id)
         assert len(tickets) == 1
