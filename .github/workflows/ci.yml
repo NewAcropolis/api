@@ -40,10 +40,10 @@ jobs:
           pip install coveralls==2.2.0
       - name: Run tests
         run: ./scripts/run_tests.sh
-      # - name: Coveralls
-      #  run: coveralls
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Coveralls
+        run: coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   deploy_to_test:
     if: github.ref == 'refs/heads/test-deploy'
     environment: test
