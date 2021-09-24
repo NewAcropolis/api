@@ -1,6 +1,7 @@
 from freezegun import freeze_time
 
-from app.models import MAGAZINE, TICKET_STATUS_UNUSED, Event, Fee, Speaker
+from app.dao import dao_create_record
+from app.models import MAGAZINE, TICKET_STATUS_UNUSED, OrderError
 from app.utils.time import get_local_time
 from tests.db import (
     create_article,
@@ -215,6 +216,9 @@ class WhenUsingOrderModel:
 
         order = create_order(books=[sample_book, book], tickets=[ticket])
 
+        error = OrderError(error='Test error', order_id=order.id)
+        dao_create_record(error)
+
         assert order.serialize() == {
             'id': str(order.id),
             'txn_id': order.txn_id,
@@ -305,5 +309,10 @@ class WhenUsingOrderModel:
                     },
                 }
             ],
-            'errors': []
+            'errors': [
+                {
+                    'error': 'Test error',
+                    'id': str(error.id)
+                }
+            ]
         }
