@@ -119,10 +119,21 @@ def _get_nice_cost(cost):
     return int(_cost) if _cost % 1 == 0 else "{:0,.2f}".format(_cost)
 
 
-@orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
-def paypal_ipn():
-    message = ''
+@orders_blueprint.route('/orders/paypal/replay_ipn', methods=['POST'])
+@jwt_required
+def replay_paypal_ipn():
     params = request.form.to_dict(flat=False)
+    return paypal_ipn(params)
+
+
+@orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
+def paypal_ipn(params=None):
+    message = ''
+    bypass_verify = False
+    if not params:
+        params = request.form.to_dict(flat=False)
+    else:
+        bypass_verify = True
     current_app.logger.info('IPN params: %r', params)
 
     def get_data(params):
@@ -134,7 +145,7 @@ def paypal_ipn():
                 data[key] = params[key]
         return data
 
-    if current_app.config['TEST_VERIFY'] and current_app.config['ENVIRONMENT'] != 'live':
+    if bypass_verify or (current_app.config['TEST_VERIFY'] and current_app.config['ENVIRONMENT'] != 'live'):
         v_response = 'VERIFIED'
         current_app.logger.info('Test paypal verify')
     else:
