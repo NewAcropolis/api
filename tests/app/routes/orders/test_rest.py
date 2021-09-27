@@ -14,7 +14,7 @@ from tests.db import create_ticket, create_order
 
 sample_ipns = [
     # single ticket
-    "mc_gross=0.01&protection_eligibility=Ineligible&item_number1={id}&tax=0.00&payer_id=XXYYZZ1&payment_date="
+    "mc_gross=190.00&protection_eligibility=Ineligible&item_number1={id}&tax=0.00&payer_id=XXYYZZ1&payment_date="
     "10%3A00%3A00+Jan+01%2C+2018+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Completed&"
     "charset=windows-1252&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&notify_version=3.8&custom=&"
     "payer_status=verified&business=receiver%40example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=XXYYZZ1"
