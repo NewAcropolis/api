@@ -336,7 +336,11 @@ class WhenHandlingPaypalIPN:
                     url_for('orders.replay_paypal_ipn'),
                     data=_sample_ipn,
                     content_type="application/x-www-form-urlencoded",
-                    headers=[('Content-Type', 'application/json'), create_authorization_header()]
+                    headers=[
+                        ('Content-Type', 'application/json'),
+                        create_authorization_header(),
+                        ('Allow-emails', 'true')
+                    ]
                 )
 
         orders = dao_get_orders()
@@ -351,6 +355,46 @@ class WhenHandlingPaypalIPN:
             for n in range(num_tickets[i]):
                 assert 'http://test/images/qr_codes/{}'.format(
                     str(tickets[n].id)) in mock_send_email.call_args_list[i][0][2]
+
+    def it_creates_orders_and_event_tickets_on_replay_without_email(
+        self, mocker, client, db_session, sample_event_with_dates
+    ):
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+
+        txn_ids = ['112233', '112244', '112255', '112266']
+        txn_types = ['cart', 'cart', 'paypal_here', 'cart']
+        num_tickets = [1, 2, 1, 1]
+
+        for i in range(len(txn_ids)):
+            _sample_ipn = sample_ipns[i].format(
+                id=sample_event_with_dates.id, txn_id=txn_ids[i], txn_type=txn_types[i])
+
+            with requests_mock.mock() as r:
+                r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+                client.post(
+                    url_for('orders.replay_paypal_ipn'),
+                    data=_sample_ipn,
+                    content_type="application/x-www-form-urlencoded",
+                    headers=[
+                        ('Content-Type', 'application/json'),
+                        create_authorization_header(),
+                        ('Allow-emails', 'false')
+                    ]
+                )
+
+        orders = dao_get_orders()
+        assert len(orders) == 4
+        assert not mock_send_email.called
+
+        for i in range(len(sample_ipns)):
+            assert orders[i].txn_id == txn_ids[i]
+            assert orders[i].txn_type == txn_types[i]
+
+            tickets = dao_get_tickets_for_order(orders[i].id)
+            assert len(tickets) == num_tickets[i]
 
     def it_creates_orders_and_event_tickets_with_remote_login(
         self, mocker, client, db_session, sample_event_with_dates

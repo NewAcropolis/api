@@ -123,11 +123,14 @@ def _get_nice_cost(cost):
 @jwt_required
 def replay_paypal_ipn():
     params = request.form.to_dict(flat=False)
-    return paypal_ipn(params)
+    return paypal_ipn(
+        params,
+        allow_emails=request.headers.get('Allow-emails') == 'true'
+    )
 
 
 @orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
-def paypal_ipn(params=None):
+def paypal_ipn(params=None, allow_emails=True):
     message = ''
     bypass_verify = False
     if not params:
@@ -370,11 +373,12 @@ def paypal_ipn(params=None):
                 "your order.</p>"
             )
 
-        send_email(
-            order.email_address,
-            'New Acropolis Order',
-            message + product_message + delivery_message + error_message
-        )
+        if allow_emails:
+            send_email(
+                order.email_address,
+                'New Acropolis Order',
+                message + product_message + delivery_message + error_message
+            )
     else:
         if v_response == 'INVALID':
             current_app.logger.info('INVALID %r', params['txn_id'])
