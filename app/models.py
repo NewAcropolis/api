@@ -767,8 +767,10 @@ class Order(db.Model):
     delivery_balance = db.Column(db.Numeric(scale=2), default=0.0)
     delivery_sent = db.Column(db.Boolean)
     refund_issued = db.Column(db.Boolean)
-    books = db.relationship("Book", secondary="book_to_order", order_by='Book.title')
-    tickets = db.relationship("Ticket", back_populates="order")
+    books = db.relationship(
+        "Book", secondary="book_to_order", order_by='Book.title', cascade="all,delete")
+    tickets = db.relationship(
+        "Ticket", back_populates="order", cascade="all,delete,delete-orphan")
     errors = db.relationship(
         "OrderError",
         backref=db.backref("order"),

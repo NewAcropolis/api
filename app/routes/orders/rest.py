@@ -25,7 +25,7 @@ from app.dao import dao_create_record, dao_update_record
 from app.dao.books_dao import dao_create_book_to_order, dao_get_book_by_old_id, dao_get_book_by_id
 from app.dao.events_dao import dao_get_event_by_id
 from app.dao.event_dates_dao import dao_get_event_date_on_date, dao_get_event_date_by_id
-from app.dao.orders_dao import dao_get_order_with_txn_id, dao_get_orders
+from app.dao.orders_dao import dao_get_order_with_txn_id, dao_get_orders, dao_delete_order
 from app.dao.tickets_dao import dao_get_ticket_id, dao_update_ticket
 from app.dao.users_dao import dao_get_admin_users
 from app.errors import register_errors, InvalidRequest
@@ -123,11 +123,15 @@ def _get_nice_cost(cost):
 @jwt_required
 def replay_paypal_ipn():
     params = request.form.to_dict(flat=False)
-    return paypal_ipn(params)
+    return paypal_ipn(
+        params,
+        allow_emails=request.headers.get('Allow-emails') == 'true',
+        replace_order=request.headers.get('Replace-order') == 'true'
+    )
 
 
 @orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
-def paypal_ipn(params=None):
+def paypal_ipn(params=None, allow_emails=True, replace_order=False):
     message = ''
     bypass_verify = False
     if not params:
@@ -170,7 +174,7 @@ def paypal_ipn(params=None):
         diff = 0.0
         data = get_data(params)
 
-        order_data, tickets, events, products, delivery_zones, errors = parse_ipn(data)
+        order_data, tickets, events, products, delivery_zones, errors = parse_ipn(data, replace_order)
         order_data['params'] = json.dumps(params)
 
         order = Order(**order_data)
@@ -370,11 +374,12 @@ def paypal_ipn(params=None):
                 "your order.</p>"
             )
 
-        send_email(
-            order.email_address,
-            'New Acropolis Order',
-            message + product_message + delivery_message + error_message
-        )
+        if allow_emails:
+            send_email(
+                order.email_address,
+                'New Acropolis Order',
+                message + product_message + delivery_message + error_message
+            )
     else:
         if v_response == 'INVALID':
             current_app.logger.info('INVALID %r', params['txn_id'])
@@ -420,7 +425,7 @@ def use_ticket(ticket_id):
     return jsonify(data)
 
 
-def parse_ipn(ipn):
+def parse_ipn(ipn, replace_order=False):
     order_data = {}
     receiver_email = None
     errors = []
@@ -470,10 +475,14 @@ def parse_ipn(ipn):
 
     order_found = dao_get_order_with_txn_id(order_data['txn_id'])
     if order_found:
-        msg = f"Order: {order_data['txn_id']}, payment already made"
-        current_app.logger.error(msg)
-        errors.append(msg)
-        return short_response
+        if replace_order:
+            current_app.logger.info(f'Replacing order txn_id: {order_data["txn_id"]}')
+            dao_delete_order(order_data['txn_id'])
+        else:
+            msg = f"Order: {order_data['txn_id']}, payment already made"
+            current_app.logger.error(msg)
+            errors.append(msg)
+            return short_response
 
     if ipn['txn_type'] == 'paypal_here':
         _event_date = datetime.strptime(ipn['payment_date'], '%H:%M:%S %b %d, %Y PST').strftime('%Y-%m-%d')
