@@ -86,7 +86,7 @@ PRODUCT_TYPES = [BOOK, GIFT]
 
 class Product:
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    price = db.Column(db.Numeric(3, 2), nullable=True)
+    price = db.Column(db.Numeric(5, 2), nullable=True)
     buy_code = db.Column(db.String(50))
     image_filename = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
@@ -754,7 +754,7 @@ class Order(db.Model):
     txn_type = db.Column(db.String)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     payment_status = db.Column(db.String)
-    payment_total = db.Column(db.Numeric(scale=4))
+    payment_total = db.Column(db.Numeric(6, 2))
     params = db.Column(db.String)
     address_street = db.Column(db.String)
     address_city = db.Column(db.String)
@@ -764,7 +764,7 @@ class Order(db.Model):
     address_country_code = db.Column(db.String)
     delivery_zone = db.Column(db.String)
     delivery_status = db.Column(db.String(20))
-    delivery_balance = db.Column(db.Numeric(scale=2), default=0.0)
+    delivery_balance = db.Column(db.Numeric(4, 2), default=0)
     delivery_sent = db.Column(db.Boolean)
     refund_issued = db.Column(db.Boolean)
     books = db.relationship(
@@ -888,7 +888,7 @@ class Ticket(db.Model):
     ticket_type = db.Column(db.String, db.ForeignKey('ticket_types._type'))
     eventdate_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_dates.id'))
     name = db.Column(db.String)
-    price = db.Column(db.Numeric(scale=3))
+    price = db.Column(db.Numeric(5, 2))
     last_updated = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     status = db.Column(db.String, db.ForeignKey('ticket_statuses.status'), default=TICKET_STATUS_UNUSED)
