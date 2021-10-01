@@ -257,8 +257,8 @@ class WhenGettingEvents:
         data = json.loads(response.get_data(as_text=True))
         assert Event.query.count() == 3
         assert len(data) == 2
-        assert data[0]['id'] == str(sample_event_with_dates.id)
-        assert data[1]['id'] == str(event_2.id)
+        assert data[0]['id'] == str(event_2.id)
+        assert data[1]['id'] == str(sample_event_with_dates.id)
 
     def it_returns_limited_events(self, client, sample_event_with_dates, sample_event_type, db_session):
         event_2 = create_event(
