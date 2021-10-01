@@ -1242,8 +1242,8 @@ class WhenGettingOrders:
         assert response.json[0]['txn_id'] == sample_order.txn_id
         assert response.json[0]['address_street'] == sample_order.address_street
         assert len(response.json[0]['linked_transactions']) == 2
-        assert response.json[0]['payment_total'] == '10.0'
-        assert response.json[0]['delivery_balance'] == '0.0'
+        assert response.json[0]['payment_total'] == "10.00"
+        assert response.json[0]['delivery_balance'] == "0.0"
 
 
 class WhenGettingAnOrder:
