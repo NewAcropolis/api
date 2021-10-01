@@ -380,7 +380,7 @@ def get_event_by_id(event_id):
 def get_events_in_year(year):
     events = [e.serialize() if e else None for e in dao_get_events_in_year(year)]
 
-    events.sort(key=extract_startdate)
+    events.sort(key=extract_startdate, reverse=True)
     return jsonify(events)
 
 
