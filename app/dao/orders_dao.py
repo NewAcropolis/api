@@ -13,7 +13,7 @@ def dao_get_orders(year=None):
         end_year = f"{year + 1}-01-01"
         return Order.query.filter(
             Order.created_at.between(start_year, end_year)
-        ).order_by(Order.created_at).all()
+        ).order_by(Order.created_at.desc()).all()
 
 
 def dao_get_order_with_txn_id(txn_id):
