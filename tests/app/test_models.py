@@ -285,6 +285,7 @@ class WhenUsingOrderModel:
                         'event_type_id': str(sample_event_with_dates.event_type_id),
                         'fee': 5,
                         'has_expired': True,
+                        'has_banner_text': True,
                         'id': str(sample_event_with_dates.id),
                         'image_filename': None,
                         'multi_day_conc_fee': 10,
