@@ -400,7 +400,7 @@ class Event(db.Model):
     venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
     remote_access = db.Column(db.String())
     remote_pw = db.Column(db.String())
-    has_banner_text = db.Column(db.Boolean, default=True)
+    show_banner_text = db.Column(db.Boolean, default=True)
 
     def serialize_event_dates(self):
         def serialize_speakers(speakers):
@@ -483,7 +483,7 @@ class Event(db.Model):
             'event_state': self.event_state,
             'reject_reasons': serlialized_reject_reasons(),
             'has_expired': has_expired(_sorted_event_dates),
-            'has_banner_text': self.has_banner_text,
+            'show_banner_text': self.show_banner_text,
         }
 
         if with_dates:
