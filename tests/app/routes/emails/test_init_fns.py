@@ -15,7 +15,7 @@ class WhenGettingNiceEventDates:
             self.MockEventDate('2019-01-07 19:00'),
         ]
         dates = get_nice_event_dates(event_dates)
-        assert dates == 'Tue 1, Mon 7 of January - 7 PM'
+        assert dates == 'Tues 1, Mon 7 of January - 7 PM'
 
     def it_returns_nice_dates_for_different_months(self):
         event_dates = [
@@ -23,4 +23,4 @@ class WhenGettingNiceEventDates:
             self.MockEventDate('2019-02-07 19:00'),
         ]
         dates = get_nice_event_dates(event_dates)
-        assert dates == 'Tue 1 of January, Thu 7 of February - 7 PM'
+        assert dates == 'Tues 1 of January, Thurs 7 of February - 7 PM'

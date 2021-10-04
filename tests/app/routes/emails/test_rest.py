@@ -281,7 +281,7 @@ class WhenPreviewingEmails:
             client.get,
             headers=[('Content-Type', 'application/json'), create_authorization_header()])
 
-        assert html.soup.select_one('h3').text.strip() == 'Mon 1, Tue 2 of January - 7 PM'
+        assert html.soup.select_one('h3').text.strip() == 'Mon 1, Tues 2 of January - 7 PM'
         assert html.soup.select_one('.event_text h4').text == 'WORKSHOP: test_title'
 
         assert data['details'] in str(html.soup.select_one('.event_text'))
