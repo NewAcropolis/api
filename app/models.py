@@ -751,7 +751,7 @@ class Order(db.Model):
     old_member_id = db.Column(db.Integer)
     email_address = db.Column(db.String)
     buyer_name = db.Column(db.String)
-    txn_id = db.Column(db.String)
+    txn_id = db.Column(db.String, unique=True)
     linked_txn_id = db.Column(db.String)
     txn_type = db.Column(db.String)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())

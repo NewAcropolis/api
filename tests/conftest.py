@@ -255,7 +255,7 @@ def sample_order(db, sample_book, sample_event_with_dates):
         eventdate_id=event_dates[0]['id']
     )
 
-    return create_order(books=[sample_book], tickets=[ticket])
+    return create_order(books=[sample_book], tickets=[ticket], txn_id='111222333')
 
 
 @pytest.fixture(scope='function')
