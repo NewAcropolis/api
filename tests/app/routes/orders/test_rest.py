@@ -1044,6 +1044,32 @@ class WhenHandlingPaypalIPN:
         assert len(orders) == 1
         assert orders[0].errors[0].error == 'Payment not Completed: Incomplete'
 
+    def it_doesnt_create_an_order_if_txn_duplicate(self, app, client, db_session, sample_book):
+        create_order(
+            txn_id='1122334455',
+            payment_total=1
+        )
+
+        _sample_ipn = sample_book_order_ipn.format(
+            book_id=f'book-{sample_book.id}',
+            payer_email="payer@example.com",
+            delivery_id=app.config['DELIVERY_ID'],
+            delivery_zone='UK',
+            country_code='GB'
+        )
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+
+        orders = dao_get_orders()
+        assert len(orders) == 1
+
     @pytest.mark.parametrize('resp', ['INVALID', 'UNKNOWN'])
     def it_does_not_create_an_order_if_not_verified(self, mocker, client, db_session, sample_event_with_dates, resp):
         sample_ipn = sample_ipns[0].format(
@@ -1137,11 +1163,9 @@ class WhenHandlingPaypalIPN:
                 )
 
         orders = dao_get_orders()
-        assert len(orders) == 2
+        assert len(orders) == 1
         assert orders[0].txn_id == txn_ids[0]
         assert orders[0].txn_type == txn_types[0]
-        assert len(orders[1].errors) == 1
-        assert orders[1].errors[0].error == 'Order: 112233, payment already made'
 
         tickets = dao_get_tickets_for_order(orders[0].id)
         assert len(tickets) == 1
