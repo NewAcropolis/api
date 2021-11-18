@@ -1269,6 +1269,25 @@ class WhenGettingOrders:
         assert response.json[0]['payment_total'] == "10.00"
         assert response.json[0]['delivery_balance'] == "0.0"
 
+    def it_will_return_ignore_duplicate_order(self, client, db_session, sample_order):
+        create_order(
+            txn_id='XX-1-3334455666',
+            payment_total=1
+        )
+        response = client.get(
+            url_for('orders.get_orders')
+        )
+
+        assert len(response.json) == 1
+        assert len(response.json[0]['books']) == 1
+        assert response.json[0]['books'][0]['id'] == str(sample_order.books[0].id)
+        assert len(response.json[0]['tickets']) == 1
+        assert response.json[0]['tickets'][0]['id'] == str(sample_order.tickets[0].id)
+        assert response.json[0]['txn_id'] == sample_order.txn_id
+        assert response.json[0]['address_street'] == sample_order.address_street
+        assert response.json[0]['payment_total'] == "10.00"
+        assert response.json[0]['delivery_balance'] == "0.0"
+
 
 class WhenGettingAnOrder:
     def it_will_the_order_using_txn_id(self, client, db_session, sample_order):

@@ -59,7 +59,7 @@ def get_order(txn_id):
 @orders_blueprint.route('/orders/<int:year>', methods=['GET'])
 def get_orders(year=None):
     orders = dao_get_orders(year)
-    json_orders = [o.serialize() for o in orders]
+    json_orders = [o.serialize() for o in orders if not o.txn_id.startswith("XX-")]
 
     linked_orders = {}
     for o in json_orders:
