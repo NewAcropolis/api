@@ -1070,8 +1070,11 @@ class WhenHandlingPaypalIPN:
         orders = dao_get_orders()
         assert len(orders) == 1
 
+    @freeze_time("2021-11-20T19:00:00")
     @pytest.mark.parametrize('resp', ['INVALID', 'UNKNOWN'])
-    def it_does_not_create_an_order_if_not_verified(self, mocker, client, db_session, sample_event_with_dates, resp):
+    def it_creates_an_order_if_not_verified_with_updated_txn_id(
+        self, mocker, client, db_session, sample_event_with_dates, resp
+    ):
         sample_ipn = sample_ipns[0].format(
             id=sample_event_with_dates.id, txn_id='112233', txn_type='Cart')
 
@@ -1087,6 +1090,7 @@ class WhenHandlingPaypalIPN:
         assert len(orders) == 1
         assert len(orders[0].errors) == 1
         assert orders[0].errors[0].error == f"{resp} verification"
+        assert orders[0].txn_id.startswith(f"{resp}_1637434800-")
 
     def it_does_not_create_an_order_if_wrong_receiver(self, mocker, client, db_session, sample_event):
         mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')
