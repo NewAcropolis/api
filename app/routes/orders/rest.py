@@ -4,7 +4,7 @@ import json
 import io
 import pyqrcode
 import sys
-from urllib.parse import unquote
+from urllib.parse import unquote, urlencode
 import requests
 from datetime import datetime
 from flask import (
@@ -120,9 +120,14 @@ def _get_nice_cost(cost):
 
 
 @orders_blueprint.route('/orders/paypal/replay_ipn', methods=['POST'])
+@orders_blueprint.route('/orders/paypal/replay_ipn/<string:txn_id>', methods=['POST'])
 @jwt_required
-def replay_paypal_ipn():
-    params = request.form.to_dict(flat=False)
+def replay_paypal_ipn(txn_id=None):
+    if txn_id:
+        order = dao_get_order_with_txn_id(txn_id)
+        params = json.loads(order.params)
+    else:
+        params = request.form.to_dict(flat=False)
     return paypal_ipn(
         params,
         allow_emails=request.headers.get('Allow-emails') == 'true',
