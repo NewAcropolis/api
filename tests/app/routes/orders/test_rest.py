@@ -4,6 +4,7 @@ import json
 import pytest
 import requests_mock
 from mock import call
+from urllib.parse import parse_qs
 
 from app.dao.orders_dao import dao_get_orders
 from app.dao.tickets_dao import dao_get_tickets_for_order
@@ -356,7 +357,7 @@ class WhenHandlingPaypalIPN:
                 assert 'http://test/images/qr_codes/{}'.format(
                     str(tickets[n].id)) in mock_send_email.call_args_list[i][0][2]
 
-    def it_replace_existing_orders_and_event_tickets_on_replay(
+    def it_replaces_existing_orders_and_event_tickets_on_replay(
         self, mocker, client, db_session, sample_event_with_dates
     ):
         mocker.patch('app.routes.orders.rest.Storage')
@@ -416,6 +417,53 @@ class WhenHandlingPaypalIPN:
         for n in range(num_tickets[i]):
             assert 'http://test/images/qr_codes/{}'.format(
                 str(tickets[n].id)) in mock_send_email.call_args_list[i][0][2]
+
+    def it_replaces_existing_orders_and_event_tickets_on_replay_using_txn_id(
+        self, mocker, client, db_session, sample_event_with_dates
+    ):
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+
+        txn_id = '112233'
+        txn_type = 'cart'
+
+        _sample_ipn = sample_ipns[0].format(
+            id=sample_event_with_dates.id, txn_id=txn_id, txn_type=txn_type)
+        _params = json.dumps(parse_qs(_sample_ipn))
+
+        order = create_order(
+            txn_id='112233', created_at='2018-01-01 10:00:00', params=_params
+        )  # original order
+        assert len(order.tickets) == 0
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.replay_paypal_ipn', txn_id=txn_id),
+                # data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded",
+                headers=[
+                    ('Content-Type', 'application/json'),
+                    create_authorization_header(),
+                    ('Allow-emails', 'true'),
+                    ('Replace-order', 'true')
+                ]
+            )
+
+        orders = dao_get_orders()
+
+        assert mock_send_email.called
+        assert len(orders) == 1
+        assert orders[0].txn_id == txn_id
+        assert orders[0].txn_type == txn_type
+
+        tickets = dao_get_tickets_for_order(orders[0].id)
+        assert len(tickets) == 1
+
+        assert 'http://test/images/qr_codes/{}'.format(
+            str(tickets[0].id)) in mock_send_email.call_args_list[0][0][2]
 
     def it_creates_orders_and_event_tickets_on_replay_without_email(
         self, mocker, client, db_session, sample_event_with_dates
@@ -1288,9 +1336,6 @@ class WhenGettingOrders:
         assert len(response.json[0]['tickets']) == 1
         assert response.json[0]['tickets'][0]['id'] == str(sample_order.tickets[0].id)
         assert response.json[0]['txn_id'] == sample_order.txn_id
-        assert response.json[0]['address_street'] == sample_order.address_street
-        assert response.json[0]['payment_total'] == "10.00"
-        assert response.json[0]['delivery_balance'] == "0.0"
 
 
 class WhenGettingAnOrder:
