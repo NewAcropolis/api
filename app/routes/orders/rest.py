@@ -396,7 +396,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
             current_app.logger.info('UNKNOWN response %r', params['txn_id'])
 
         data = get_data(params)
-        data['txn_id'] = f"{v_response}_{int(datetime.utcnow().timestamp())}-{data['txn_id']}"
+        data['txn_id'] = f"XX-{v_response}_{int(datetime.utcnow().timestamp())}-{data['txn_id']}"
 
         order_data, tickets, events, products, delivery_zones, errors = parse_ipn(data)
 
