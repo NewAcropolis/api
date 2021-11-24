@@ -62,9 +62,10 @@ def get_order(txn_id):
 def get_orders(year=None, _filter=None):
     orders = dao_get_orders(year)
     if _filter == 'invalid':
-        json_orders = [o.serialize() for o in orders if o.txn_id.startswith("XX-")]
+        json_orders = [o.serialize() for o in orders if o.txn_id.startswith("XX-") or o.txn_id.startswith("INVALID_")]
     else:
-        json_orders = [o.serialize() for o in orders if not o.txn_id.startswith("XX-")]
+        json_orders = (
+            [o.serialize() for o in orders if not o.txn_id.startswith("XX-") and not o.txn_id.startswith("INVALID_")])
 
     linked_orders = {}
     for o in json_orders:
@@ -496,6 +497,8 @@ def parse_ipn(ipn, replace_order=False):
             # truncate txn_id to remove XX-INVALID-nnnnnnnnnn- for original txn id
             if order_data['txn_id'].startswith('XX-'):
                 order_data['txn_id'] = order_data['txn_id'][22:]
+            elif order_data['txn_id'].startswith('INVALID_'):
+                order_data['txn_id'] = order_data['txn_id'][19:]
         else:
             msg = f"Order: {order_data['txn_id']}, payment already made"
             current_app.logger.error(msg)

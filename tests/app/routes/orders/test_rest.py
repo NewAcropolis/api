@@ -418,14 +418,17 @@ class WhenHandlingPaypalIPN:
             assert 'http://test/images/qr_codes/{}'.format(
                 str(tickets[n].id)) in mock_send_email.call_args_list[i][0][2]
 
+    @pytest.mark.parametrize('txn_id,trunc_length', [
+        ('XX-INVALID_1637667646-112233', 22),
+        ('INVALID_1637667646-112233', 19)
+    ])
     def it_replaces_existing_invalid_order_and_event_tickets_on_replay_using_txn_id(
-        self, mocker, client, db_session, sample_event_with_dates
+        self, mocker, client, db_session, sample_event_with_dates, txn_id, trunc_length
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
         mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
 
-        txn_id = 'XX-INVALID_1637667646-112233'
         txn_type = 'cart'
 
         _sample_ipn = sample_ipns[0].format(
@@ -455,7 +458,7 @@ class WhenHandlingPaypalIPN:
 
         assert mock_send_email.called
         assert len(orders) == 1
-        assert orders[0].txn_id == txn_id[22:]
+        assert orders[0].txn_id == txn_id[trunc_length:]
         assert orders[0].txn_type == txn_type
 
         tickets = dao_get_tickets_for_order(orders[0].id)
@@ -1305,6 +1308,14 @@ class WhenGettingOrders:
             payment_total=1,
             linked_txn_id=sample_order.txn_id
         )
+        create_order(
+            txn_id='XX-INVALID_1122334455-112233',
+            payment_total=1,
+        )
+        create_order(
+            txn_id='INVALID_1122334455-112233',
+            payment_total=1,
+        )
         response = client.get(
             url_for('orders.get_orders')
         )
@@ -1325,12 +1336,17 @@ class WhenGettingOrders:
             txn_id='XX-INVALID_1637667646-2223334455',
             payment_total=1
         )
+        order2 = create_order(
+            txn_id='INVALID_1637667646-2223334455',
+            payment_total=1
+        )
         response = client.get(
             url_for('orders.get_orders', _filter='invalid')
         )
 
-        assert len(response.json) == 1
+        assert len(response.json) == 2
         assert response.json[0]['txn_id'] == order.txn_id
+        assert response.json[1]['txn_id'] == order2.txn_id
 
     def it_will_return_ignore_duplicate_order(self, client, db_session, sample_order):
         create_order(
