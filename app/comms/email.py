@@ -227,7 +227,7 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
 def send_smtp_email(to, subject, message, from_email=None, from_name='', smtp_info=None):  # pragma: no cover
     if current_app.config['EMAIL_DISABLED']:
         current_app.logger.info("Emails disabled, unset EMAIL_DISABLED env var to re-enable")
-        return 200, None
+        return 200
 
     if not to:
         current_app.logger.info("smtp: no email to send to")
