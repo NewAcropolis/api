@@ -102,6 +102,18 @@ sample_invalid_date = (
     "payment_gross=&ipn_track_id=112233"
 )
 
+sample_all_dates = (
+    "mc_gross=0.01&protection_eligibility=Ineligible&item_number1={id}&tax=0.00&payer_id=XXYYZZ1&payment_date="
+    "10%3A00%3A00+Jan+01%2C+2018+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Completed&"
+    "charset=windows-1252&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&notify_version=3.8&custom=&"
+    "payer_status=verified&business=receiver%40example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=XXYYZZ1"
+    ".t.sign&payer_email=test1%40example.com&mc_shipping1=0.00&tax1=0.00&btn_id1="
+    "XXYYZZ1&option_name1_1=Type&txn_id=112233&payment_type=instant&option_selection2_1=all&last_name=User&"
+    "item_name1=Get+Inspired+-+Discover+Philosophy&receiver_email=receiver%40example.com&payment_fee=&quantity1=1&"
+    "receiver_id=AABBCC1&txn_type=Cart&mc_gross_1=0.01&mc_currency=GBP&residence_country=GB&transaction_subject=&"
+    "payment_gross=&ipn_track_id=112233"
+)
+
 sample_book_order_ipn = (
     "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
     "item_number1={book_id}&item_number2={delivery_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
@@ -1196,6 +1208,25 @@ class WhenHandlingPaypalIPN:
         assert len(orders) == 1
         assert len(orders[0].errors) == 1
         assert orders[0].errors[0].error == f"Event date 3 not found for: {sample_event_with_dates.id}"
+
+    def it_creates_an_order_for_all_dates(
+        self, mocker, client, db_session, sample_event_with_dates, mock_storage
+    ):
+        sample_ipn = sample_all_dates.format(id=sample_event_with_dates.id)
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert len(orders[0].tickets) == 2
+        assert orders[0].tickets[0].eventdate_id == sample_event_with_dates.event_dates[0].id
+        assert orders[0].tickets[1].eventdate_id == sample_event_with_dates.event_dates[1].id
 
     def it_does_not_create_orders_with_duplicate_txn_ids(
         self, mocker, client, db_session, sample_event_with_dates, mock_storage
