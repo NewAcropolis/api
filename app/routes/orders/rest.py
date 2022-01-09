@@ -566,35 +566,46 @@ def parse_ipn(ipn, replace_order=False):
                     continue
 
                 if 'option_name2_%d' % counter in ipn.keys():
-                    event_date_index = int(ipn['option_selection2_%d' % counter]) \
-                        if ipn['option_name2_%d' % counter] == 'Date' else 1
+                    if ipn['option_selection2_%d' % counter] == 'all':
+                        event_date_index = -1
+                    else:
+                        event_date_index = int(ipn['option_selection2_%d' % counter]) \
+                            if ipn['option_name2_%d' % counter] == 'Date' else 1
                 else:
                     event_date_index = 1
 
-                if event_date_index > len(event.event_dates):
-                    error_msg = f"Event date {event_date_index} not found for: {ipn['item_number%d' % counter]}"
-                    current_app.logger.error(error_msg)
-                    counter += 1
-                    errors.append(error_msg)
-                    continue
+                def create_ticket(event_date_id):
+                    for i in range(1, quantity + 1):
+                        ticket = {
+                            'ticket_number': i,
+                            'event_id': event.id,
+                            'ticket_type': ipn['option_selection1_%d' % counter],
+                            'eventdate_id': event_date_id,
+                            'price': price,
+                            'name':
+                                ipn.get('option_selection3_%d' % counter)
+                                if ipn.get('option_name3_%d' % counter) == 'Course Member name'
+                                else ipn.get('option_selection2_%d' % counter)
+                                if ipn.get('option_name2_%d' % counter) == 'Course Member name'
+                                else None
+                        }
+                        tickets.append(ticket)
 
-                event_date_id = event.event_dates[event_date_index - 1].id
+                if event_date_index == -1:
+                    for event_date_idx in range(0, len(event.event_dates)):
+                        event_date_id = event.event_dates[event_date_idx].id
+                        create_ticket(event_date_id)
+                else:
+                    if event_date_index > len(event.event_dates):
+                        error_msg = f"Event date {event_date_index} not found for: {ipn['item_number%d' % counter]}"
+                        current_app.logger.error(error_msg)
+                        counter += 1
+                        errors.append(error_msg)
+                        continue
 
-                for i in range(1, quantity + 1):
-                    ticket = {
-                        'ticket_number': i,
-                        'event_id': event.id,
-                        'ticket_type': ipn['option_selection1_%d' % counter],
-                        'eventdate_id': event_date_id,
-                        'price': price,
-                        'name':
-                            ipn.get('option_selection3_%d' % counter)
-                            if ipn.get('option_name3_%d' % counter) == 'Course Member name'
-                            else ipn.get('option_selection2_%d' % counter)
-                            if ipn.get('option_name2_%d' % counter) == 'Course Member name'
-                            else None
-                    }
-                    tickets.append(ticket)
+                    event_date_id = event.event_dates[event_date_index - 1].id
+                    create_ticket(event_date_id)
+
             counter += 1
 
     return order_data, tickets, events, products, delivery_zones, errors
