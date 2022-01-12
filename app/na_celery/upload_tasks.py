@@ -27,7 +27,7 @@ def upload_magazine(magazine_id, pdf_data):
         storage.upload_blob_from_base64string(
             magazine.filename,
             magazine.filename,
-            pdf_data,
+            base64.b64decode(pdf_data),
             content_type='application/pdf'
         )
 
