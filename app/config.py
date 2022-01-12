@@ -66,7 +66,8 @@ class Config(object):
     CELERY_ENABLE_UTC = True
     CELERY_ACCEPT_CONTENT = ['json']
     CELERY_TASK_SERIALIZER = 'json'
-    CELERY_IMPORTS = ("app.na_celery.event_tasks", "app.na_celery.stats_tasks",)
+    # CELERY_IMPORTS = ("app.na_celery.event_tasks", "app.na_celery.stats_tasks",)
+    CELERY_IMPORTS = ("app.na_celery.event_tasks",)
 
     if not os.environ.get('GITHUB_ACTIONS'):  # pragma: no cover
         from celery.schedules import crontab
@@ -80,10 +81,11 @@ class Config(object):
                 'task': 'send_periodic_emails',
                 'schedule': crontab(minute=0, hour='*') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
             },
-            'send-num-subscribers-and-social-stats': {
-                'task': 'send_num_subscribers_and_social_stats',
-                'schedule': crontab(hour=7, day_of_month=1) if ENVIRONMENT != 'development' else crontab(minute='*/10'),
-            },
+            # 'send-num-subscribers-and-social-stats': {
+            #     'task': 'send_num_subscribers_and_social_stats',
+            #     'schedule': crontab(hour=7, day_of_month=1) \
+            #                 if ENVIRONMENT != 'development' else crontab(minute='*/10'),
+            # },
         }
 
     EMAIL_DELAY = 4 if ENVIRONMENT != 'development' else 0  # hours
