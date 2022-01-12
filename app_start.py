@@ -48,8 +48,8 @@ def get_unsubcode(member_id):
 
 @manager.command
 def extract_topics():
-    filename = 'Bi_monthly_Issue 38.pdf'
-    with open(os.path.join('data', 'pdfs', filename)) as f:
+    filename = 'Bi_monthly_Issue 49.pdf'
+    with open(os.path.join('data', 'pdfs', filename), "rb") as f:
         pdf_binary = f.read()
         print(_extract_topics(pdf_binary))
 

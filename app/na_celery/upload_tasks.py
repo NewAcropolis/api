@@ -23,15 +23,19 @@ def upload_magazine(magazine_id, pdf_data):
         magazine = dao_get_magazine_by_id(magazine_id)
 
         storage = Storage(current_app.config['STORAGE'])
-
+        decoded_data = base64.b64decode(pdf_data)
         storage.upload_blob_from_base64string(
             magazine.filename,
             magazine.filename,
-            base64.b64decode(pdf_data),
+            decoded_data,
             content_type='application/pdf'
         )
 
-        topics = extract_topics(base64.b64decode(pdf_data))
+        try:
+            topics = extract_topics(base64.b64decode(decoded_data))
+        except Exception as e:
+            topics = []
+            current_app.logger.error("Error extracting topics: %r", e)
 
         dao_update_record(Magazine, magazine_id, topics=topics)
 
