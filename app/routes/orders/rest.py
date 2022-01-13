@@ -356,7 +356,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
 
                         event_date = dao_get_event_date_by_id(tickets[i]['eventdate_id'])
                         minutes = ':%M' if event_date.event_datetime.minute > 0 else ''
-                        message += "<span>{} on {}</span></div>".format(
+                        message += "<div>{} on {}</div></div>".format(
                             event.title, event_date.event_datetime.strftime('%-d %b at %-I{}%p'.format(minutes)))
 
                         if event_date.event.remote_access:
