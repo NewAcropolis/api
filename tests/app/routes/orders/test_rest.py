@@ -735,7 +735,7 @@ class WhenHandlingPaypalIPN:
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[0].id}">'
-            '</span><span>test_title on 1 Jan at 7PM</span></div>'
+            '</span><div>test_title on 1 Jan at 7PM</div></div>'
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
             "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
