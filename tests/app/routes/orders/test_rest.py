@@ -1212,6 +1212,7 @@ class WhenHandlingPaypalIPN:
     def it_creates_an_order_for_all_dates(
         self, mocker, client, db_session, sample_event_with_dates, mock_storage
     ):
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
         sample_ipn = sample_all_dates.format(id=sample_event_with_dates.id)
 
         with requests_mock.mock() as r:
@@ -1227,6 +1228,14 @@ class WhenHandlingPaypalIPN:
         assert len(orders[0].tickets) == 2
         assert orders[0].tickets[0].eventdate_id == sample_event_with_dates.event_dates[0].id
         assert orders[0].tickets[1].eventdate_id == sample_event_with_dates.event_dates[1].id
+        assert mock_send_email.called
+        assert mock_send_email.call_args == call(
+            'test1@example.com', 'New Acropolis Order',
+            f'<p>Thank you for your order ({orders[0].id})</p>'
+            f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[0].id}"></span>'
+            '<div>test_title on 1 Jan at 7PM</div></div>'
+            f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[1].id}"></span>'
+            '<div>test_title on 2 Jan at 7PM</div></div>')
 
     def it_does_not_create_orders_with_duplicate_txn_ids(
         self, mocker, client, db_session, sample_event_with_dates, mock_storage

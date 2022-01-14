@@ -336,28 +336,29 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
                         ticket = Ticket(**_ticket)
                         dao_create_record(ticket)
                         tickets[i]['ticket_id'] = ticket.id
+                        tickets[i]['title'] = ticket.event.title
 
                     storage = Storage(current_app.config['STORAGE'])
-                    for i, event in enumerate(events):
+                    for ticket in tickets:
                         link_to_post = '{}{}'.format(
                             current_app.config['API_BASE_URL'],
-                            url_for('.use_ticket', ticket_id=tickets[i]['ticket_id'])
+                            url_for('.use_ticket', ticket_id=ticket['ticket_id'])
                         )
                         img = pyqrcode.create(link_to_post)
                         buffer = io.BytesIO()
                         img.png(buffer, scale=2)
 
                         img_b64 = base64.b64encode(buffer.getvalue())
-                        target_image_filename = '{}/{}'.format('qr_codes', str(tickets[i]['ticket_id']))
+                        target_image_filename = '{}/{}'.format('qr_codes', str(ticket['ticket_id']))
                         storage.upload_blob_from_base64string('qr.code', target_image_filename, img_b64)
 
                         message += '<div><span><img src="{}/{}"></span>'.format(
                             current_app.config['IMAGES_URL'], target_image_filename)
 
-                        event_date = dao_get_event_date_by_id(tickets[i]['eventdate_id'])
+                        event_date = dao_get_event_date_by_id(ticket['eventdate_id'])
                         minutes = ':%M' if event_date.event_datetime.minute > 0 else ''
                         message += "<div>{} on {}</div></div>".format(
-                            event.title, event_date.event_datetime.strftime('%-d %b at %-I{}%p'.format(minutes)))
+                            ticket['title'], event_date.event_datetime.strftime('%-d %b at %-I{}%p'.format(minutes)))
 
                         if event_date.event.remote_access:
                             message += f"<br><div>Meeting id: {event_date.event.remote_access}"
