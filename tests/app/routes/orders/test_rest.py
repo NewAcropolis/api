@@ -557,6 +557,8 @@ class WhenHandlingPaypalIPN:
         assert 'http://test/images/qr_codes/{}'.format(
             str(tickets[0].id)) in mock_send_email.call_args_list[0][0][2]
         assert "Meeting id: 111, Password: pwd" in str(mock_send_email.call_args_list[0][0][2])
+        assert f"<a href='https://zoom.us/j/{sample_event_with_dates.remote_access}'>Join zoom</a>" in\
+            str(mock_send_email.call_args_list[0][0][2])
 
     @pytest.mark.parametrize(
         'country_code,delivery_zone', [
