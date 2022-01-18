@@ -366,7 +366,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
                                 message += f", Password: {event_date.event.remote_pw}"
                             message += "</div>"
                             message += f"<div><a href='https://zoom.us/j/{event_date.event.remote_access}'>"\
-                                "Join zoom</a></div>"
+                                "Join zoom event</a></div>"
 
         if errors:
             error_message = ''
