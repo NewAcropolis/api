@@ -5,6 +5,7 @@ from mock import Mock, call
 import pytest
 import requests_mock
 
+from app.dao.magazines_dao import dao_get_magazines
 from tests.conftest import create_authorization_header
 from tests.db import create_magazine
 
@@ -38,7 +39,8 @@ class WhenPostingMagazines(object):
         data = {
             'title': 'title',
             'filename': 'Magazine Issue 1.pdf',
-            'pdf_data': pdf_data
+            'pdf_data': pdf_data,
+            'tags': 'new tag'
         }
 
         response = client.post(
@@ -48,12 +50,16 @@ class WhenPostingMagazines(object):
         )
         assert response.status_code == 201
         assert pdf_data in mocker_upload.call_args[0][0]
+        magazines = dao_get_magazines()
+        assert len(magazines) == 1
+        magazines[0].tags == 'new tag'
 
     def it_doesnt_creates_a_magazine_if_filename_not_matched(self, client):
         data = {
             'title': 'title',
             'filename': 'Magazine 1.pdf',
             'pdf_data': 'test data',
+            'tags': ''
         }
 
         response = client.post(
@@ -69,7 +75,8 @@ class WhenPostingMagazines(object):
         data = {
             'title': 'new title',
             'filename': magazine.filename,
-            'pdf_data': 'test data'
+            'pdf_data': 'test data',
+            'tags': 'Philosophy'
         }
 
         response = client.post(
@@ -90,7 +97,8 @@ class WhenPostingMagazines(object):
             'title': 'new title',
             'filename': 'Magazine Issue 1.pdf',
             'pdf_data': 'test data',
-            'topics': ''
+            'topics': '',
+            'tags': 'update tag'
         }
 
         response = client.post(
@@ -101,6 +109,9 @@ class WhenPostingMagazines(object):
         assert response.status_code == 200
         assert response.json['title'] == data['title']
         assert data['pdf_data'] in mocker_upload.call_args[0][0]
+        magazines = dao_get_magazines()
+        assert len(magazines) == 1
+        magazines[0].tags == 'update tag'
 
     def it_updates_a_magazine_without_pdf_data(self, mocker, client, db_session):
         magazine = create_magazine(title='title', filename='new filename')
@@ -109,7 +120,8 @@ class WhenPostingMagazines(object):
         data = {
             'title': 'new title',
             'filename': 'Magazine Issue 1.pdf',
-            'topics': 'philosophy: new world'
+            'topics': 'philosophy: new world',
+            'tags': 'Philosophy'
         }
 
         response = client.post(
@@ -129,7 +141,8 @@ class WhenPostingMagazines(object):
             'title': 'title',
             'filename': 'Magazine 1.pdf',
             'pdf_data': 'test data',
-            'topics': ''
+            'topics': '',
+            'tags': ''
         }
 
         response = client.post(

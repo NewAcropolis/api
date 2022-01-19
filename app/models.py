@@ -292,6 +292,7 @@ class Magazine(db.Model):
     topics = db.Column(db.String)
     filename = db.Column(db.String, unique=True)
     old_filename = db.Column(db.String, unique=True)
+    tags = db.Column(db.String())
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     def serialize(self):
@@ -301,7 +302,8 @@ class Magazine(db.Model):
             "title": self.title,
             "topics": self.topics,
             "filename": self.filename,
-            "old_filename": self.old_filename
+            "old_filename": self.old_filename,
+            "tags": self.tags
         }
 
 
