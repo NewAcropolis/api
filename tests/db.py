@@ -284,13 +284,15 @@ def create_magazine(
     old_id=None,
     title='title',
     old_filename=None,
-    filename='new filename'
+    filename='new filename',
+    tags='',
 ):
     data = {
         'old_id': old_id,
         'title': title,
         'old_filename': old_filename,
         'filename': filename,
+        'tags': tags
     }
 
     magazine = Magazine(**data)

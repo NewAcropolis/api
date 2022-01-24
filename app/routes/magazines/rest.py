@@ -82,19 +82,26 @@ def update_magazine(id):
     validate(data, post_update_magazine_schema)
 
     new_filename = get_magazine_filename(data['filename'])
-
     if new_filename:
         magazine = Magazine(
             id=id,
             title=data['title'],
             filename=new_filename,
-            topics=data['topics']
+            topics=data['topics'],
+            tags=data['tags']
         )
 
         if 'pdf_data' in data:
             upload_tasks.upload_magazine.apply_async((id, data['pdf_data']))
 
-        dao_update_record(Magazine, id=id, title=magazine.title, filename=magazine.filename, topics=magazine.topics)
+        dao_update_record(
+            Magazine,
+            id=id,
+            title=magazine.title,
+            filename=magazine.filename,
+            topics=magazine.topics,
+            tags=magazine.tags
+        )
 
         return jsonify(magazine.serialize()), 200
 
