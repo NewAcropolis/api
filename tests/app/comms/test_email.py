@@ -131,6 +131,13 @@ class WhenSendingAnEmail:
             smtp_info={'SMTP_SERVER': 'http://smtp_server.com', 'SMTP_USER': 'user', 'SMTP_PASS': 'password'}
         )
 
+    def it_triggers_429_when_monthly_limit_reached(self, mocker, db_session):
+        create_email_provider(monthly_limit=100)
+        mocker.patch('app.comms.email.dao_get_last_30_days_email_count_for_provider', return_value=200)
+
+        with pytest.raises(expected_exception=InvalidRequest):
+            send_email('someone@example.com', 'test subject', 'test message')
+
     def it_triggers_429_when_hourly_limit_reached(self, mocker, db_session, sample_email_provider):
         mocker.patch('app.comms.email.dao_get_past_hour_email_count_for_provider', return_value=30)
 

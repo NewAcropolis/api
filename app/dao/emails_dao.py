@@ -153,6 +153,16 @@ def dao_get_approved_emails_for_sending():
     ).order_by(Email.expires).all()
 
 
+def dao_get_last_30_days_email_count_for_provider(email_provider_id):
+    now = datetime.now(timezone('Europe/London'))
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    return EmailToMember.query.filter(
+        EmailToMember.created_at > today,
+        EmailToMember.created_at > now - timedelta(days=30),
+        EmailToMember.email_provider_id == email_provider_id
+    ).count()
+
+
 def dao_get_todays_email_count_for_provider(email_provider_id):
     now = datetime.now(timezone('Europe/London'))
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)

@@ -16,7 +16,11 @@ from app.comms.encryption import encrypt
 from app.errors import InvalidRequest
 from app.models import BASIC, EVENT, MAGAZINE
 from app.dao.events_dao import dao_get_event_by_id
-from app.dao.emails_dao import dao_get_past_hour_email_count_for_provider, dao_get_todays_email_count_for_provider
+from app.dao.emails_dao import (
+    dao_get_past_hour_email_count_for_provider,
+    dao_get_todays_email_count_for_provider,
+    dao_get_last_30_days_email_count_for_provider
+)
 from app.dao.email_providers_dao import (
     dao_get_first_email_provider, dao_get_next_email_provider, dao_get_next_available_email_provider
 )
@@ -31,12 +35,11 @@ def get_email_provider(override=False, email_provider=None):
         if not email_provider:
             return None
 
-    hourly_email_count = daily_email_count = 0
+    hourly_email_count = daily_email_count = monthly_email_count = 0
 
-    if email_provider.daily_limit > 0:
-        daily_email_count = dao_get_todays_email_count_for_provider(email_provider.id)
-
-        if daily_email_count > email_provider.daily_limit:
+    def _get_email_provider_or_count(limit, dao_count, limit_reached):
+        email_count = dao_count(email_provider.id)
+        if email_count > limit:
             next_email_provider = dao_get_next_available_email_provider(email_provider.pos)
             if next_email_provider:
                 return get_email_provider(override, next_email_provider)
@@ -48,28 +51,42 @@ def get_email_provider(override=False, email_provider=None):
                     return get_email_provider(override, next_email_provider)
             else:
                 email_provider.limit = 0
-                email_provider.daily_limit_reached = True
+                setattr(email_provider, limit_reached, True)
             return email_provider
+        return email_count
+
+    if email_provider.monthly_limit > 0:
+        email_provider_or_count = _get_email_provider_or_count(
+            email_provider.monthly_limit,
+            dao_get_last_30_days_email_count_for_provider,
+            'monthly_limit_reached')
+
+        if type(email_provider_or_count) == int:
+            email_provider.limit = email_provider.monthly_limit - email_provider_or_count
+        else:
+            return email_provider_or_count
+
+    if email_provider.daily_limit > 0:
+        email_provider_or_count = _get_email_provider_or_count(
+            email_provider.daily_limit,
+            dao_get_todays_email_count_for_provider,
+            'daily_limit_reached')
+
+        if type(email_provider_or_count) == int:
+            email_provider.limit = email_provider.daily_limit - email_provider_or_count
+        else:
+            return email_provider_or_count
 
     if email_provider.hourly_limit > 0:
-        hourly_email_count = dao_get_past_hour_email_count_for_provider(email_provider.id)
+        email_provider_or_count = _get_email_provider_or_count(
+            email_provider.hourly_limit,
+            dao_get_past_hour_email_count_for_provider,
+            'hourly_limit_reached')
 
-        if hourly_email_count > email_provider.hourly_limit:
-            next_email_provider = dao_get_next_available_email_provider(email_provider.pos)
-            if next_email_provider:
-                return get_email_provider(override, next_email_provider)
-
-            if override:
-                next_email_provider = dao_get_next_email_provider(email_provider.pos)
-                if next_email_provider:
-                    return get_email_provider(override, next_email_provider)
-
-            email_provider.limit = 0
-            email_provider.hourly_limit_reached = True
-
-        email_provider.limit = email_provider.hourly_limit - hourly_email_count
-
-    email_provider.limit = email_provider.daily_limit - daily_email_count
+        if type(email_provider_or_count) == int:
+            email_provider.limit = email_provider.hourly_limit - email_provider_or_count
+        else:
+            return email_provider_or_count
     return email_provider
 
 
@@ -179,6 +196,8 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
             raise InvalidRequest('Hourly limit reached', 429)
         elif hasattr(email_provider, "daily_limit_reached"):
             raise InvalidRequest('Daily limit reached', 429)
+        elif hasattr(email_provider, "monthly_limit_reached"):
+            raise InvalidRequest('Monthly limit reached', 429)
 
         if email_provider.smtp_server:
             smtp_info = {

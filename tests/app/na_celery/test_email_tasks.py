@@ -226,7 +226,7 @@ class WhenProcessingSendEmailsTask:
             'EMAIL_RESTRICT': None
         })
         mocker.patch('requests.post')
-        email_provider = create_email_provider(daily_limit=2)
+        email_provider = create_email_provider(daily_limit=2, hourly_limit=0)
 
         member_1 = create_member(name='Test 1', email='test1@example.com')
         create_member(name='Test 2', email='test2@example.com')
