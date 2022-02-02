@@ -147,6 +147,7 @@ class EmailProvider(db.Model):
     name = db.Column(db.String, unique=True)
     daily_limit = db.Column(db.Integer)
     hourly_limit = db.Column(db.Integer)
+    monthly_limit = db.Column(db.Integer)
     api_key = db.Column(db.String)
     api_url = db.Column(db.String)
     data_map = db.Column(JSONB)
@@ -165,6 +166,7 @@ class EmailProvider(db.Model):
             'name': self.name,
             'daily_limit': self.daily_limit,
             'hourly_limit': self.hourly_limit,
+            'monthly_limit': self.monthly_limit,
             'api_key': self.api_key,
             'api_url': self.api_url,
             'data_map': self.data_map,
