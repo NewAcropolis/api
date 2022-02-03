@@ -17,6 +17,7 @@ from app.errors import InvalidRequest
 from app.models import BASIC, EVENT, MAGAZINE
 from app.dao.events_dao import dao_get_event_by_id
 from app.dao.emails_dao import (
+    dao_get_last_minute_email_count_for_provider,
     dao_get_past_hour_email_count_for_provider,
     dao_get_todays_email_count_for_provider,
     dao_get_last_30_days_email_count_for_provider
@@ -35,7 +36,7 @@ def get_email_provider(override=False, email_provider=None):
         if not email_provider:
             return None
 
-    hourly_email_count = daily_email_count = monthly_email_count = 0
+    minute_email_count = hourly_email_count = daily_email_count = monthly_email_count = 0
 
     def _get_email_provider_or_count(limit, dao_count, limit_reached):
         email_count = dao_count(email_provider.id)
@@ -87,6 +88,17 @@ def get_email_provider(override=False, email_provider=None):
             email_provider.limit = email_provider.hourly_limit - email_provider_or_count
         else:
             return email_provider_or_count
+    if email_provider.minute_limit > 0:
+        email_provider_or_count = _get_email_provider_or_count(
+            email_provider.minute_limit,
+            dao_get_last_minute_email_count_for_provider,
+            'minute_limit_reached')
+
+        if type(email_provider_or_count) == int:
+            email_provider.limit = email_provider.minute_limit - email_provider_or_count
+        else:
+            return email_provider_or_count
+
     return email_provider
 
 
@@ -192,7 +204,9 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
     email_provider = get_email_provider(override)
 
     if email_provider:
-        if hasattr(email_provider, "hourly_limit_reached"):
+        if hasattr(email_provider, "minute_limit_reached"):
+            raise InvalidRequest('Minute limit reached', 429)
+        elif hasattr(email_provider, "hourly_limit_reached"):
             raise InvalidRequest('Hourly limit reached', 429)
         elif hasattr(email_provider, "daily_limit_reached"):
             raise InvalidRequest('Daily limit reached', 429)

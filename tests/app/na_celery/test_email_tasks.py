@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from flask import current_app
 from freezegun import freeze_time
+from mock import call
 import pytest
 
 from app.na_celery.email_tasks import send_emails, send_periodic_emails
@@ -218,15 +219,27 @@ class WhenProcessingSendEmailsTask:
 
         assert mock_send_emails.called
 
+    @pytest.mark.parametrize('monthly,daily,hourly,minute', [
+        (2, 0, 0, 0),
+        (0, 2, 0, 0),
+        (0, 0, 2, 0),
+        (0, 0, 0, 2),
+    ])
     def it_sends_an_email_to_members_up_to_email_limit(
-        self, mocker, db_session, sample_email, sample_member
+        self, mocker, db_session, sample_email, sample_member,
+        monthly, daily, hourly, minute
     ):
         mocker.patch.dict('app.application.config', {
             'ENVIRONMENT': 'live',
             'EMAIL_RESTRICT': None
         })
         mocker.patch('requests.post')
-        email_provider = create_email_provider(daily_limit=2, hourly_limit=0)
+        email_provider = create_email_provider(
+            monthly_limit=monthly,
+            daily_limit=daily,
+            hourly_limit=hourly,
+            minute_limit=minute
+        )
 
         member_1 = create_member(name='Test 1', email='test1@example.com')
         create_member(name='Test 2', email='test2@example.com')
@@ -269,14 +282,18 @@ class WhenProcessingSendEmailsTask:
     def it_logs_429_status_code_response(self, mocker, db_session, sample_email, sample_member):
         mocker.patch(
             'app.na_celery.email_tasks.send_email',
-            side_effect=InvalidRequest('Daily limit reached', 429)
+            side_effect=InvalidRequest('Minute limit reached', 429)
         )
         mock_logger_error = mocker.patch('app.na_celery.email_tasks.current_app.logger.error')
-        send_emails(sample_email.id)
+        mock_send_periodic_task = mocker.patch('app.na_celery.email_tasks.send_periodic_emails.apply_async')
+        with pytest.raises(expected_exception=InvalidRequest):
+            send_emails(sample_email.id)
         assert mock_logger_error.called
         args = mock_logger_error.call_args[0]
         assert args[0] == 'Email limit reached: %r'
-        assert args[1] == 'Daily limit reached'
+        assert args[1] == 'Minute limit reached'
+        assert mock_send_periodic_task.called
+        assert mock_send_periodic_task.call_args == call(countdown=60)
 
     def it_reraises_if_not_429_status_code_response(self, mocker, db_session, sample_email, sample_member):
         mocker.patch(

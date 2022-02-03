@@ -144,6 +144,13 @@ class WhenSendingAnEmail:
         with pytest.raises(expected_exception=InvalidRequest):
             send_email('someone@example.com', 'test subject', 'test message')
 
+    def it_triggers_429_when_minute_limit_reached(self, mocker, db_session):
+        create_email_provider(minute_limit=5)
+        mocker.patch('app.comms.email.dao_get_last_minute_email_count_for_provider', return_value=6)
+
+        with pytest.raises(expected_exception=InvalidRequest):
+            send_email('someone@example.com', 'test subject', 'test message')
+
     def it_triggers_429_when_daily_limit_reached(self, mocker, db_session, sample_email_provider):
         mocker.patch('app.comms.email.dao_get_todays_email_count_for_provider', return_value=30)
 
