@@ -64,8 +64,9 @@ def send_emails(email_id):
     except InvalidRequest as e:
         if e.status_code == 429:
             current_app.logger.error("Email limit reached: %r", e.message)
-        else:
-            raise
+            if "Minute" in e.message:
+                send_periodic_emails.apply_async(countdown=60)
+        raise
 
 
 @celery.task(name='send_periodic_emails')
