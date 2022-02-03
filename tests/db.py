@@ -518,7 +518,7 @@ DATA_MAP = {
 
 
 def create_email_provider(
-    name='Test Email Provider', monthly_limit=0, daily_limit=25, hourly_limit=5,
+    name='Test Email Provider', monthly_limit=0, daily_limit=25, hourly_limit=5, minute_limit=0,
     api_key='apikey', api_url='http://alt-api-url.com', pos=1,
     headers=True, as_json=False, data_map=DATA_MAP,
     smtp_server=None, smtp_user=None, smtp_password=None,
@@ -529,6 +529,7 @@ def create_email_provider(
         'monthly_limit': monthly_limit,
         'daily_limit': daily_limit,
         'hourly_limit': hourly_limit,
+        'minute_limit': minute_limit,
         'api_key': api_key,
         'api_url': api_url,
         'data_map': json.dumps(data_map),

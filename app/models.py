@@ -145,9 +145,10 @@ class EmailProvider(db.Model):
     __tablename__ = 'email_providers'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String, unique=True)
-    daily_limit = db.Column(db.Integer)
-    hourly_limit = db.Column(db.Integer)
-    monthly_limit = db.Column(db.Integer)
+    daily_limit = db.Column(db.Integer, default=0)
+    hourly_limit = db.Column(db.Integer, default=0)
+    minute_limit = db.Column(db.Integer, default=0)
+    monthly_limit = db.Column(db.Integer, default=0)
     api_key = db.Column(db.String)
     api_url = db.Column(db.String)
     data_map = db.Column(JSONB)
@@ -166,6 +167,7 @@ class EmailProvider(db.Model):
             'name': self.name,
             'daily_limit': self.daily_limit,
             'hourly_limit': self.hourly_limit,
+            'minute_limit': self.minute_limit,
             'monthly_limit': self.monthly_limit,
             'api_key': self.api_key,
             'api_url': self.api_url,

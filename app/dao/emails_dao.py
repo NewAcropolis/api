@@ -179,8 +179,16 @@ def dao_get_past_hour_email_count_for_provider(email_provider_id):
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     return EmailToMember.query.filter(
-        EmailToMember.created_at > today,
         EmailToMember.created_at > now - timedelta(hours=1),
+        EmailToMember.email_provider_id == email_provider_id
+    ).count()
+
+
+def dao_get_last_minute_email_count_for_provider(email_provider_id):
+    now = datetime.now(timezone('Europe/London'))
+
+    return EmailToMember.query.filter(
+        EmailToMember.created_at > now - timedelta(minutes=1),
         EmailToMember.email_provider_id == email_provider_id
     ).count()
 
