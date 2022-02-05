@@ -141,6 +141,10 @@ class EmailToMember(db.Model):
         }
 
 
+BEARER_AUTH = 'bearer'
+API_AUTH = 'api'
+
+
 class EmailProvider(db.Model):
     __tablename__ = 'email_providers'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -154,6 +158,7 @@ class EmailProvider(db.Model):
     data_map = db.Column(JSONB)
     pos = db.Column(db.Integer, unique=True)
     headers = db.Column(db.Boolean)
+    auth_type = db.Column(db.String)
     as_json = db.Column(db.Boolean)
     smtp_server = db.Column(db.String)
     smtp_user = db.Column(db.String)
@@ -174,6 +179,7 @@ class EmailProvider(db.Model):
             'data_map': self.data_map,
             'pos': self.pos,
             'headers': self.headers,
+            'auth_type': self.auth_type,
             'as_json': self.as_json,
             'smtp_server': self.smtp_server,
             'smtp_user': self.smtp_user,
