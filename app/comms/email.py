@@ -14,7 +14,7 @@ from na_common.dates import get_nice_event_dates
 
 from app.comms.encryption import encrypt
 from app.errors import InvalidRequest
-from app.models import BASIC, EVENT, MAGAZINE
+from app.models import BASIC, EVENT, MAGAZINE, BEARER_AUTH, API_AUTH
 from app.dao.events_dao import dao_get_event_by_id
 from app.dao.emails_dao import (
     dao_get_last_minute_email_count_for_provider,
@@ -225,15 +225,20 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
             data = get_email_data(email_provider.data_map, to, subject, message, from_email, from_name)
             data = data if email_provider.as_json else json.dumps(data)
 
-            headers = {
-                'api-key': email_provider.api_key,
-                'accept': 'application/json',
-                'content-type': 'application/json'
-            } if email_provider.headers else None
+            headers = None
+            if email_provider.headers:
+                headers = {
+                    'accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+                if email_provider.auth_type == BEARER_AUTH:
+                    headers['Authorization'] = f"Bearer {email_provider.api_key}"
+                elif email_provider.auth_type == API_AUTH:
+                    headers['api-key'] = email_provider.api_key
 
             response = requests.post(
                 email_provider.api_url,
-                auth=('api', email_provider.api_key),
+                auth=('api', email_provider.api_key) if email_provider.auth_type == API_AUTH else None,
                 headers=headers,
                 data=data,
             )

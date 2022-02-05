@@ -21,7 +21,7 @@ from app.dao.venues_dao import dao_create_venue
 from app.models import (
     Article, Book, BookToOrder, Email, EmailToMember, EmailProvider, Event, EventDate, EventType, Fee,
     Magazine, Marketing, Member, Order, RejectReason, Speaker, Ticket, User, Venue,
-    EVENT, TICKET_STATUS_UNUSED, DRAFT
+    EVENT, TICKET_STATUS_UNUSED, DRAFT, API_AUTH
 )
 
 
@@ -520,7 +520,7 @@ DATA_MAP = {
 def create_email_provider(
     name='Test Email Provider', monthly_limit=0, daily_limit=25, hourly_limit=5, minute_limit=0,
     api_key='apikey', api_url='http://alt-api-url.com', pos=1,
-    headers=True, as_json=False, data_map=DATA_MAP,
+    headers=True, auth_type=API_AUTH, as_json=False, data_map=DATA_MAP,
     smtp_server=None, smtp_user=None, smtp_password=None,
     available=False
 ):
@@ -535,6 +535,7 @@ def create_email_provider(
         'data_map': json.dumps(data_map),
         'headers': headers,
         'as_json': as_json,
+        'auth_type': auth_type,
         'pos': pos,
         'smtp_server': smtp_server,
         'smtp_user': smtp_user,
