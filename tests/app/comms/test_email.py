@@ -9,7 +9,7 @@ from app.comms.email import get_email_html, send_email, get_email_data
 from app.dao.email_providers_dao import dao_update_email_provider, dao_get_email_provider_by_id
 from tests.db import create_email_provider
 from app.errors import InvalidRequest
-from app.models import MAGAZINE, EmailProvider, Email
+from app.models import API_AUTH, BEARER_AUTH, MAGAZINE, EmailProvider, Email
 
 
 @pytest.fixture
@@ -112,6 +112,20 @@ class WhenSendingAnEmail:
             )
 
             assert r.last_request.text == json.dumps(data)
+
+    @pytest.mark.parametrize('auth_type,expected_header', [
+        (API_AUTH, 'api-key'),
+        (BEARER_AUTH, 'Authorization'),
+    ])
+    def it_sends_email_to_provider_with_correct_auth(
+        self, mocker, db_session, sample_email_provider, auth_type, expected_header
+    ):
+        sample_email_provider.auth_type = auth_type
+        with requests_mock.mock() as r:
+            r.post(sample_email_provider.api_url, text='OK')
+            send_email('someone@example.com', 'test subject', 'test message')
+
+            assert expected_header in r.last_request.headers.keys()
 
     def it_sends_email_to_provider_with_smtp(self, mocker, db_session, sample_email_provider):
         sample_email_provider.smtp_server = "http://smtp_server.com"
