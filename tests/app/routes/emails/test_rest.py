@@ -655,12 +655,18 @@ class WhenPostingSendMessage:
 
 
 class WhenGettingDefaultDetails:
-    def it_gets_default_details(self, client, sample_event):
+    @pytest.mark.parametrize('fee,fee_text', [
+        (0, "<div><strong>Fees:</strong> Free Admission</div>"),
+        (-2, "<div><strong>Fees:</strong> External site</div>"),
+        (-3, "<div><strong>Fees:</strong> Donation</div>"),
+        (5, "<div><strong>Fees:</strong> £5, £3 concession for students, "
+            "income support & OAPs, and free for members of New Acropolis.</div>")
+    ])
+    def it_gets_default_details(self, client, sample_event, fee, fee_text):
+        sample_event.fee = fee
         response = client.get(
             url_for('emails.get_default_details', event_id=sample_event.id),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
-        assert response.json['details'] == f'<div><strong>Fees:</strong> £{sample_event.fee}, £{sample_event.conc_fee}'\
-            ' concession for students, income support & OAPs, and free for members of New Acropolis.</div>'\
-            f'<div><strong>Venue:</strong> {sample_event.venue.address}</div>'\
+        assert response.json['details'] == f'{fee_text}<div><strong>Venue:</strong> {sample_event.venue.address}</div>'\
             f'{sample_event.venue.directions}'
