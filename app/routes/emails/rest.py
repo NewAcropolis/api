@@ -160,9 +160,15 @@ def get_email_types():
 @jwt_required
 def get_default_details(event_id):
     event = dao_get_event_by_id(event_id)
-    details = f"<div><strong>Fees:</strong> £{event.fee}, £{event.conc_fee} concession for students, "\
-        "income support & OAPs, and free for members of New Acropolis.</div><div><strong>Venue:</strong> "\
-        f"{event.venue.address}</div>{event.venue.directions}"
+    fees = f"<div><strong>Fees:</strong> £{event.fee}, £{event.conc_fee} concession for students, "\
+        "income support & OAPs, and free for members of New Acropolis.</div>"
+    if event.fee == 0:
+        fees = "<div><strong>Fees:</strong> Free Admission</div>"
+    elif event.fee == -2:
+        fees = "<div><strong>Fees:</strong> External site</div>"
+    elif event.fee == -3:
+        fees = "<div><strong>Fees:</strong> Donation</div>"
+    details = f"{fees}<div><strong>Venue:</strong> {event.venue.address}</div>{event.venue.directions}"
 
     return jsonify({'details': details})
 
