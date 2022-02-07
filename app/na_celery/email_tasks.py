@@ -35,7 +35,7 @@ def send_emails(email_id):
         for index, (member_id, email_to) in enumerate(members_not_sent_to):
             if limit and index > limit - 1 or email.email_state != APPROVED:
                 current_app.logger.info("Email stopped - {}".format(
-                    "not approved" if email.email_state != APPROVED else "limit reached"))
+                    "not approved" if email.email_state != APPROVED else f"limit reached: {limit}"))
                 break
             subject = email.get_subject()
             message = None
