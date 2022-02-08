@@ -1,3 +1,4 @@
+import base64
 import copy
 from datetime import timedelta
 import pytest
@@ -32,6 +33,12 @@ base64img = (
     'QBH0f43vHWYc8pfXRl1gLcE8UukAF1uPVGVItgKw0oqGiM/8bqe/nHfO/rtzMzk1Kmjd8+SNKd1hV4nQKIVPAlgwKgk/6DL8qp'
     'nwp+of/Hv+4QejLW5bEeHsLQRXZoPTTuAdSv4qcH59f1i/wGycsTRKGME7gAAAABJRU5ErkJggg=='
 )
+
+
+def base64img_encoded():
+    base64img_encoded = base64.b64encode(base64img.encode())
+    base64img_encoded = base64.b64encode(base64img_encoded).decode('utf-8')
+    return base64img_encoded
 
 
 @pytest.fixture
@@ -509,7 +516,7 @@ class WhenPostingCreatingAnEvent:
         for event in Event.query.all():
             if event.image_filename:
                 mock_storage_blob_upload.assert_called_with(
-                    'test_img.png', '2019/{}'.format(str(event.id)), base64img)
+                    'test_img.png', '2019/{}'.format(str(event.id)), base64.b64encode(base64img.encode()))
 
     @pytest.mark.parametrize('mock_state,paypal_button_task_called', [
         (DRAFT, False),
@@ -750,7 +757,7 @@ class WhenPostingCreatingAnEvent:
             "title": "Test title",
             "description": "Test description",
             "image_filename": "test_img.png",
-            "image_data": base64img,
+            "image_data": base64img_encoded(),
             "event_dates": [
                 {
                     "event_date": "2019-03-01 19:00:00",
@@ -894,7 +901,7 @@ class WhenPostingUpdatingAnEvent:
         for event in Event.query.all():
             if event.image_filename:
                 mock_storage_blob_upload.assert_called_with(
-                    'test_img.png', '2018/{}-temp'.format(str(event.id)), base64img)
+                    'test_img.png', '2018/{}-temp'.format(str(event.id)), base64.b64encode(base64img.encode()))
 
     def it_updates_an_event_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage,
@@ -1409,13 +1416,16 @@ class WhenPostingUpdatingAnEvent:
     ):
         speaker = create_speaker(name='Julie White')
 
+        # base64img_encoded = base64.b64encode(base64img.encode())
+        # base64img_encoded = base64.b64encode(base64img_encoded).decode('utf-8')
+
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
             "title": "Test title new",
             "sub_title": "Test sub title",
             "description": "Test description",
             "image_filename": "test_img.png",
-            "image_data": base64img,
+            "image_data": base64img_encoded(),
             "event_dates": [
                 {
                     "event_date": sample_req_event_data_with_event['event'].event_dates[0].event_datetime.strftime(
@@ -1465,7 +1475,7 @@ class WhenPostingUpdatingAnEvent:
             "sub_title": "Test sub title",
             "description": "Test description",
             "image_filename": "test_img.png",
-            "image_data": base64img,
+            "image_data": base64img_encoded(),
             "event_dates": [
                 {
                     "event_date": event_datetime.strftime('%Y-%m-%d %H:%M'),

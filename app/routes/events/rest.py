@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime
 from flask import (
     Blueprint,
@@ -132,7 +133,8 @@ def create_event():
     if image_data:
         target_image_filename = '{}/{}'.format(event_year, str(event.id))
 
-        storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
+        storage.upload_blob_from_base64string(
+            image_filename, target_image_filename, base64.b64decode(image_data))
 
         image_filename = target_image_filename
     elif image_filename:
@@ -303,7 +305,8 @@ def update_event(event_id):
                 if data.get('event_state') != APPROVED:
                     target_image_filename += '-temp'
 
-                storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
+                storage.upload_blob_from_base64string(
+                    image_filename, target_image_filename, base64.b64decode(image_data))
 
                 unix_time = time.time()
                 image_filename = '{}?{}'.format(target_image_filename, unix_time)
