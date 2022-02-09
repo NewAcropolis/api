@@ -59,7 +59,7 @@ def send_emails(email_id):
             send_ga_event(
                 f"Sent {email.email_type} email, {subject} - {str(email.id)}",
                 "email",
-                "send success" if email_status_code in [200, 201] else "send failed",
+                "send success" if email_status_code in [200, 201, 202] else "send failed",
                 f"{subject} - {email.id}")
     except InvalidRequest as e:
         if e.status_code == 429:

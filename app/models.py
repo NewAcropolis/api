@@ -265,10 +265,10 @@ class Email(db.Model):
         return {
             'success': EmailToMember.query.filter(
                 EmailToMember.email_id == self.id,
-                EmailToMember.status_code.in_([200, 201])).count(),
+                EmailToMember.status_code.in_([200, 201, 202])).count(),
             'failed': EmailToMember.query.filter(
                 EmailToMember.email_id == self.id,
-                EmailToMember.status_code.notin_([200, 201])
+                EmailToMember.status_code.notin_([200, 201, 202])
             ).count(),
             'total_active_members': Member.query.filter_by(active=True).count()
         }
