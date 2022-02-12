@@ -191,6 +191,9 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
             return "Duplicate transaction %s" % {data['txn_id']}
 
         order_data['params'] = json.dumps(params)
+        if 'is_donation' in order_data.keys() and order_data['is_donation'] == "Donation":
+            order_data['is_donation'] = True
+            order_data['linked_txn_id'] = None
 
         order = Order(**order_data)
         dao_create_record(order)
@@ -454,8 +457,12 @@ def parse_ipn(ipn, replace_order=False):
     products = []
     delivery_zones = []
 
+    custom_map = 'linked_txn_id'
+    if 'custom' in ipn.keys() and ipn['custom'] == 'Donation':
+        custom_map = 'is_donation'
+
     order_mapping = {
-        'custom': 'linked_txn_id',
+        'custom': custom_map,
         'payer_email': 'email_address',
         'first_name': 'first_name',
         'last_name': 'last_name',
