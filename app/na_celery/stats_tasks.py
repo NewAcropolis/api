@@ -41,7 +41,7 @@ def get_instagram_count():
         return 'failed'
 
 
-@celery.task(name='send_num_subscribers_and_social_stats')
+# @celery.task(name='send_num_subscribers_and_social_stats')
 def send_num_subscribers_and_social_stats(inc_subscribers=True):
     current_app.logger.info('Task send_num_subscribers_and_social_stats received: {}')
     report_month = (datetime.today() - timedelta(weeks=2)).strftime('%B').lower()
