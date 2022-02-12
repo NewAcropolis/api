@@ -227,6 +227,7 @@ class WhenUsingOrderModel:
             'created_at': get_local_time(order.created_at).strftime('%Y-%m-%d %H:%M'),
             'payment_status': order.payment_status,
             'payment_total': str(order.payment_total),
+            'is_donation': order.is_donation,
             'address_country_code': order.address_country_code,
             'address_street': order.address_street,
             'address_city': order.address_city,
