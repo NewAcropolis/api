@@ -769,6 +769,7 @@ class Order(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     payment_status = db.Column(db.String)
     payment_total = db.Column(db.Numeric(6, 2))
+    is_donation = db.Column(db.Boolean)
     params = db.Column(db.String)
     address_street = db.Column(db.String)
     address_city = db.Column(db.String)
@@ -828,6 +829,7 @@ class Order(db.Model):
             'buyer_name': self.buyer_name,
             'payment_status': self.payment_status,
             'payment_total': str(self.payment_total),  # not possible to json serialize a decimal
+            'is_donation': self.is_donation,
             'address_country_code': self.address_country_code,
             'address_street': self.address_street,
             'address_city': self.address_city,
