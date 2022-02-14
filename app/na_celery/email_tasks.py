@@ -18,7 +18,7 @@ def send_emails(email_id):
     if current_app.config.get('EMAIL_RESTRICT'):
         limit = 1
     elif current_app.config.get('ENVIRONMENT') == 'live':
-        email_provider = get_email_provider()
+        email_provider = get_email_provider(use_minute_limit=False)
         limit = email_provider.limit
     else:
         limit = current_app.config.get('EMAIL_LIMIT')

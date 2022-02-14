@@ -30,7 +30,7 @@ from app.dao.magazines_dao import dao_get_magazine_by_id
 h = HTMLParser()
 
 
-def get_email_provider(override=False, email_provider=None):
+def get_email_provider(override=False, email_provider=None, use_minute_limit=True):
     if not email_provider:
         email_provider = dao_get_first_email_provider()
         if not email_provider:
@@ -88,7 +88,8 @@ def get_email_provider(override=False, email_provider=None):
             email_provider.limit = email_provider.hourly_limit - email_provider_or_count
         else:
             return email_provider_or_count
-    if email_provider.minute_limit > 0:
+
+    if use_minute_limit and email_provider.minute_limit > 0:
         email_provider_or_count = _get_email_provider_or_count(
             email_provider.minute_limit,
             dao_get_last_minute_email_count_for_provider,
@@ -98,6 +99,8 @@ def get_email_provider(override=False, email_provider=None):
             email_provider.limit = email_provider.minute_limit - email_provider_or_count
         else:
             return email_provider_or_count
+    elif 'limit' not in dir(email_provider):
+        email_provider.limit = current_app.config["EMAIL_LIMIT"]
 
     return email_provider
 
