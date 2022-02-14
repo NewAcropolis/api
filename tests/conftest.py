@@ -162,7 +162,7 @@ def sample_magazine_email(db):
 @pytest.fixture(scope='function')
 def sample_email_provider(db):
     return create_email_provider(
-        name='Sample Email Provider', daily_limit=25, monthly_limit=100,
+        name='Sample Email Provider', minute_limit=10, daily_limit=25, monthly_limit=100,
         api_key='sample-api-key', api_url='http://sample-api-url.com', pos=0,
     )
 
