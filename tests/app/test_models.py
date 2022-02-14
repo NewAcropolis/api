@@ -226,7 +226,7 @@ class WhenUsingOrderModel:
             'buyer_name': order.buyer_name,
             'created_at': get_local_time(order.created_at).strftime('%Y-%m-%d %H:%M'),
             'payment_status': order.payment_status,
-            'payment_total': str(order.payment_total),
+            'payment_total': f"{order.payment_total:.2f}",
             'is_donation': order.is_donation,
             'address_country_code': order.address_country_code,
             'address_street': order.address_street,
@@ -238,7 +238,7 @@ class WhenUsingOrderModel:
             'delivery_status': order.delivery_status,
             'delivery_sent': order.delivery_sent,
             'refund_issued': order.refund_issued,
-            'delivery_balance': str(order.delivery_balance),
+            'delivery_balance': f"{order.delivery_balance:.2f}",
             'notes': order.notes,
             'books': [
                 {

@@ -828,7 +828,7 @@ class Order(db.Model):
             'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d %H:%M'),
             'buyer_name': self.buyer_name,
             'payment_status': self.payment_status,
-            'payment_total': str(self.payment_total),  # not possible to json serialize a decimal
+            'payment_total': f"{self.payment_total:.2f}",  # not possible to json serialize a decimal
             'is_donation': self.is_donation,
             'address_country_code': self.address_country_code,
             'address_street': self.address_street,
@@ -838,7 +838,7 @@ class Order(db.Model):
             'address_country': self.address_country,
             'delivery_zone': self.delivery_zone,
             'delivery_status': self.delivery_status,
-            'delivery_balance': str(self.delivery_balance),
+            'delivery_balance': f"{self.delivery_balance:.2f}",
             'delivery_sent': self.delivery_sent,
             'refund_issued': self.refund_issued,
             'notes': self.notes,
