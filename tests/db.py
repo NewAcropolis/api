@@ -432,7 +432,7 @@ def create_order(
     txn_id='1122334455',
     txn_type='cart',
     payment_status='completed',
-    payment_total='10.0',
+    payment_total=10.0,
     params='some_test_params&test_param2',
     address_street='1 Test Steeet',
     address_city='Test City',
