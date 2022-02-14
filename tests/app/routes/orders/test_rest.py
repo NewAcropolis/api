@@ -1409,7 +1409,7 @@ class WhenGettingOrders:
         assert response.json[0]['address_street'] == sample_order.address_street
         assert len(response.json[0]['linked_transactions']) == 2
         assert response.json[0]['payment_total'] == "10.00"
-        assert response.json[0]['delivery_balance'] == "0.0"
+        assert response.json[0]['delivery_balance'] == "0.00"
 
     def it_will_return_latest_invalid_orders(self, client, db_session, sample_order):
         order = create_order(
