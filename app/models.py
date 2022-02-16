@@ -4,7 +4,7 @@ import uuid
 import re
 
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint
+from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint, and_, or_
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -270,7 +270,19 @@ class Email(db.Model):
                 EmailToMember.email_id == self.id,
                 EmailToMember.status_code.notin_([200, 201, 202])
             ).count(),
-            'total_active_members': Member.query.filter_by(active=True).count()
+            'total_active_members': Member.query.filter(
+                or_(
+                    and_(
+                        Member.active,
+                        Member.created_at < Email.expires
+                    ),
+                    and_(
+                        Member.active.is_(False),
+                        Member.last_updated > Email.created_at,
+                        Member.last_updated < Email.expires
+                    ),
+                )
+            ).count()
         }
 
     def serialize(self):

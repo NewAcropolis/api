@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from datetime import datetime, timedelta
+from pytz import timezone
 from sqlalchemy import and_
 
 from app import db
@@ -15,6 +16,8 @@ def dao_create_member(member):
 
 @transactional
 def dao_update_member(member_id, **kwargs):
+    now = datetime.now(timezone('Europe/London'))
+    kwargs['last_updated'] = now
     return Member.query.filter_by(id=member_id).update(
         kwargs
     )
