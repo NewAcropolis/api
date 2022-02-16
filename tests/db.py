@@ -329,7 +329,7 @@ def create_member(
     active=True,
     old_marketing_id=1,
     is_course_member=False,
-    created_at=None,
+    created_at='2019-06-09T19:00:00',
     last_updated=None,
     marketing_id=None
 ):
