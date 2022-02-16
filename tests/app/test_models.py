@@ -9,6 +9,7 @@ from tests.db import (
     create_event,
     create_email,
     create_fee,
+    create_member,
     create_order,
     create_speaker,
     create_ticket
@@ -161,6 +162,56 @@ class WhenUsingEmailModel:
                 'success': 0,
                 'failed': 0,
                 'total_active_members': 0
+            }
+        }
+
+    def it_shows_email_json_on_serialize_only_members_active(self, db, db_session):
+        email = create_email(
+            created_at='2019-06-01T10:00:00',
+            send_starts_at='2019-06-02T11:00:00',
+            send_after='2019-06-02T12:00:00'
+        )
+
+        create_member(name='Active 1', email='test1@example.com', created_at='2019-04-09T19:00:00')
+        create_member(name='Active 2', email='test2@example.com', created_at='2019-06-09T19:00:00')
+
+        # member created after email expired not counted
+        create_member(name='Test 3', email='test3@example.com', created_at='2019-08-09T19:00:00')
+
+        # member that is now inactive but was active before email expired is counted
+        create_member(
+            name='Active past',
+            active=False, last_updated='2019-06-19T19:00:00',
+            email='test4@example.com', created_at='2019-05-09T19:00:00'
+        )
+
+        # member that is now inactive and was created before email is ignored
+        create_member(
+            name='Active past before',
+            active=False, last_updated='2019-03-19T19:00:00',
+            email='test5@example.com', created_at='2019-02-09T19:00:00'
+        )
+
+        assert email.serialize() == {
+            'id': str(email.id),
+            'subject': 'workshop: test title',
+            'event_id': str(email.event_id),
+            'magazine_id': None,
+            'old_id': email.old_id,
+            'old_event_id': email.old_event_id,
+            'created_at': get_local_time(email.created_at).strftime('%Y-%m-%d %H:%M'),
+            'extra_txt': u'test extra text',
+            'details': u'test event details',
+            'replace_all': False,
+            'email_type': u'event',
+            'email_state': u'draft',
+            'send_starts_at': '2019-06-02',
+            'expires': '2019-06-21',
+            'send_after': get_local_time(email.send_after).strftime('%Y-%m-%d %H:%M'),
+            'emails_sent_counts': {
+                'success': 0,
+                'failed': 0,
+                'total_active_members': 3
             }
         }
 
