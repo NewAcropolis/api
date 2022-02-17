@@ -274,10 +274,12 @@ class Email(db.Model):
                 or_(
                     and_(
                         Member.active,
+                        Email.id == self.id,
                         Member.created_at < Email.expires
                     ),
                     and_(
                         Member.active.is_(False),
+                        Email.id == self.id,
                         Member.last_updated > Email.created_at,
                         Member.last_updated < Email.expires
                     ),
