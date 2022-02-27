@@ -191,9 +191,6 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
             return "Duplicate transaction %s" % {data['txn_id']}
 
         order_data['params'] = json.dumps(params)
-        if 'is_donation' in order_data.keys() and order_data['is_donation'] == "Donation":
-            order_data['is_donation'] = True
-            order_data['linked_txn_id'] = None
 
         order = Order(**order_data)
         dao_create_record(order)
@@ -458,11 +455,25 @@ def parse_ipn(ipn, replace_order=False):
     delivery_zones = []
 
     custom_map = 'linked_txn_id'
-    if 'custom' in ipn.keys() and ipn['custom'] == 'Donation':
-        custom_map = 'is_donation'
+    if 'custom' in ipn.keys():
+        if ipn['custom'].startswith('Donation'):
+            custom_map = 'is_donation'
+
+    custom_mapping = {
+        'custom': custom_map,
+    }
+
+    for key in ipn.keys():
+        if key in custom_mapping.keys():
+            order_data[custom_mapping[key]] = ipn[key]
+
+    if order_data.get('is_donation', '').startswith('Donation'):
+        if order_data.get('is_donation') == 'DonationGiftaid':
+            order_data['is_giftaid'] = True
+        order_data['is_donation'] = True
+        order_data['linked_txn_id'] = None
 
     order_mapping = {
-        'custom': custom_map,
         'payer_email': 'email_address',
         'first_name': 'first_name',
         'last_name': 'last_name',
@@ -471,13 +482,34 @@ def parse_ipn(ipn, replace_order=False):
         'mc_gross': 'payment_total',
         'txn_id': 'txn_id',
         'payment_date': 'created_at',
-        'address_street': 'address_street',
-        'address_city': 'address_city',
-        'address_zip': 'address_postal_code',
-        'address_state': 'address_state',
-        'address_country': 'address_country',
-        'address_country_code': 'address_country_code',
     }
+
+    if 'item_number' in ipn:
+        if 'is_giftaid' in order_data:
+            order_mapping.update({
+                'address_street': 'address_street',
+                'address_city': 'address_city',
+                'address_zip': 'address_postal_code',
+                'address_state': 'address_state',
+                'address_country': 'address_country',
+                'address_country_code': 'address_country_code',
+            })
+    else:
+        counter = 1
+        while ('item_number%r' % counter) in ipn:
+            item = ipn['item_number%r' % counter]
+            if item.startswith('book-') or item.startswith('delivery'):
+                order_mapping.update({
+                    'address_street': 'address_street',
+                    'address_city': 'address_city',
+                    'address_zip': 'address_postal_code',
+                    'address_state': 'address_state',
+                    'address_country': 'address_country',
+                    'address_country_code': 'address_country_code',
+                })
+                break
+
+            counter += 1
 
     for key in ipn.keys():
         if key == 'receiver_email':
