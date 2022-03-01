@@ -444,6 +444,41 @@ def use_ticket(ticket_id):
     return jsonify(data)
 
 
+def get_order_mapping(ipn, is_giftaid):
+    order_mapping = {
+        'payer_email': 'email_address',
+        'first_name': 'first_name',
+        'last_name': 'last_name',
+        'payment_status': 'payment_status',
+        'txn_type': 'txn_type',
+        'mc_gross': 'payment_total',
+        'txn_id': 'txn_id',
+        'payment_date': 'created_at',
+    }
+
+    counter = 1
+    item_numbers = []
+    if 'item_number' in ipn:
+        item_numbers.append('item_number')
+
+    while ('item_number%r' % counter) in ipn:
+        item_numbers.append('item_number%r' % counter)
+        counter += 1
+
+    for item_number in item_numbers:
+        item = ipn[item_number]
+        if item.startswith('book-') or item.startswith('delivery') or is_giftaid:
+            order_mapping.update({
+                'address_street': 'address_street',
+                'address_city': 'address_city',
+                'address_zip': 'address_postal_code',
+                'address_state': 'address_state',
+                'address_country': 'address_country',
+                'address_country_code': 'address_country_code',
+            })
+    return order_mapping
+
+
 def parse_ipn(ipn, replace_order=False):
     order_data = {}
     receiver_email = None
@@ -473,43 +508,7 @@ def parse_ipn(ipn, replace_order=False):
         order_data['is_donation'] = True
         order_data['linked_txn_id'] = None
 
-    order_mapping = {
-        'payer_email': 'email_address',
-        'first_name': 'first_name',
-        'last_name': 'last_name',
-        'payment_status': 'payment_status',
-        'txn_type': 'txn_type',
-        'mc_gross': 'payment_total',
-        'txn_id': 'txn_id',
-        'payment_date': 'created_at',
-    }
-
-    if 'item_number' in ipn:
-        if 'is_giftaid' in order_data:
-            order_mapping.update({
-                'address_street': 'address_street',
-                'address_city': 'address_city',
-                'address_zip': 'address_postal_code',
-                'address_state': 'address_state',
-                'address_country': 'address_country',
-                'address_country_code': 'address_country_code',
-            })
-    else:
-        counter = 1
-        while ('item_number%r' % counter) in ipn:
-            item = ipn['item_number%r' % counter]
-            if item.startswith('book-') or item.startswith('delivery'):
-                order_mapping.update({
-                    'address_street': 'address_street',
-                    'address_city': 'address_city',
-                    'address_zip': 'address_postal_code',
-                    'address_state': 'address_state',
-                    'address_country': 'address_country',
-                    'address_country_code': 'address_country_code',
-                })
-                break
-
-            counter += 1
+    order_mapping = get_order_mapping(ipn, order_data.get('is_giftaid'))
 
     for key in ipn.keys():
         if key == 'receiver_email':
