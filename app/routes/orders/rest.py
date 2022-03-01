@@ -191,9 +191,6 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
             return "Duplicate transaction %s" % {data['txn_id']}
 
         order_data['params'] = json.dumps(params)
-        if 'is_donation' in order_data.keys() and order_data['is_donation'] == "Donation":
-            order_data['is_donation'] = True
-            order_data['linked_txn_id'] = None
 
         order = Order(**order_data)
         dao_create_record(order)
@@ -447,6 +444,41 @@ def use_ticket(ticket_id):
     return jsonify(data)
 
 
+def get_order_mapping(ipn, is_giftaid):
+    order_mapping = {
+        'payer_email': 'email_address',
+        'first_name': 'first_name',
+        'last_name': 'last_name',
+        'payment_status': 'payment_status',
+        'txn_type': 'txn_type',
+        'mc_gross': 'payment_total',
+        'txn_id': 'txn_id',
+        'payment_date': 'created_at',
+    }
+
+    counter = 1
+    item_numbers = []
+    if 'item_number' in ipn:
+        item_numbers.append('item_number')
+
+    while ('item_number%r' % counter) in ipn:
+        item_numbers.append('item_number%r' % counter)
+        counter += 1
+
+    for item_number in item_numbers:
+        item = ipn[item_number]
+        if item.startswith('book-') or item.startswith('delivery') or is_giftaid:
+            order_mapping.update({
+                'address_street': 'address_street',
+                'address_city': 'address_city',
+                'address_zip': 'address_postal_code',
+                'address_state': 'address_state',
+                'address_country': 'address_country',
+                'address_country_code': 'address_country_code',
+            })
+    return order_mapping
+
+
 def parse_ipn(ipn, replace_order=False):
     order_data = {}
     receiver_email = None
@@ -458,26 +490,25 @@ def parse_ipn(ipn, replace_order=False):
     delivery_zones = []
 
     custom_map = 'linked_txn_id'
-    if 'custom' in ipn.keys() and ipn['custom'] == 'Donation':
-        custom_map = 'is_donation'
+    if 'custom' in ipn.keys():
+        if ipn['custom'].startswith('Donation'):
+            custom_map = 'is_donation'
 
-    order_mapping = {
+    custom_mapping = {
         'custom': custom_map,
-        'payer_email': 'email_address',
-        'first_name': 'first_name',
-        'last_name': 'last_name',
-        'payment_status': 'payment_status',
-        'txn_type': 'txn_type',
-        'mc_gross': 'payment_total',
-        'txn_id': 'txn_id',
-        'payment_date': 'created_at',
-        'address_street': 'address_street',
-        'address_city': 'address_city',
-        'address_zip': 'address_postal_code',
-        'address_state': 'address_state',
-        'address_country': 'address_country',
-        'address_country_code': 'address_country_code',
     }
+
+    for key in ipn.keys():
+        if key in custom_mapping.keys():
+            order_data[custom_mapping[key]] = ipn[key]
+
+    if order_data.get('is_donation', '').startswith('Donation'):
+        if order_data.get('is_donation') == 'DonationGiftaid':
+            order_data['is_giftaid'] = True
+        order_data['is_donation'] = True
+        order_data['linked_txn_id'] = None
+
+    order_mapping = get_order_mapping(ipn, order_data.get('is_giftaid'))
 
     for key in ipn.keys():
         if key == 'receiver_email':

@@ -784,6 +784,7 @@ class Order(db.Model):
     payment_status = db.Column(db.String)
     payment_total = db.Column(db.Numeric(6, 2))
     is_donation = db.Column(db.Boolean)
+    is_giftaid = db.Column(db.Boolean)
     params = db.Column(db.String)
     address_street = db.Column(db.String)
     address_city = db.Column(db.String)

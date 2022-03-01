@@ -258,6 +258,18 @@ sample_donation = (
     "test_ipn=1&shipping_method=Default&transaction_subject=&payment_gross=&ipn_track_id=112233"
 )
 
+sample_donation_giftaid = (
+    "mc_gross=10.00&protection_eligibility=Eligible&payer_id=XXYYZZ&payment_date=16:59:13 Feb 09, 2022 PST&"
+    "payment_status=Completed&charset=UTF-8&first_name=TestName&mc_fee=0.54&notify_version=3.9&"
+    "custom=DonationGiftaid&payer_status=verified&business=test%40test.com&"
+    "quantity=1&verify_sign=XXYYZZ1&payer_email={payer_email}&"
+    "txn_id=11223344&payment_type=instant&last_name=User&receiver_email=receiver%40example.com&"
+    "payment_fee=&shipping_discount=0.00&receiver_id=AABBCC&insurance_amount=0.00&txn_type=web_accept&"
+    "item_name=Donation: {event_title}&discount=0.00&mc_currency=GBP&item_number={event_id}&residence_country=GB&"
+    "test_ipn=1&shipping_method=Default&transaction_subject=&payment_gross=&ipn_track_id=112233&"
+    "address_country=United+Kingdom&address_city=London"
+)
+
 
 @pytest.fixture(scope='function')
 def mock_storage(mocker):
@@ -779,6 +791,36 @@ class WhenHandlingPaypalIPN:
         assert len(orders) == 1
         assert orders[0].is_donation
         assert orders[0].payment_total == 10.00
+        assert orders[0].address_city is None
+
+    def it_creates_an_order_with_donation_giftaid(
+        self, mocker, app, client, db_session, sample_event_with_dates
+    ):
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+
+        _sample_ipn = sample_donation_giftaid.format(
+            event_id=sample_event_with_dates.id,
+            event_title=sample_event_with_dates.title,
+            payer_email="payer@example.com",
+        )
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert orders[0].is_donation
+        assert orders[0].is_giftaid
+        assert orders[0].payment_total == 10.00
+        assert orders[0].address_city == 'London'
 
     def it_sends_an_email_if_missing_address_for_book_order(
         self, mocker, app, client, db_session, sample_book
