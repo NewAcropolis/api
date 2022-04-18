@@ -2,6 +2,8 @@ import pytest
 import uuid
 
 from flask import json, url_for
+
+from app.models import Article, DRAFT, READY
 from tests.conftest import create_authorization_header
 
 from tests.db import create_article
@@ -161,3 +163,56 @@ class WhenPostingUpdateArticle:
         )
         assert response.status_code == 200
         assert response.json['image_filename'] == data['image_filename']
+
+
+class WhenPostingAddArticle:
+
+    def it_adds_an_article(self, client, db_session):
+        data = {
+            'title': 'New',
+            'author': 'Somone',
+            'content': 'Something interesting',
+            'image_filename': 'new_filename.jpg',
+            'tags': 'Some tag'
+        }
+        response = client.post(
+            url_for('article.add_article'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+        assert response.json['image_filename'] == data['image_filename']
+
+        articles = Article.query.all()
+
+        assert len(articles) == 1
+        assert articles[0].title == data['title']
+        assert articles[0].article_state == DRAFT
+        assert articles[0].tags == data['tags']
+
+
+class WhenPostingUpdateArticle:
+
+    def it_updates_an_article(self, client, db_session, sample_article):
+        data = {
+            'title': 'Updated',
+            'author': 'Updated Somone',
+            'content': 'Something updated',
+            'image_filename': 'updated_filename.jpg',
+            'tags': 'Updated tag',
+            'article_state': READY
+        }
+        response = client.post(
+            url_for('article.update_article_by_id', article_id=sample_article.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+        assert response.json['image_filename'] == data['image_filename']
+
+        articles = Article.query.all()
+
+        assert len(articles) == 1
+        assert articles[0].title == data['title']
+        assert articles[0].article_state == READY
+        assert articles[0].tags == data['tags']

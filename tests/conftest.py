@@ -121,7 +121,9 @@ def db_session(db):
 
     db.session.remove()
     for tbl in reversed(db.metadata.sorted_tables):
-        if tbl.name not in ["event_states", "email_types", "email_states", "ticket_types", "ticket_statuses"]:
+        if tbl.name not in [
+            "article_states", "event_states", "email_types", "email_states", "ticket_types", "ticket_statuses"
+        ]:
             db.engine.execute(tbl.delete())
     db.session.commit()
 

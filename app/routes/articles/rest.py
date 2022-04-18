@@ -14,12 +14,12 @@ from app.dao.articles_dao import (
     dao_get_articles,
     dao_update_article,
     dao_get_article_by_id,
-    dao_get_article_by_old_id,
     dao_get_articles_with_images
 )
 from app.errors import register_errors
 
-from app.routes.articles.schemas import post_import_articles_schema, post_update_article_schema
+from app.routes.articles.schemas import (
+    post_import_articles_schema, post_update_article_schema, post_create_article_schema)
 
 from app.models import Article
 from app.schema_validation import validate
@@ -35,20 +35,6 @@ register_errors(article_blueprint)
 def get_articles():
     articles = [a.serialize() if a else None for a in dao_get_articles()]
     return jsonify(articles)
-
-
-@article_blueprint.route('/article/<int:old_id>', methods=['POST'])
-@jwt_required
-def update_article_by_old_id(old_id):
-    data = request.get_json(force=True)
-
-    validate(data, post_update_article_schema)
-
-    article = dao_get_article_by_old_id(old_id)
-
-    dao_update_article(article.id, **data)
-
-    return jsonify(article.serialize()), 200
 
 
 @articles_blueprint.route('/articles/summary')
@@ -119,3 +105,37 @@ def import_articles():
         res['errors'] = errors
 
     return jsonify(res), 201 if articles else 400 if errors else 200
+
+
+@article_blueprint.route('/article', methods=['POST'])
+@jwt_required
+def add_article():
+    data = request.get_json(force=True)
+
+    validate(data, post_create_article_schema)
+
+    article = Article(
+        title=data['title'],
+        author=data['author'],
+        content=data['content'],
+        image_filename=data['image_filename'],
+        tags=data['tags'],
+    )
+
+    dao_create_article(article)
+
+    return jsonify(article.serialize()), 201
+
+
+@article_blueprint.route('/article/<uuid:article_id>', methods=['POST'])
+@jwt_required
+def update_article_by_id(article_id):
+    data = request.get_json(force=True)
+
+    validate(data, post_update_article_schema)
+
+    article = dao_get_article_by_id(article_id)
+
+    dao_update_article(article.id, **data)
+
+    return jsonify(article.serialize()), 200
