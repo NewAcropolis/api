@@ -30,7 +30,7 @@ READY = 'ready'
 APPROVED = 'approved'
 REJECTED = 'rejected'
 
-EMAIL_STATES = EVENT_STATES = [
+EMAIL_STATES = EVENT_STATES = ARTICLE_STATES = [
     DRAFT, READY, APPROVED, REJECTED
 ]
 
@@ -45,6 +45,14 @@ class Article(db.Model):
     image_filename = db.Column(db.String(255))
     content = db.Column(db.Text())
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    article_state = db.Column(
+        db.String(255),
+        db.ForeignKey('article_states.name'),
+        default=DRAFT,
+        nullable=True,
+        index=True,
+    )
+    tags = db.Column(db.String())
 
     def serialize(self):
         return {
@@ -54,6 +62,8 @@ class Article(db.Model):
             'author': self.author,
             'content': self.content,
             'image_filename': self.image_filename,
+            'article_state': self.article_state,
+            'tags': self.tags,
             'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d') if self.created_at else None,
         }
 
@@ -77,6 +87,12 @@ class Article(db.Model):
             'very_short_content': get_short_content(num_words=30),
             'image_filename': self.image_filename,
         }
+
+
+class ArticleStates(db.Model):
+    __tablename__ = 'article_states'
+
+    name = db.Column(db.String(), primary_key=True)
 
 
 BOOK = 'book'

@@ -40,5 +40,20 @@ post_update_article_schema = {
         'author': {"type": "string"},
         'content': {"type": "string"},
         'image_filename': {"type": "string"},
+        'tags': {"type": "string"},
     },
+}
+
+post_create_article_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for create article",
+    "type": "object",
+    "properties": {
+        'title': {"type": "string"},
+        'author': {"type": "string"},
+        'content': {"type": "string"},
+        'image_filename': {"type": "string"},
+        'tags': {"type": "string"},
+    },
+    "required": ["title", "author", "content"]
 }
