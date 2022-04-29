@@ -61,12 +61,12 @@ class PayPal:
 
                 get_resp = parse_qs(response.content.decode('ASCII'))
 
-                if 'L_BUTTONVAR6' not in get_resp:
-                    current_app.logger.info('Skipping %s', get_resp['HOSTEDBUTTONID'])
-                    continue
-
-                _item_id = get_resp['L_BUTTONVAR6'][0].split('=')[1]
-                _item_id = _item_id[:-1]
+                _item_id = None
+                for _key in [k for k in get_resp.keys() if k.startswith('L_BUTTONVAR')]:
+                    item = get_resp[_key][0].split('=')
+                    if item[0][1:] == 'item_number':
+                        _item_id = item[1][:-1]
+                        break
 
                 current_app.logger.info(
                     'Button compare: {} - {} = {}'.format(item_id, _item_id, str(item_id) == str(_item_id)))
@@ -146,4 +146,7 @@ class PayPal:
             current_app.logger.info('Paypal success: {} - {}'.format(item_id, process_resp['HOSTEDBUTTONID'][0]))
             return process_resp['HOSTEDBUTTONID'][0]
         else:
-            raise PaypalException('Paypal error: {}'.format(process_resp['L_LONGMESSAGE0']))
+            error_msg = ""
+            for key in [k for k in process_resp.keys() if k.startswith('L_LONGMESSAGE')]:
+                error_msg += f'{process_resp[key]}, '
+            raise PaypalException('Paypal error: {}'.format(error_msg))
