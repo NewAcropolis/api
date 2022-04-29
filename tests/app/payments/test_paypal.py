@@ -1,5 +1,6 @@
 from mock import call, Mock
 import pytest
+import random
 import uuid
 
 from app.errors import PaypalException
@@ -43,10 +44,10 @@ mock_process_button = (
 
 
 class MockRequests:
-    def __init__(self, ack='Success', err_msg='', has_L_BUTTONVAR6=True):
+    def __init__(self, ack='Success', err_msg='', has_item_number=True):
         self.ack = ack
         self.err_msg = err_msg
-        self.has_L_BUTTONVAR6 = has_L_BUTTONVAR6
+        self.has_item_number = has_item_number
 
     def post(self, _, data=None, **kwargs):
         mock_response = Mock()
@@ -57,7 +58,7 @@ class MockRequests:
         elif data['METHOD'] == 'BMGetButtonDetails':
             mock_response.content = mock_get_button_details.format(
                 mock_update_button_id,
-                f"L_BUTTONVAR6=%22item_number%3d{mock_item_id}%22&" if self.has_L_BUTTONVAR6 else ''
+                f"L_BUTTONVAR{random.randint(6, 9)}=%22item_number%3d{mock_item_id}%22&" if self.has_item_number else ''
             )
         elif data['METHOD'] in ['BMCreateButton']:
             mock_response.content = mock_process_button.format(
@@ -111,8 +112,8 @@ class WhenCreatingPaypalButton:
         button_id = p.create_update_paypal_button(mock_item_id, 'test title')
         assert button_id == mock_update_button_id
 
-    def it_creates_a_paypal_button_for_search_without_L_BUTTONVAR6(self, app, mocker, sample_uuid):
-        mocker.patch('app.payments.paypal.requests', MockRequests(has_L_BUTTONVAR6=False))
+    def it_creates_a_paypal_button_for_search_without_item_number(self, app, mocker, sample_uuid):
+        mocker.patch('app.payments.paypal.requests', MockRequests(has_item_number=False))
 
         p = PayPal()
         button_id = p.create_update_paypal_button(
