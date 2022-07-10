@@ -1793,3 +1793,13 @@ class WhenTestingPaypal:
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.get_data(as_text=True) == 'Cannot test paypal on live environment'
+
+
+class WhenSyncPaypal:
+
+    def it_calls_paypal_task_create_update_paypal_button_task(self, client, mock_paypal_task, sample_uuid):
+        response = client.get(
+            url_for('events.sync_paypal', event_id=sample_uuid),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert mock_paypal_task.called

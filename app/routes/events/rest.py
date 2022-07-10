@@ -165,6 +165,14 @@ def delete_event(event_id):
     return jsonify({'message': '{} deleted'.format(event_id)}), 200
 
 
+@events_blueprint.route('/event/sync_paypal/<uuid:event_id>')
+@jwt_required
+def sync_paypal(event_id):
+    paypal_tasks.create_update_paypal_button_task.apply_async((str(event_id),))
+
+    return 'ok'
+
+
 @events_blueprint.route('/event/<uuid:event_id>', methods=['POST'])
 @jwt_required
 def update_event(event_id):
