@@ -170,7 +170,7 @@ def delete_event(event_id):
 def sync_paypal(event_id):
     paypal_tasks.create_update_paypal_button_task.apply_async((str(event_id),))
 
-    return 'ok'
+    return jsonify({'status': 'ok'})
 
 
 @events_blueprint.route('/event/<uuid:event_id>', methods=['POST'])
