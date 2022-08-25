@@ -1,3 +1,4 @@
+import base64
 import os
 from random import randint
 from flask import (
@@ -17,10 +18,13 @@ from app.dao.books_dao import (
 )
 from app.errors import register_errors, InvalidRequest
 
-from app.routes.books.schemas import post_import_books_schema, post_update_book_schema
+from app.routes.books.schemas import post_import_books_schema, post_update_book_schema, post_create_book_schema
 
 from app.models import Book
 from app.schema_validation import validate
+
+from app.utils.storage import Storage
+
 
 books_blueprint = Blueprint('books', __name__)
 book_blueprint = Blueprint('book', __name__)
@@ -53,9 +57,49 @@ def update_book(book_id):
     if not fetched_book:
         raise InvalidRequest(f'book not found: {book_id}', 404)
 
+    image_data = data.pop('image_data')
+
     dao_update_book(book_id, **data)
 
+    if image_data:
+        target_image_filename = f"books/{fetched_book.title.lower().replace(' ', '-')}.jpg"
+        storage = Storage(current_app.config['STORAGE'])
+
+        storage.upload_blob_from_base64string(
+            data['image_filename'], target_image_filename, base64.b64decode(image_data))
+
     return jsonify(fetched_book.serialize()), 201
+
+
+@book_blueprint.route('/book', methods=['POST'])
+@jwt_required
+def add_book():
+    data = request.get_json(force=True)
+
+    validate(data, post_create_book_schema)
+
+    book = Book(
+        title=data['title'],
+        author=data['author'],
+        image_filename=data['image_filename'],
+        description=data['description'],
+        price=data['price']
+    )
+
+    dao_create_book(book)
+
+    if current_app.config['STORAGE'].startswith('None'):
+        current_app.logger.warn('Storage not setup')
+    else:
+        image_data = data.get('image_data')
+        if image_data:
+            target_image_filename = f"books/{book.title.lower().replace(' ', '-')}.jpg"
+            storage = Storage(current_app.config['STORAGE'])
+
+            storage.upload_blob_from_base64string(
+                data['image_filename'], target_image_filename, base64.b64decode(image_data))
+
+    return jsonify(book.serialize()), 201
 
 
 @books_blueprint.route('/books/import', methods=['POST'])
