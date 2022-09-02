@@ -944,6 +944,8 @@ class Ticket(db.Model):
     event_date = db.relationship("EventDate", backref=db.backref("tickets", uselist=False))
 
     def serialize(self):
+        if not self.eventdate_id:  # pragma: no cover
+            current_app.logger.info(f'ticket event date missing {self.id}')
         return {
             'id': str(self.id),
             'event_id': str(self.event_id),
@@ -951,7 +953,7 @@ class Ticket(db.Model):
             'old_id': self.old_id,
             'ticket_type': self.ticket_type,
             'eventdate_id': str(self.eventdate_id),
-            'event_date': self.event_date.serialize(),
+            'event_date': self.event_date.serialize() if self.event_date else None,
             'name': self.name if self.name else self.order.buyer_name,
             'price': str(self.price) if self.price else None,
             'last_updated': get_local_time(self.last_updated).strftime('%Y-%m-%d %H:%M'),
