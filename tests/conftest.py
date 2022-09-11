@@ -70,6 +70,7 @@ def app():
         'PAYPAL_PASSWORD': 'test pass',
         'PAYPAL_SIG': 'paypal signature',
         'PAYPAL_RECEIVER': 'receiver@example.com',
+        'PAYPAL_RECEIVER_ID': 'AABBCC1',
         'PAYPAL_VERIFY_URL': 'https://test.paypal/verify',
         'API_BASE_URL': 'http://test',
         'IMAGES_URL': 'http://test/images',

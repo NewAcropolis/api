@@ -45,6 +45,7 @@ class Config(object):
     PAYPAL_USER = os.environ.get('PAYPAL_USER')
     PAYPAL_PASSWORD = os.environ.get('PAYPAL_PASSWORD')
     PAYPAL_RECEIVER = os.environ.get('PAYPAL_RECEIVER')
+    PAYPAL_RECEIVER_ID = os.environ.get('PAYPAL_RECEIVER_ID')
     PAYPAL_SIG = os.environ.get('PAYPAL_SIG')
     PAYPAL_VERIFY_URL = os.environ.get('PAYPAL_VERIFY_URL')
     EMAIL_TOKENS = json.loads(os.environ.get('EMAIL_TOKENS')) if 'EMAIL_TOKENS' \

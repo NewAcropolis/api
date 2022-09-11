@@ -90,6 +90,45 @@ sample_wrong_receiver = (
 )
 
 
+sample_receiver_id = (
+    "mc_gross=0.01&protection_eligibility=Ineligible&item_number1={id}&tax=0.00&payer_id=XXYYZZ1&payment_date="
+    "10%3A00%3A00+Jan+01%2C+2018+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Completed&"
+    "charset=windows-1252&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&notify_version=3.8&custom=&"
+    "payer_status=verified&business=receiver%40example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=XXYYZZ1"
+    ".t.sign&payer_email=test1%40example.com&mc_shipping1=0.00&tax1=0.00&btn_id1="
+    "XXYYZZ1&option_name1_1=Type&txn_id=112233&payment_type=instant&option_selection2_1=1&last_name=User&"
+    "item_name1=Get+Inspired+-+Discover+Philosophy&payment_fee=&quantity1=1&"
+    "receiver_id=AABBCC1&txn_type=Cart&mc_gross_1=0.01&mc_currency=GBP&residence_country=GB&transaction_subject=&"
+    "payment_gross=&ipn_track_id=112233"
+)
+
+
+sample_wrong_receiver_id = (
+    "mc_gross=0.01&protection_eligibility=Ineligible&item_number1={id}&tax=0.00&payer_id=XXYYZZ1&payment_date="
+    "10%3A00%3A00+Jan+01%2C+2018+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Completed&"
+    "charset=windows-1252&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&notify_version=3.8&custom=&"
+    "payer_status=verified&business=receiver%40example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=XXYYZZ1"
+    ".t.sign&payer_email=test1%40example.com&mc_shipping1=0.00&tax1=0.00&btn_id1="
+    "XXYYZZ1&option_name1_1=Type&txn_id=112233&payment_type=instant&option_selection2_1=1&last_name=User&"
+    "item_name1=Get+Inspired+-+Discover+Philosophy&payment_fee=&quantity1=1&"
+    "receiver_id=XAABBCC1&txn_type=Cart&mc_gross_1=0.01&mc_currency=GBP&residence_country=GB&transaction_subject=&"
+    "payment_gross=&ipn_track_id=112233"
+)
+
+
+sample_no_receiver_email_or_id = (
+    "mc_gross=0.01&protection_eligibility=Ineligible&item_number1={id}&tax=0.00&payer_id=XXYYZZ1&payment_date="
+    "10%3A00%3A00+Jan+01%2C+2018+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Completed&"
+    "charset=windows-1252&mc_shipping=0.00&mc_handling=0.00&first_name=Test&mc_fee=0.01&notify_version=3.8&custom=&"
+    "payer_status=verified&business=receiver%40example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=XXYYZZ1"
+    ".t.sign&payer_email=test1%40example.com&mc_shipping1=0.00&tax1=0.00&btn_id1="
+    "XXYYZZ1&option_name1_1=Type&txn_id=112233&payment_type=instant&option_selection2_1=1&last_name=User&"
+    "item_name1=Get+Inspired+-+Discover+Philosophy&payment_fee=&quantity1=1&"
+    "txn_type=Cart&mc_gross_1=0.01&mc_currency=GBP&residence_country=GB&transaction_subject=&"
+    "payment_gross=&ipn_track_id=112233"
+)
+
+
 sample_invalid_date = (
     "mc_gross=0.01&protection_eligibility=Ineligible&item_number1={id}&tax=0.00&payer_id=XXYYZZ1&payment_date="
     "10%3A00%3A00+Jan+01%2C+2018+PST&option_name2_1=Date&option_selection1_1=Concession&payment_status=Completed&"
@@ -1236,7 +1275,38 @@ class WhenHandlingPaypalIPN:
         assert orders[0].errors[0].error == f"{resp} verification"
         assert orders[0].txn_id.startswith(f"XX-{resp}_1637434800-")
 
-    def it_does_not_create_an_order_if_wrong_receiver(self, mocker, client, db_session, sample_event):
+    def it_creates_an_order_with_receiver_id(self, mocker, client, db_session, sample_event_with_dates):
+        mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')
+        sample_ipn = sample_receiver_id.format(id=sample_event_with_dates.id)
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert len(orders[0].errors) == 0
+
+    def it_does_not_create_an_order_without_receivers(self, mocker, client, db_session, sample_event_with_dates):
+        mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')
+        sample_ipn = sample_no_receiver_email_or_id.format(id=sample_event_with_dates.id)
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert len(orders[0].errors) == 1
+        assert mock_logger.call_args == call('No Paypal receiver email or id for %s', u'112233')
+
+    def it_creates_an_order_error_if_wrong_receiver(self, mocker, client, db_session, sample_event):
         mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')
         sample_ipn = sample_wrong_receiver.format(id=sample_event.id)
         with requests_mock.mock() as r:
@@ -1250,7 +1320,41 @@ class WhenHandlingPaypalIPN:
         orders = dao_get_orders()
         assert len(orders) == 1
         assert len(orders[0].errors) == 1
-        assert mock_logger.call_args == call('Paypal receiver not valid: %s for %s', u'another@example.com', u'112233')
+        assert mock_logger.call_args == call(
+            'Paypal receiver email not valid: %s for %s', u'another@example.com', u'112233')
+
+    def it_creates_an_order_error_if_wrong_receiver_id(self, mocker, client, db_session, sample_event):
+        mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')
+        sample_ipn = sample_wrong_receiver_id.format(id=sample_event.id)
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert len(orders[0].errors) == 1
+        assert mock_logger.call_args == call('Paypal receiver id not valid: %s for %s', u'XAABBCC1', u'112233')
+
+    def it_creates_an_order_error_if_wrong_receiver(self, mocker, client, db_session, sample_event):
+        mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')
+        sample_ipn = sample_wrong_receiver.format(id=sample_event.id)
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert len(orders[0].errors) == 1
+        assert mock_logger.call_args == call(
+            'Paypal receiver email not valid: %s for %s', u'another@example.com', u'112233')
 
     def it_creates_an_order_if_no_event_matched_with_errors(self, mocker, client, db_session, sample_uuid):
         mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
