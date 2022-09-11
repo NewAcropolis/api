@@ -481,7 +481,7 @@ def get_order_mapping(ipn, is_giftaid):
 
 def parse_ipn(ipn, replace_order=False):
     order_data = {}
-    receiver_email = None
+    receiver_email = receiver_id = None
     errors = []
     short_response = order_data, None, None, None, None, errors
     tickets = []
@@ -513,6 +513,8 @@ def parse_ipn(ipn, replace_order=False):
     for key in ipn.keys():
         if key == 'receiver_email':
             receiver_email = ipn[key]
+        if key == 'receiver_id':
+            receiver_id = ipn[key]
         if key in order_mapping.keys():
             order_data[order_mapping[key]] = ipn[key]
 
@@ -525,9 +527,19 @@ def parse_ipn(ipn, replace_order=False):
             'Order: %s, payment not complete: %s', order_data['txn_id'], order_data['payment_status'])
         return short_response
 
-    if receiver_email.replace(' ', '+') != current_app.config['PAYPAL_RECEIVER']:
-        current_app.logger.error('Paypal receiver not valid: %s for %s', receiver_email, order_data['txn_id'])
-        order_data['payment_status'] = 'Invalid receiver'
+    if receiver_email:
+        if receiver_email.replace(' ', '+') != current_app.config['PAYPAL_RECEIVER']:
+            current_app.logger.error('Paypal receiver email not valid: %s for %s', receiver_email, order_data['txn_id'])
+            order_data['payment_status'] = 'Invalid receiver email'
+            return short_response
+    elif receiver_id:
+        if receiver_id != current_app.config['PAYPAL_RECEIVER_ID']:
+            current_app.logger.error('Paypal receiver id not valid: %s for %s', receiver_id, order_data['txn_id'])
+            order_data['payment_status'] = 'Invalid receiver id'
+            return short_response
+    else:
+        current_app.logger.error('No Paypal receiver email or id for %s', order_data['txn_id'])
+        order_data['payment_status'] = 'No receiver email or id'
         return short_response
 
     order_found = dao_get_order_with_txn_id(order_data['txn_id'])
