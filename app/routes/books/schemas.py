@@ -43,5 +43,33 @@ post_update_book_schema = {
         'price': money,
         'buy_code': {"type": "string"},
         'image_filename': {"type": "string"},
+        "image_data": {
+            "type": ["string", "null"],
+            "media": {
+                "binaryEncoding": "base64",
+                "type": "image/png"
+            }
+        }
     }
+}
+
+post_create_book_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for creating a book",
+    "type": "object",
+    "properties": {
+        'title': {"type": "string"},
+        'author': {"type": "string"},
+        'description': {"type": "string"},
+        'price': money,
+        'image_filename': {"type": "string"},
+        "image_data": {
+            "type": ["string", "null"],
+            "media": {
+                "binaryEncoding": "base64",
+                "type": "image/png"
+            }
+        }
+    },
+    "required": ["title", "author", "price", "image_filename", "image_data"]
 }
