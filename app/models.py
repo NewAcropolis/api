@@ -53,6 +53,7 @@ class Article(db.Model):
         index=True,
     )
     tags = db.Column(db.String())
+    magazine_id = db.Column(UUID(as_uuid=True), db.ForeignKey('magazines.id'), nullable=True)
 
     def serialize(self):
         return {
@@ -64,6 +65,7 @@ class Article(db.Model):
             'image_filename': self.image_filename,
             'article_state': self.article_state,
             'tags': self.tags,
+            'magazine_id': self.magazine_id,
             'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d') if self.created_at else None,
         }
 

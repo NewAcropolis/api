@@ -167,12 +167,13 @@ class WhenPostingUpdateArticle:
 
 class WhenPostingAddArticle:
 
-    def it_adds_an_article(self, client, db_session):
+    def it_adds_an_article(self, client, db_session, sample_magazine):
         data = {
             'title': 'New',
             'author': 'Somone',
             'content': 'Something interesting',
             'image_filename': 'new_filename.jpg',
+            'magazine_id': str(sample_magazine.id),
             'tags': 'Some tag'
         }
         response = client.post(
@@ -182,6 +183,7 @@ class WhenPostingAddArticle:
         )
         assert response.status_code == 201
         assert response.json['image_filename'] == data['image_filename']
+        assert response.json['magazine_id'] == data['magazine_id']
 
         articles = Article.query.all()
 
@@ -189,6 +191,7 @@ class WhenPostingAddArticle:
         assert articles[0].title == data['title']
         assert articles[0].article_state == DRAFT
         assert articles[0].tags == data['tags']
+        assert articles[0].magazine_id == sample_magazine.id
 
 
 class WhenPostingUpdateArticle:

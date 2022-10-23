@@ -119,6 +119,7 @@ def add_article():
         author=data['author'],
         content=data['content'],
         image_filename=data['image_filename'],
+        magazine_id=data['magazine_id'],
         tags=data['tags'],
     )
 
