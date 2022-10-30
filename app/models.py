@@ -804,6 +804,8 @@ class Order(db.Model):
     is_donation = db.Column(db.Boolean)
     is_giftaid = db.Column(db.Boolean)
     params = db.Column(db.String)
+    email_status = db.Column(db.String)
+    email_provider_id = db.Column(UUID(as_uuid=True), db.ForeignKey('email_providers.id'))
     address_street = db.Column(db.String)
     address_city = db.Column(db.String)
     address_postal_code = db.Column(db.String)
