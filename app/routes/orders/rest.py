@@ -181,7 +181,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
 
     # Check return message and take action as needed
     if v_response == 'VERIFIED':
-        status = product_message = delivery_message = error_message = ''
+        status = product_message = delivery_message = error_message = email_status_code = email_provider_id = ''
         diff = 0.0
         data = get_data(params)
 
@@ -393,10 +393,16 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
             )
 
         if allow_emails:
-            send_email(
+            email_status_code, email_provider_id = send_email(
                 order.email_address,
                 'New Acropolis Order',
                 message + product_message + delivery_message + error_message
+            )
+            print(email_status_code, email_provider_id)
+            dao_update_record(
+                Order, order.id,
+                email_status=email_status_code,
+                email_provider_id=email_provider_id
             )
     else:
         if v_response == 'INVALID':
