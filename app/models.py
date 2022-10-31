@@ -877,6 +877,8 @@ class Order(db.Model):
             'delivery_sent': self.delivery_sent,
             'refund_issued': self.refund_issued,
             'notes': self.notes,
+            'email_status': self.email_status,
+            'email_provider_id': self.email_provider_id,
         }
 
 
