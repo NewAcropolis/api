@@ -5,11 +5,14 @@ import pytz
 from app import celery
 from app.comms.email import send_email, get_email_html, get_email_provider
 from app.comms.stats import send_ga_event
+from app.dao import dao_update_record
 from app.dao.emails_dao import dao_get_email_by_id, dao_add_member_sent_to_email, dao_get_approved_emails_for_sending
 from app.dao.members_dao import dao_get_members_not_sent_to
+from app.dao.orders_dao import dao_get_orders_without_email_status
 from app.dao.users_dao import dao_get_admin_users
 from app.errors import InvalidRequest
-from app.models import EVENT, MAGAZINE, APPROVED
+from app.models import EVENT, MAGAZINE, APPROVED, Order
+from app.routes.orders.rest import _replay_paypal_ipn
 
 
 def send_emails(email_id):
@@ -89,3 +92,14 @@ def send_periodic_emails():
 
     for email in emails:
         send_emails(email.id)
+
+
+@celery.task(name='send_missing_confirmation_emails')
+def send_missing_confirmation_emails():
+    for order in dao_get_orders_without_email_status():
+        email_status_code = _replay_paypal_ipn(order.txn_id, email_only=True)
+        if not email_status_code:
+            dao_update_record(
+                Order, order.id,
+                email_status='500'
+            )

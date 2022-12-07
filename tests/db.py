@@ -446,7 +446,8 @@ def create_order(
     books=[],
     tickets=[],
     errors=[],
-    linked_txn_id=None
+    linked_txn_id=None,
+    email_status=None
 ):
     data = {
         'old_id': old_id,
@@ -471,7 +472,8 @@ def create_order(
         'delivery_balance': delivery_balance,
         'books': books,
         'tickets': tickets,
-        'errors': errors
+        'errors': errors,
+        'email_status': email_status
     }
     if linked_txn_id:
         data.update(linked_txn_id=linked_txn_id)

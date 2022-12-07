@@ -128,7 +128,11 @@ def _get_nice_cost(cost):
 @orders_blueprint.route('/orders/paypal/replay_ipn', methods=['POST'])
 @orders_blueprint.route('/orders/paypal/replay_ipn/<string:txn_id>', methods=['POST'])
 @jwt_required
-def replay_paypal_ipn(txn_id=None):
+def replay_paypal_ipn(txn_id=None, email_only=False):
+    return _replay_paypal_ipn(txn_id, email_only)
+
+
+def _replay_paypal_ipn(txn_id=None, email_only=False):
     if txn_id:
         order = dao_get_order_with_txn_id(txn_id)
         params = json.loads(order.params)
@@ -136,13 +140,14 @@ def replay_paypal_ipn(txn_id=None):
         params = request.form.to_dict(flat=False)
     return paypal_ipn(
         params,
-        allow_emails=request.headers.get('Allow-emails') == 'true',
-        replace_order=request.headers.get('Replace-order') == 'true'
+        allow_emails=email_only or request.headers.get('Allow-emails') == 'true',
+        replace_order=request.headers.get('Replace-order') == 'true',
+        email_only=email_only
     )
 
 
 @orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
-def paypal_ipn(params=None, allow_emails=True, replace_order=False):
+def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=False):
     message = ''
     bypass_verify = False
     if not params:
@@ -185,7 +190,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
         diff = 0.0
         data = get_data(params)
 
-        order_data, tickets, events, products, delivery_zones, errors = parse_ipn(data, replace_order)
+        order_data, tickets, events, products, delivery_zones, errors = parse_ipn(data, replace_order, email_only)
         if 'payment already made' in (','.join(errors)):
             current_app.logger.info("Transaction payment already made %r", data['txn_id'])
             return "Duplicate transaction %s" % {data['txn_id']}
@@ -193,7 +198,11 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
         order_data['params'] = json.dumps(params)
 
         order = Order(**order_data)
-        dao_create_record(order)
+
+        if not email_only:
+            dao_create_record(order)
+        else:
+            order = dao_get_order_with_txn_id(data['txn_id'])
 
         if order_data['payment_status'] != 'Completed':
             err_msg = f"Payment not Completed: {order_data['payment_status']}"
@@ -214,13 +223,14 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
                     status = statuses.DELIVERY_REFUND
                     current_app.logger.warning('Delivery balance overpaid')
 
-                dao_update_record(
-                    Order,
-                    linked_order.id,
-                    delivery_status=status,
-                    payment_total=linked_order.payment_total + Decimal(order_data['payment_total']),
-                    delivery_balance=abs(diff)
-                )
+                if not email_only:
+                    dao_update_record(
+                        Order,
+                        linked_order.id,
+                        delivery_status=status,
+                        payment_total=linked_order.payment_total + Decimal(order_data['payment_total']),
+                        delivery_balance=abs(diff)
+                    )
 
                 order_data['delivery_status'] = status
                 order_data['delivery_zone'] = linked_order.delivery_zone
@@ -248,7 +258,8 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
                                 order_id=order.id,
                                 quantity=product['quantity']
                             )
-                            dao_create_book_to_order(book_to_order)
+                            if not email_only:
+                                dao_create_book_to_order(book_to_order)
 
                             product_message += (
                                 f'<tr><td>{product["title"]}</td><td> x {product["quantity"]}</td>'
@@ -308,12 +319,13 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
                         else:
                             status = statuses.DELIVERY_PAID
 
-                    dao_update_record(
-                        Order, order.id,
-                        delivery_status=status,
-                        delivery_zone=address_delivery_zone['name'] if address_delivery_zone else None,
-                        delivery_balance=str(abs(diff))
-                    )
+                    if not email_only:
+                        dao_update_record(
+                            Order, order.id,
+                            delivery_status=status,
+                            delivery_zone=address_delivery_zone['name'] if address_delivery_zone else None,
+                            delivery_balance=str(abs(diff))
+                        )
 
                     if delivery_message:
                         order_data['delivery_status'] = status
@@ -334,7 +346,10 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
                     for i, _ticket in enumerate(tickets):
                         _ticket['order_id'] = order.id
                         ticket = Ticket(**_ticket)
-                        dao_create_record(ticket)
+                        if not email_only:
+                            dao_create_record(ticket)
+                        else:
+                            ticket.event = dao_get_event_by_id(ticket.event_id)
                         tickets[i]['ticket_id'] = ticket.id
                         tickets[i]['title'] = ticket.event.title
 
@@ -398,12 +413,14 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
                 'New Acropolis Order',
                 message + product_message + delivery_message + error_message
             )
-            print(email_status_code, email_provider_id)
+
             dao_update_record(
                 Order, order.id,
                 email_status=email_status_code,
                 email_provider_id=email_provider_id
             )
+            if email_only:
+                return email_status_code
     else:
         if v_response == 'INVALID':
             current_app.logger.info('INVALID %r', params['txn_id'])
@@ -419,7 +436,8 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False):
 
         order = Order(**order_data)
         order.errors.append(OrderError(error=f"{v_response} verification"))
-        dao_create_record(order)
+        if not email_only:
+            dao_create_record(order)
 
     return 'Paypal IPN'
 
@@ -485,7 +503,7 @@ def get_order_mapping(ipn, is_giftaid):
     return order_mapping
 
 
-def parse_ipn(ipn, replace_order=False):
+def parse_ipn(ipn, replace_order=False, email_only=False):
     order_data = {}
     receiver_email = receiver_id = None
     errors = []
@@ -558,7 +576,7 @@ def parse_ipn(ipn, replace_order=False):
                 order_data['txn_id'] = order_data['txn_id'][22:]
             elif order_data['txn_id'].startswith('INVALID_'):
                 order_data['txn_id'] = order_data['txn_id'][19:]
-        else:
+        elif not email_only:
             msg = f"Order: {order_data['txn_id']}, payment already made"
             current_app.logger.error(msg)
             errors.append(msg)

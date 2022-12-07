@@ -2,16 +2,20 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from flask import current_app
 from freezegun import freeze_time
+import json
 from mock import call
 import pytest
+from urllib.parse import parse_qs
 
-from app.na_celery.email_tasks import send_emails, send_periodic_emails
+from app.na_celery.email_tasks import send_emails, send_periodic_emails, send_missing_confirmation_emails
 from app.comms.encryption import decrypt, get_tokens
 from app.errors import InvalidRequest
-from app.models import APPROVED, DRAFT, Magazine, EmailToMember
+from app.models import APPROVED, DRAFT, TICKET_STATUS_UNUSED, Magazine, EmailToMember
+from tests.app.routes.orders.test_rest import sample_ipns
 
 from tests.db import (
-    create_email, create_event, create_event_date, create_member, create_email_to_member, create_email_provider
+    create_email, create_event, create_event_date, create_member, create_email_to_member,
+    create_email_provider, create_order, create_ticket
 )
 
 
@@ -314,3 +318,72 @@ class WhenProcessingSendEmailsTask:
 
     def it_sends_email_with_correct_template(self):
         pass
+
+
+class WhenProcessingSendMissingConfirmationEmailsTask:
+
+    @freeze_time("2022-11-24T09:00:00")
+    def it_sends_missing_confirmation_emails(
+        self, db, db_session, mocker, sample_email_provider, sample_event_with_dates, mock_storage
+    ):
+        txn_ids = ['112233', '112244']
+        txn_types = ['cart', 'cart']
+        num_tickets = [1, 2]
+
+        create_order(created_at='2022-11-21T19:00:00', txn_id='111')  # more than 2 days before so ignore
+
+        for i in range(len(txn_ids)):
+            sample_ipns[i] = sample_ipns[i].format(
+                id=sample_event_with_dates.id, txn_id=txn_ids[i], txn_type=txn_types[i])
+
+        order = create_order(
+            created_at='2022-11-22T19:00:00', txn_id='112233', params=json.dumps(parse_qs(sample_ipns[0]))
+        )  # 2 days before
+        order2 = create_order(
+            created_at='2022-11-24T08:00:00', txn_id='112244', params=json.dumps(parse_qs(sample_ipns[1]))
+        )  # on the day of the task
+        create_order(
+            created_at='2022-11-24T09:00:00', txn_id='112255', params=json.dumps(parse_qs(sample_ipns[2])),
+            email_status="202"
+        )  # ignored as email status set
+
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email', return_value=(200, str(sample_email_provider.id))
+        )
+
+        mock_url_for = mocker.patch(
+            'app.routes.orders.rest.url_for', return_value="/orders/ticket/ticket_id"
+        )
+        send_missing_confirmation_emails()
+
+        assert mock_send_email.call_count == 2
+        assert str(order.id) in mock_send_email.call_args_list[0][0][2]
+        assert str(order2.id) in mock_send_email.call_args_list[1][0][2]
+
+    @freeze_time("2022-11-24T09:00:00")
+    def it_sets_email_status_500_on_missing_email_status_after_retry(
+        self, db, db_session, mocker, sample_email_provider, sample_event_with_dates, mock_storage
+    ):
+        txn_ids = ['112233']
+        txn_types = ['cart']
+        num_tickets = [1]
+
+        sample_ipns[0] = sample_ipns[0].format(
+            id=sample_event_with_dates.id, txn_id=txn_ids[0], txn_type=txn_types[0])
+
+        order = create_order(
+            created_at='2022-11-22T19:00:00', txn_id='112233', params=json.dumps(parse_qs(sample_ipns[0]))
+        )
+
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email', return_value=(200, str(sample_email_provider.id))
+        )
+
+        mock_replay_ipn = mocker.patch(
+            'app.na_celery.email_tasks._replay_paypal_ipn', return_value=None
+        )
+
+        send_missing_confirmation_emails()
+
+        assert mock_send_email.call_count == 0
+        assert order.email_status == "500"
