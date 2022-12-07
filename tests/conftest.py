@@ -287,6 +287,12 @@ def sample_uuid():
     return '42111e2a-c990-4d38-a785-394277bbc30c'
 
 
+@pytest.fixture(scope='function')
+def mock_storage(mocker):
+    mocker.patch('app.routes.orders.rest.Storage')
+    mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+
+
 def create_test_db_if_does_not_exist(db):
     try:
         conn = db.engine.connect()

@@ -310,12 +310,6 @@ sample_donation_giftaid = (
 )
 
 
-@pytest.fixture(scope='function')
-def mock_storage(mocker):
-    mocker.patch('app.routes.orders.rest.Storage')
-    mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-
-
 class WhenHandlingPaypalIPN:
     def it_creates_orders_and_event_tickets_with_test_verify_flag(
         self, mocker, client, db_session, sample_event_with_dates

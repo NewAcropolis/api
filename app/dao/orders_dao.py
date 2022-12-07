@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from sqlalchemy import and_
 
 from app import db
 from app.dao.decorators import transactional
-from app.models import Order
+from app.models import EventDate, Order
 
 
 def dao_get_orders(year=None):
@@ -24,3 +25,16 @@ def dao_get_order_with_txn_id(txn_id):
 def dao_delete_order(txn_id):
     order = Order.query.filter_by(txn_id=txn_id).first()
     db.session.delete(order)
+
+
+def dao_get_orders_without_email_status():
+    DAYS_AGO = 2
+
+    orders = Order.query.filter(
+        and_(
+            Order.email_status == db.null(),
+            Order.created_at > datetime.today() - timedelta(days=DAYS_AGO)
+        )
+    ).all()
+
+    return orders

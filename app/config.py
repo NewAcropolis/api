@@ -82,6 +82,10 @@ class Config(object):
                 'task': 'send_periodic_emails',
                 'schedule': crontab(minute=0, hour='*') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
             },
+            'send-missing-confirmation-emails': {
+                'task': 'send_missing_confirmation_emails',
+                'schedule': crontab(minute=0, hour='9') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
+            },
             # 'send-num-subscribers-and-social-stats': {
             #     'task': 'send_num_subscribers_and_social_stats',
             #     'schedule': crontab(hour=7, day_of_month=1) \
