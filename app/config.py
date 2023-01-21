@@ -119,10 +119,11 @@ class Development(Config):
     ENVIRONMENT = 'development'
     SESSION_COOKIE_SECURE = False
     SESSION_PROTECTION = None
-    PORT = 5000
+    PORT = 5001
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_development')
     STORAGE = '{}development'.format(os.environ.get('GOOGLE_STORE'))
     EMAIL_LIMIT = 3
+    EMAIL_TEST = os.environ.get('EMAIL_TEST')
 
 
 class Preview(Config):

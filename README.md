@@ -21,7 +21,7 @@ Copy `environment_sample.sh` and create an `environment.sh` file and fill in the
 
 ```
 export DATABASE_URL_development=<postgres url>
-export API_development=<development endpoint, defaults to localhost:5000>
+export API_development=<development endpoint, defaults to localhost:5001>
 export ADMIN_CLIENT_ID=<admin client id>
 export ADMIN_CLIENT_SECRET=<admin client secret>
 export JWT_SECRET=<secret key>
@@ -70,7 +70,7 @@ On project path -
 
 Where ENV is -
 
-`development - port 5000`
+`development - port 5001`
 `https://<new acropolis url>/dev/`
 
 `preview`

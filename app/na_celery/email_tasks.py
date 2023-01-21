@@ -7,7 +7,7 @@ from app.comms.email import send_email, get_email_html, get_email_provider
 from app.comms.stats import send_ga_event
 from app.dao import dao_update_record
 from app.dao.emails_dao import dao_get_email_by_id, dao_add_member_sent_to_email, dao_get_approved_emails_for_sending
-from app.dao.members_dao import dao_get_members_not_sent_to
+from app.dao.members_dao import dao_get_members_not_sent_to, dao_get_first_member
 from app.dao.orders_dao import dao_get_orders_without_email_status
 from app.dao.users_dao import dao_get_admin_users
 from app.errors import InvalidRequest
@@ -16,9 +16,13 @@ from app.routes.orders.rest import _replay_paypal_ipn
 
 
 def send_emails(email_id):
-    members_not_sent_to = dao_get_members_not_sent_to(email_id)
+    if current_app.config.get('EMAIL_TEST'):
+        member = dao_get_first_member()
+        members_not_sent_to = [(member.id, member.email)]
+    else:
+        members_not_sent_to = dao_get_members_not_sent_to(email_id)
 
-    if current_app.config.get('EMAIL_RESTRICT'):
+    if current_app.config.get('EMAIL_RESTRICT') or current_app.config.get('EMAIL_TEST'):
         limit = 1
     elif current_app.config.get('ENVIRONMENT') == 'live':
         email_provider = get_email_provider(use_minute_limit=False)
@@ -54,10 +58,11 @@ def send_emails(email_id):
                 message = get_email_html(MAGAZINE, magazine_id=email.magazine_id, member_id=member_id)
 
             email_status_code, email_provider_id = send_email(email_to, subject, message)
-            dao_add_member_sent_to_email(
-                email_id, member_id, status_code=email_status_code,
-                email_provider_id=email_provider_id
-            )
+            if not current_app.config.get('EMAIL_TEST'):
+                dao_add_member_sent_to_email(
+                    email_id, member_id, status_code=email_status_code,
+                    email_provider_id=email_provider_id
+                )
 
             send_ga_event(
                 f"Sent {email.email_type} email, {subject} - {str(email.id)}",

@@ -4,8 +4,8 @@ from app.routes import is_running_locally
 
 
 @pytest.mark.parametrize('url,expected_res', [
-    ('http://localhost:5000/test', True),
-    ('http://127.0.0.1:5000/test', True),
+    ('http://localhost:5001/test', True),
+    ('http://127.0.0.1:5001/test', True),
     ('http://live.website/test', False),
 ])
 class WhenCheckingRequest:

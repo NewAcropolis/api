@@ -91,6 +91,26 @@ class WhenProcessingSendEmailsTask:
         assert mock_send_email.call_count == 1
         assert mock_send_email.call_args_list[0][0][0] == sample_member.email
 
+    def it_only_sends_to_first_member_if_email_test_and_doesnt_record_it(
+        self, mocker, db, db_session, sample_email, sample_member, sample_email_provider
+    ):
+        mocker.patch.dict('app.application.config', {
+            'ENVIRONMENT': 'test',
+            'EMAIL_TEST': 1
+        })
+        mock_record_member_email = mocker.patch('app.na_celery.email_tasks.dao_add_member_sent_to_email')
+
+        create_member(name='Test 1', email='test1@example.com')
+
+        mock_send_email = mocker.patch(
+            'app.na_celery.email_tasks.send_email', return_value=(200, sample_email_provider.id)
+        )
+        send_emails(sample_email.id)
+
+        assert mock_send_email.call_count == 1
+        assert mock_send_email.call_args_list[0][0][0] == sample_member.email
+        assert not mock_record_member_email.called
+
     def it_doesnt_send_unapproved_emails(self, mocker, db, db_session, sample_email, sample_member):
         mocker.patch.dict('app.application.config', {
             'ENVIRONMENT': 'test',

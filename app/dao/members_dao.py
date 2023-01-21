@@ -27,6 +27,10 @@ def dao_get_members():
     return Member.query.all()
 
 
+def dao_get_first_member():
+    return Member.query.first()
+
+
 def dao_get_active_member_count(month=None, year=None):
     if not month:
         return Member.query.filter_by(active=True).count()
