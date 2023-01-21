@@ -124,6 +124,7 @@ class Development(Config):
     STORAGE = '{}development'.format(os.environ.get('GOOGLE_STORE'))
     EMAIL_LIMIT = 3
     EMAIL_TEST = os.environ.get('EMAIL_TEST')
+    PREVIEW_API_BASE_URL = os.environ.get('PREVIEW_API_BASE_URL')
 
 
 class Preview(Config):
