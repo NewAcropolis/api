@@ -10,7 +10,7 @@ class WhenGettingPort(object):
 
     @pytest.mark.parametrize('env,expected_port', [
         ('preview', 4000),
-        ('development', 5000),
+        ('development', 5001),
         ('live', 8000),
         ('', 'No environment')
     ])

@@ -9,7 +9,7 @@ fi
 ENV=development
 www_dir="www-$ENV"
 
-port=5000
+port=5001
 
 if [ ! -z "$1" ]; then
     ENV=$1

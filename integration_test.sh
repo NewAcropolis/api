@@ -15,7 +15,7 @@ function setupURLS {
         export username=$ADMIN_CLIENT_ID_live
         export password=$ADMIN_CLIENT_SECRET_live
     else
-        export api_server='http://localhost:5000'
+        export api_server='http://localhost:5001'
         export username=$ADMIN_CLIENT_ID
         export password=$ADMIN_CLIENT_SECRET
     fi
@@ -24,7 +24,8 @@ function setupURLS {
 }
 
 function setupAccessToken {
-    export TKN=$(curl -X POST $api_server'/auth/login' \
+    export TKN=$(curl -X  POST $api_server'/auth/login' \
+    -k \
     -H "Content-Type: application/json" \
     -X "POST" \
     -d '{"username": "'$username'","password": "'$password'"}' | jq -r '.access_token')
@@ -43,6 +44,7 @@ function GetEvents {
     echo "*** Get events ***"
 
     curl -X GET $api_server'/events' \
+    -k \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN"
 }
@@ -815,7 +817,7 @@ EOF
 )
 
 preview_email="%7B%22details%22%3A%20%22%3Cdiv%3ESome%20additional%20details%3C/div%3E%22%2C%20%22email_type%22%3A%20%22event%22%2C%20%22event_id%22%3A%20%22$EVENT_ID%22%2C%20%22extra_txt%22%3A%20%22%3Cdiv%3ESome%20more%20information%20about%20the%20event%3C/div%3E%22%2C%20%22replace_all%22%3A%20false%7D"
-preview_basic_email="data={\"email_type\":\"basic\",\"name\":\"Test name\",\"message\":\"<a href='http://localhost:5000'>Test message 1</a>\"}"
+preview_basic_email="data={\"email_type\":\"basic\",\"name\":\"Test name\",\"message\":\"<a href='http://localhost:5001'>Test message 1</a>\"}"
 
 update_email=$(cat  << EOF
     {
@@ -930,7 +932,7 @@ function UpdateEmailProvider {
 function GetEmailProviders {
     echo "*** Get email providers ***"
 
-    curl -X GET $api_server"/email_providers" \
+    curl -X GET -k $api_server"/email_providers" \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN"
 }
@@ -1075,7 +1077,7 @@ function GetOrders {
 function GetBooks {
     echo "*** Get books ***"
 
-    curl $api_server'/books' \
+    curl -k $api_server'/books' \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" 
 }
