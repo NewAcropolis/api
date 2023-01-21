@@ -49,9 +49,11 @@ def create_app(**kwargs):
 def init_app(app):
     app.jinja_loader = jinja2.FileSystemLoader([os.getcwd() + '/app/templates'])
 
-    app.jinja_env.globals['API_BASE_URL'] = app.config['API_BASE_URL']
+    app.jinja_env.globals['API_BASE_URL'] = app.config['PREVIEW_API_BASE_URL'] \
+        if app.config.get('EMAIL_TEST') else app.config['API_BASE_URL']
     app.jinja_env.globals['FRONTEND_URL'] = app.config['FRONTEND_URL']
-    app.jinja_env.globals['IMAGES_URL'] = app.config['IMAGES_URL']
+    app.jinja_env.globals['IMAGES_URL'] = f"{app.config['PREVIEW_API_BASE_URL']}/static/images" \
+        if app.config.get('EMAIL_TEST') else app.config['IMAGES_URL']
 
     @app.before_request
     def check_for_apikey():
