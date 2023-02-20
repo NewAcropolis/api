@@ -385,6 +385,41 @@ class WhenHandlingPaypalIPN:
                 assert 'http://test/images/qr_codes/{}'.format(
                     str(tickets[n].id)) in mock_send_email.call_args_list[i][0][2]
 
+    def it_creates_orders_and_event_tickets_from_ipn_queued(self, mocker, client, db_session, sample_event_with_dates):
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+
+        txn_ids = ['112233', '112244', '112255', '112266']
+        txn_types = ['cart', 'cart', 'paypal_here', 'cart']
+        num_tickets = [1, 2, 1, 1]
+
+        for i in range(len(txn_ids)):
+            _sample_ipn = sample_ipns[i].format(
+                id=sample_event_with_dates.id, txn_id=txn_ids[i], txn_type=txn_types[i])
+
+            # note that the verify URL is not mocked as it is bypassed
+            # the IPN is verified by the frontend before it is queued
+            client.post(
+                url_for('orders.paypal_ipn_queued'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded",
+                headers=[create_authorization_header()]
+            )
+
+        orders = dao_get_orders()
+        assert len(orders) == 4
+        for i in range(len(sample_ipns)):
+            assert orders[i].txn_id == txn_ids[i]
+            assert orders[i].txn_type == txn_types[i]
+
+            tickets = dao_get_tickets_for_order(orders[i].id)
+            assert len(tickets) == num_tickets[i]
+
+            for n in range(num_tickets[i]):
+                assert 'http://test/images/qr_codes/{}'.format(
+                    str(tickets[n].id)) in mock_send_email.call_args_list[i][0][2]
+
     def it_creates_an_order_with_email_confirmation(
         self, mocker, client, db_session, sample_event_with_dates, sample_email_provider
     ):

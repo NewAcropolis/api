@@ -146,12 +146,20 @@ def _replay_paypal_ipn(txn_id=None, email_only=False):
     )
 
 
+@orders_blueprint.route('/orders/paypal/ipn/queued', methods=['POST'])
+@jwt_required
+def paypal_ipn_queued():
+    return paypal_ipn(ipn_queued=True)
+
+
 @orders_blueprint.route('/orders/paypal/ipn', methods=['GET', 'POST'])
-def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=False):
+def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=False, ipn_queued=False):
     message = ''
     bypass_verify = False
     if not params:
         params = request.form.to_dict(flat=False)
+        if ipn_queued:
+            bypass_verify = True
     else:
         bypass_verify = True
     current_app.logger.info('IPN params: %r', params)
@@ -439,7 +447,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
         if not email_only:
             dao_create_record(order)
 
-    return 'Paypal IPN'
+    return '{"message": "IPN processed"}'
 
 
 @orders_blueprint.route('/orders/ticket/<string:ticket_id>', methods=['GET'])
