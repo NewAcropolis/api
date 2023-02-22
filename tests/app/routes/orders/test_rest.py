@@ -1504,11 +1504,14 @@ class WhenHandlingPaypalIPN:
             with requests_mock.mock() as r:
                 r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
 
-                client.post(
+                response = client.post(
                     url_for('orders.paypal_ipn'),
                     data=_sample_ipn,
                     content_type="application/x-www-form-urlencoded"
                 )
+
+        assert response.get_data() == b'{"error": "Duplicate transaction 112233"}'
+        assert response.status_code == 409
 
         orders = dao_get_orders()
         assert len(orders) == 1

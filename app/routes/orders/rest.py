@@ -201,7 +201,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
         order_data, tickets, events, products, delivery_zones, errors = parse_ipn(data, replace_order, email_only)
         if 'payment already made' in (','.join(errors)):
             current_app.logger.info("Transaction payment already made %r", data['txn_id'])
-            return "Duplicate transaction %s" % {data['txn_id']}
+            return '{"error": "Duplicate transaction %s"}' % data['txn_id'], 409
 
         order_data['params'] = json.dumps(params)
 
