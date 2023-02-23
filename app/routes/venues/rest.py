@@ -105,7 +105,7 @@ def import_venues():
 
 @venue_blueprint.route('/venue/<uuid:venue_id>', methods=['POST'])
 def update_venue(venue_id):
-    data = request.get_json()
+    data = request.get_json(force=True)
 
     validate(data, post_update_venue_schema)
 

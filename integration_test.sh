@@ -24,7 +24,7 @@ function setupURLS {
 }
 
 function setupAccessToken {
-    export TKN=$(curl -X  POST $api_server'/auth/login' \
+    export TKN=$(curl -k -X  POST $api_server'/auth/login' \
     -k \
     -H "Content-Type: application/json" \
     -X "POST" \
@@ -201,6 +201,26 @@ function ImportVenues {
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
     -d @data/venues.json
+}
+
+venue=$(cat  << EOF
+    {
+        "name": "Vauxhall",
+        "address": "Wheatsheaf Community Hall, Wheatsheaf Lane (off South Lambeth Road), London, SW8 2UP",
+        "directions": ""
+    }
+EOF
+)
+
+VENUE_ID="65431c03-cff5-4f5c-840f-ea35f63145b4"
+
+function UpdateVenue {
+    echo "*** Update venue *** $venue"
+
+    curl -X POST $api_server"/venue/$VENUE_ID" \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$venue"
 }
 
 function ImportTestVenues {
@@ -1370,6 +1390,10 @@ case "$arg" in
 
         -ub)
             UpdateBook
+        ;;
+
+        -uv)
+            UpdateVenue
         ;;
 
         -uema)
