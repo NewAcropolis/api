@@ -130,12 +130,13 @@ def get_email_html(email_type, **kwargs):
         magazine = dao_get_magazine_by_id(kwargs.get('magazine_id'))
         topics = []
         if magazine.topics:
-            if all([':' in t for t in magazine.topics.split('\n')]):
-                _topics = [(t.split(':')[0], t.split(':')[1]) for t in magazine.topics.split('\n')]
+            magazine_topics = magazine.topics.strip()
+            if all([':' in t for t in magazine_topics.split('\n')]):
+                _topics = [(t.split(':')[0], t.split(':')[1]) for t in magazine_topics.split('\n')]
             else:
                 _topics = [
                     ("Missing divider", "Use : as divider between topic header and sub-header"),
-                    ("Topics", magazine.topics)
+                    ("Topics", magazine_topics)
                 ]
 
             for title, description in _topics:
