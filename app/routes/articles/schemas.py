@@ -39,8 +39,16 @@ post_update_article_schema = {
         'title': {"type": "string"},
         'author': {"type": "string"},
         'content': {"type": "string"},
-        'image_filename': {"type": "string"},
+        "image_filename": {"type": ["string", "null"]},
+        "image_data": {
+            "type": ["string", "null"],
+            "media": {
+                "binaryEncoding": "base64",
+                "type": "image/png"
+            }
+        },
         'tags': {"type": "string"},
+        "article_state": {"type": ["string", "null"]},
     },
 }
 
@@ -52,7 +60,14 @@ post_create_article_schema = {
         'title': {"type": "string"},
         'author': {"type": "string"},
         'content': {"type": "string"},
-        'image_filename': {"type": "string"},
+        "image_filename": {"type": ["string", "null"]},
+        "image_data": {
+            "type": ["string", "null"],
+            "media": {
+                "binaryEncoding": "base64",
+                "type": "image/png"
+            }
+        },
         'tags': {"type": "string"},
     },
     "required": ["title", "author", "content"]

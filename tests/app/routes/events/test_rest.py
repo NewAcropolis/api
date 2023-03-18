@@ -1416,9 +1416,6 @@ class WhenPostingUpdatingAnEvent:
     ):
         speaker = create_speaker(name='Julie White')
 
-        # base64img_encoded = base64.b64encode(base64img.encode())
-        # base64img_encoded = base64.b64encode(base64img_encoded).decode('utf-8')
-
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
             "title": "Test title new",

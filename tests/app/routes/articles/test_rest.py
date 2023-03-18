@@ -2,9 +2,13 @@ import pytest
 import uuid
 
 from flask import json, url_for
+from freezegun import freeze_time
+from mock import call
 
-from app.models import Article, DRAFT, READY
-from tests.conftest import create_authorization_header
+from sqlalchemy.orm.exc import NoResultFound
+
+from app.models import Article, DRAFT, READY, APPROVED, REJECTED
+from tests.conftest import create_authorization_header, base64img_encoded, TEST_ADMIN_USER
 
 from tests.db import create_article
 
@@ -55,12 +59,12 @@ class WhenGettingArticles:
         assert len(data) == 1
         assert data[0]['id'] == str(sample_article.id)
 
-    def it_returns_up_to_4_articles_summary(self, client, sample_article, db_session):
-        create_article(title='test 1')
-        create_article(title='test 2')
-        create_article(title='test 3')
-        create_article(title='test 4')
-        create_article(title='test 5')
+    def it_returns_up_to_5_articles_summary(self, client, sample_article, db_session):
+        create_article(title='test 1', article_state=APPROVED)
+        create_article(title='test 2', article_state=APPROVED)
+        create_article(title='test 3', article_state=APPROVED)
+        create_article(title='test 4', article_state=APPROVED)
+        create_article(title='test 5', article_state=APPROVED)
         response = client.get(
             url_for('articles.get_articles_summary'),
             headers=[create_authorization_header()]
@@ -167,7 +171,36 @@ class WhenPostingUpdateArticle:
 
 class WhenPostingAddArticle:
 
-    def it_adds_an_article(self, client, db_session, sample_magazine):
+    def it_adds_an_article(self, client, db_session, sample_magazine, mock_storage):
+        data = {
+            'title': 'New',
+            'author': 'Somone',
+            'content': 'Something interesting',
+            'image_filename': 'new_filename.jpg',
+            'image_data': base64img_encoded(),
+            'magazine_id': str(sample_magazine.id),
+            'tags': 'Some tag'
+        }
+        response = client.post(
+            url_for('article.add_article'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+        assert response.json['image_filename'] == f"{response.json['id']}"
+        assert response.json['magazine_id'] == data['magazine_id']
+
+        articles = Article.query.all()
+
+        assert len(articles) == 1
+        assert articles[0].title == data['title']
+        assert articles[0].article_state == DRAFT
+        assert articles[0].tags == data['tags']
+        assert articles[0].magazine_id == sample_magazine.id
+
+    def it_raises_400_if_image_filename_not_found(
+        self, client, db_session, sample_magazine, mock_storage_no_blob
+    ):
         data = {
             'title': 'New',
             'author': 'Somone',
@@ -181,27 +214,28 @@ class WhenPostingAddArticle:
             data=json.dumps(data),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
-        assert response.status_code == 201
-        assert response.json['image_filename'] == data['image_filename']
-        assert response.json['magazine_id'] == data['magazine_id']
 
-        articles = Article.query.all()
+        assert response.status_code == 400
+        data = json.loads(response.get_data(as_text=True))
 
-        assert len(articles) == 1
-        assert articles[0].title == data['title']
-        assert articles[0].article_state == DRAFT
-        assert articles[0].tags == data['tags']
-        assert articles[0].magazine_id == sample_magazine.id
+        assert data == {"message": "new_filename.jpg does not exist", "result": "error"}
 
 
 class WhenPostingUpdateArticle:
 
-    def it_updates_an_article(self, client, db_session, sample_article):
+    @freeze_time("2023-03-11T14:00:00")
+    def it_updates_an_article(
+        self, mocker, client, db_session, mock_storage,
+        sample_email_provider, sample_admin_user, sample_article
+    ):
+        mock_smtp = mocker.patch('app.routes.articles.rest.send_smtp_email')
+        UNIX_TIME = "1678543200.0"
         data = {
             'title': 'Updated',
             'author': 'Updated Somone',
             'content': 'Something updated',
             'image_filename': 'updated_filename.jpg',
+            'image_data': base64img_encoded(),
             'tags': 'Updated tag',
             'article_state': READY
         }
@@ -211,7 +245,7 @@ class WhenPostingUpdateArticle:
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 200
-        assert response.json['image_filename'] == data['image_filename']
+        assert response.json['image_filename'] == f"{str(sample_article.id)}-temp?{UNIX_TIME}"
 
         articles = Article.query.all()
 
@@ -219,3 +253,165 @@ class WhenPostingUpdateArticle:
         assert articles[0].title == data['title']
         assert articles[0].article_state == READY
         assert articles[0].tags == data['tags']
+        assert mock_smtp.called
+
+    def it_does_not_update_an_article(
+        self, mocker, client, db_session, mock_storage,
+        sample_email_provider, sample_admin_user, sample_uuid
+    ):
+        mock_smtp = mocker.patch('app.routes.articles.rest.send_smtp_email')
+        UNIX_TIME = "1678543200.0"
+        data = {
+            'title': 'Updated',
+            'author': 'Updated Somone',
+            'content': 'Something updated',
+            'image_filename': 'updated_filename.jpg',
+            'image_data': base64img_encoded(),
+            'tags': 'Updated tag',
+            'article_state': READY
+        }
+
+        mocker.patch('app.routes.articles.rest.dao_get_article_by_id', side_effect=NoResultFound())
+
+        response = client.post(
+            url_for('article.update_article_by_id', article_id=sample_uuid),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp['message'] == 'article not found: {}'.format(sample_uuid)
+
+    def it_raises_error_if_file_not_found(
+        self, mocker, client, db_session, sample_article, mock_storage_no_blob
+    ):
+        data = {
+            'title': 'Updated',
+            'article_state': READY,
+            'image_filename': 'test.jpg'
+        }
+        response = client.post(
+            url_for('article.update_article_by_id', article_id=sample_article.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == 'test.jpg does not exist'
+
+    def it_renames_temp_image_file_when_approved(
+        self, mocker, client, db_session, sample_article,
+        mock_storage
+    ):
+        data = {
+            'title': 'Updated',
+            'author': 'Updated Somone',
+            'content': 'Something updated',
+            'image_filename': f'{str(sample_article.id)}-temp?222',
+            'tags': 'Updated tag',
+            'article_state': APPROVED
+        }
+
+        response = client.post(
+            url_for('article.update_article_by_id', article_id=sample_article.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        assert mock_storage['mock_storage_rename'].called
+        assert mock_storage['mock_storage_rename'].call_args == call(
+            f'articles/{str(sample_article.id)}-temp', f'articles/{str(sample_article.id)}')
+        assert response.json['image_filename'] == f'{str(sample_article.id)}'
+
+    def it_logs_warning_if_no_temp_image_file_when_approved(
+        self, mocker, client, db_session, sample_article,
+        mock_storage
+    ):
+        mock_logger = mocker.patch('app.routes.articles.rest.current_app.logger.warn')
+
+        data = {
+            'title': 'Updated',
+            'author': 'Updated Somone',
+            'content': 'Something updated',
+            'image_filename': f'articles/{str(sample_article.id)}?222',
+            'tags': 'Updated tag',
+            'article_state': APPROVED
+        }
+
+        response = client.post(
+            url_for('article.update_article_by_id', article_id=sample_article.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        assert not mock_storage['mock_storage_rename'].called
+        assert mock_logger.called
+
+    def it_updates_an_article_to_rejected(
+        self, mocker, client, db, db_session, sample_admin_user, sample_article, mock_storage
+    ):
+        mock_send_email = mocker.patch('app.routes.articles.rest.send_smtp_email', return_value=200)
+
+        data = {
+            'title': 'Confucius',
+            'author': 'Updated Somone',
+            'content': 'Something updated',
+            'article_state': REJECTED,
+            "reject_reason": 'test reason'
+        }
+
+        response = client.post(
+            url_for('article.update_article_by_id', article_id=sample_article.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['content'] == data['content']
+        articles = Article.query.all()
+        assert len(articles) == 1
+        assert articles[0].content == data['content']
+        assert articles[0].article_state == REJECTED
+
+        assert mock_send_email.call_args[0][0] == [TEST_ADMIN_USER]
+        assert mock_send_email.call_args[0][1] == "Confucius article needs to be corrected"
+        assert mock_send_email.call_args[0][2] == (
+            '<div>Please correct this article <a href="http://frontend-test/admin/'
+            'articles/{}">Confucius</a>'
+            '</div><div>Reason: test reason</div>'.format(str(sample_article.id))
+        )
+
+    def it_updates_an_article_to_rejected_and_logs_email_errors(
+        self, mocker, client, db, db_session, sample_admin_user, sample_article, mock_storage
+    ):
+        mock_send_email = mocker.patch('app.routes.articles.rest.send_smtp_email', return_value=400)
+
+        data = {
+            'title': 'Confucius',
+            'author': 'Updated Somone',
+            'content': 'Something updated',
+            'article_state': REJECTED,
+            "reject_reason": 'test reason'
+        }
+
+        response = client.post(
+            url_for('article.update_article_by_id', article_id=sample_article.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['content'] == data['content']
+        articles = Article.query.all()
+        assert len(articles) == 1
+        assert articles[0].content == data['content']
+        assert articles[0].article_state == REJECTED
+
+        assert mock_send_email.called
+        assert json_resp['errors'] == ['Problem sending smtp emails: 400']

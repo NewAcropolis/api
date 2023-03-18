@@ -214,7 +214,7 @@ post_update_event_schema = {
         "multi_day_fee": {"type": ["integer", "null"]},
         "multi_day_conc_fee": {"type": ["integer", "null"]},
         "event_dates": {
-            "type": "array",
+            "type": ["array", "null"],
             "items": {
                 "type": "object",
                 "$ref": "#/definitions/event_date",
