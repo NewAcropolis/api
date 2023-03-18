@@ -1,6 +1,8 @@
+from sqlalchemy import and_
+
 from app import db
 from app.dao.decorators import transactional
-from app.models import Article
+from app.models import Article, APPROVED
 
 
 @transactional
@@ -24,7 +26,11 @@ def dao_get_articles(article_ids=None):
 
 def dao_get_articles_with_images():
     return Article.query.filter(
-        Article.image_filename != None).all()  # noqa E711 SqlAlchemy syntax
+        and_(
+            Article.image_filename != None,
+            Article.article_state == APPROVED
+        )
+    ).all()  # noqa E711 SqlAlchemy syntax
 
 
 def dao_get_article_by_id(article_id):
