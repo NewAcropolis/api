@@ -218,7 +218,9 @@ class WhenPostingAddArticle:
         assert response.status_code == 400
         data = json.loads(response.get_data(as_text=True))
 
-        assert data == {"message": "new_filename.jpg does not exist", "result": "error"}
+        article = Article.query.one()
+
+        assert data == {"message": f"articles/{article.id} does not exist", "result": "error"}
 
 
 class WhenPostingUpdateArticle:
