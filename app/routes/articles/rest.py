@@ -137,16 +137,16 @@ def add_article():
 
     storage = Storage(current_app.config['STORAGE'])
 
-    if image_data:
-        target_image_filename = str(article.id)
+    image_filename = str(article.id)
+    target_image_filename = f"articles/{image_filename}"
 
+    if image_data:
         storage.upload_blob_from_base64string(
             image_filename, target_image_filename, base64.b64decode(image_data))
 
-        image_filename = target_image_filename
-    elif image_filename:
-        if not storage.blob_exists(image_filename):
-            raise InvalidRequest('{} does not exist'.format(image_filename), 400)
+    elif data.get('image_filename'):
+        if not storage.blob_exists(target_image_filename):
+            raise InvalidRequest('{} does not exist'.format(target_image_filename), 400)
 
     article.image_filename = image_filename
     dao_update_article(article.id, image_filename=image_filename)

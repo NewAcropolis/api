@@ -19,9 +19,9 @@ def dao_update_article(article_id, **kwargs):
 
 def dao_get_articles(article_ids=None):
     if not article_ids:
-        return Article.query.order_by(Article.old_id).all()
+        return Article.query.order_by(Article.title).all()
     else:
-        return Article.query.filter(Article.id.in_(article_ids)).order_by(Article.old_id).all()
+        return Article.query.filter(Article.id.in_(article_ids)).order_by(Article.title).all()
 
 
 def dao_get_articles_with_images():
