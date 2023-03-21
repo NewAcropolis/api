@@ -127,6 +127,7 @@ def add_article():
         image_filename=data['image_filename'],
         magazine_id=data['magazine_id'],
         tags=data['tags'],
+        article_state=data['article_state']
     )
 
     dao_create_article(article)
