@@ -34,6 +34,12 @@ number = {
     "validationMessage": "is not a number",
 }
 
+state = {
+    "type": "string",
+    "pattern": "draft|ready|approved|rejected",
+    "validationMessage": "is not a recognised state",
+}
+
 
 def nullable(schema_type):
     return {

@@ -1,4 +1,4 @@
-from app.schema_validation.definitions import uuid, number
+from app.schema_validation.definitions import uuid, number, state
 
 
 post_import_article_schema = {
@@ -48,7 +48,7 @@ post_update_article_schema = {
             }
         },
         'tags': {"type": "string"},
-        "article_state": {"type": ["string", "null"]},
+        "article_state": state
     },
 }
 
@@ -69,6 +69,7 @@ post_create_article_schema = {
             }
         },
         'tags': {"type": "string"},
+        "article_state": state
     },
     "required": ["title", "author", "content"]
 }

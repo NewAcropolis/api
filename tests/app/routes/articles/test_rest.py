@@ -179,7 +179,8 @@ class WhenPostingAddArticle:
             'image_filename': 'new_filename.jpg',
             'image_data': base64img_encoded(),
             'magazine_id': str(sample_magazine.id),
-            'tags': 'Some tag'
+            'tags': 'Some tag',
+            'article_state': 'draft'
         }
         response = client.post(
             url_for('article.add_article'),
@@ -207,7 +208,8 @@ class WhenPostingAddArticle:
             'content': 'Something interesting',
             'image_filename': 'new_filename.jpg',
             'magazine_id': str(sample_magazine.id),
-            'tags': 'Some tag'
+            'tags': 'Some tag',
+            'article_state': 'draft'
         }
         response = client.post(
             url_for('article.add_article'),
