@@ -6,6 +6,7 @@ import requests_mock
 from mock import call
 from urllib.parse import parse_qs
 
+from app.dao.events_dao import dao_get_event_by_id
 from app.dao.orders_dao import dao_get_orders
 from app.dao.tickets_dao import dao_get_tickets_for_order
 from app.models import Order, OrderError, Ticket, TICKET_STATUS_USED, TICKET_STATUS_UNUSED
@@ -459,10 +460,15 @@ class WhenHandlingPaypalIPN:
         assert orders[0].email_status == '200'
         assert orders[0].email_provider_id == sample_email_provider.id
 
-    def it_creates_orders_and_event_tickets_on_replay(self, mocker, client, db_session, sample_event_with_dates):
+    def it_creates_orders_and_event_tickets_on_replay(
+        self, mocker, client, db_session, sample_event_with_dates, sample_email_provider
+    ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email',
+            return_value=(200, sample_email_provider.id)
+        )
 
         txn_ids = ['112233', '112244', '112255', '112266']
         txn_types = ['cart', 'cart', 'paypal_here', 'cart']
@@ -500,11 +506,14 @@ class WhenHandlingPaypalIPN:
                     str(tickets[n].id)) in mock_send_email.call_args_list[i][0][2]
 
     def it_replaces_existing_orders_and_event_tickets_on_replay(
-        self, mocker, client, db_session, sample_event_with_dates
+        self, mocker, client, db_session, sample_event_with_dates, sample_email_provider
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email',
+            return_value=(200, sample_email_provider.id)
+        )
 
         event_dates = sample_event_with_dates.get_sorted_event_dates()
         ticket = create_ticket(
@@ -565,11 +574,14 @@ class WhenHandlingPaypalIPN:
         ('INVALID_1637667646-112233', 19)
     ])
     def it_replaces_existing_invalid_order_and_event_tickets_on_replay_using_txn_id(
-        self, mocker, client, db_session, sample_event_with_dates, txn_id, trunc_length
+        self, mocker, client, db_session, sample_event_with_dates, sample_email_provider, txn_id, trunc_length
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email',
+            return_value=(200, sample_email_provider.id)
+        )
 
         txn_type = 'cart'
 
@@ -602,6 +614,62 @@ class WhenHandlingPaypalIPN:
         assert len(orders) == 1
         assert orders[0].txn_id == txn_id[trunc_length:]
         assert orders[0].txn_type == txn_type
+
+        tickets = dao_get_tickets_for_order(orders[0].id)
+        assert len(tickets) == 1
+
+        assert 'http://test/images/qr_codes/{}'.format(
+            str(tickets[0].id)) in mock_send_email.call_args_list[0][0][2]
+
+    def it_sends_confirmation_email_on_replay_using_txn_id(
+        self, mocker, client, db_session, sample_event_with_dates, sample_email_provider
+    ):
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email', return_value=(200, sample_email_provider.id))
+
+        txn_id = '1637667646-112233'
+        txn_type = 'cart'
+
+        _sample_ipn = sample_ipns[0].format(
+            id=sample_event_with_dates.id, txn_id=txn_id, txn_type=txn_type)
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+
+            orders = dao_get_orders()
+
+            client.post(
+                url_for('orders.replay_confirmation_email', txn_id=txn_id),
+                content_type="application/x-www-form-urlencoded",
+                headers=[
+                    ('Content-Type', 'application/json'),
+                    create_authorization_header(),
+                    ('Allow-emails', 'true')
+                ]
+            )
+
+        orders = dao_get_orders()
+
+        assert mock_send_email.called
+        assert len(orders) == 1
+        assert orders[0].txn_id == txn_id
+        assert orders[0].txn_type == txn_type
+
+        event_title = dao_get_event_by_id(orders[0].tickets[0].event_id).title
+
+        assert mock_send_email.call_args[0][0] == 'test1@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert mock_send_email.call_args[0][2] == f'<p>Thank you for your order ({orders[0].id})</p><div><span>' \
+            f'<img src="http://test/images/qr_codes/{orders[0].tickets[0].id}"></span>' \
+            f'<div>{event_title} on 1 Jan at 7PM</div></div>'
 
         tickets = dao_get_tickets_for_order(orders[0].id)
         assert len(tickets) == 1
@@ -648,6 +716,33 @@ class WhenHandlingPaypalIPN:
 
             tickets = dao_get_tickets_for_order(orders[i].id)
             assert len(tickets) == num_tickets[i]
+
+    def it_raises_errors_on_replay_paypal_ipn_without_params(
+        self, mocker, client, db_session, sample_event_with_dates
+    ):
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            response = client.post(
+                url_for('orders.replay_paypal_ipn'),
+                content_type="application/x-www-form-urlencoded",
+                headers=[
+                    ('Content-Type', 'application/json'),
+                    create_authorization_header(),
+                    ('Allow-emails', 'false')
+                ]
+            )
+
+        assert response.status_code == 400
+        assert response.get_json() == {'message': 'No paypal parameters', 'result': 'error'}
+
+        orders = dao_get_orders()
+        assert len(orders) == 0
+        assert not mock_send_email.called
 
     def it_creates_orders_and_event_tickets_with_remote_login(
         self, mocker, client, db_session, sample_event_with_dates
