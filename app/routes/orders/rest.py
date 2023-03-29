@@ -128,8 +128,14 @@ def _get_nice_cost(cost):
 @orders_blueprint.route('/orders/paypal/replay_ipn', methods=['POST'])
 @orders_blueprint.route('/orders/paypal/replay_ipn/<string:txn_id>', methods=['POST'])
 @jwt_required
-def replay_paypal_ipn(txn_id=None, email_only=False):
-    return _replay_paypal_ipn(txn_id, email_only)
+def replay_paypal_ipn(txn_id=None):
+    return _replay_paypal_ipn(txn_id)
+
+
+@orders_blueprint.route('/orders/replay_confirmation_email/<string:txn_id>', methods=['POST'])
+@jwt_required
+def replay_confirmation_email(txn_id=None):
+    return _replay_paypal_ipn(txn_id=txn_id, email_only=True)
 
 
 def _replay_paypal_ipn(txn_id=None, email_only=False):
@@ -138,6 +144,10 @@ def _replay_paypal_ipn(txn_id=None, email_only=False):
         params = json.loads(order.params)
     else:
         params = request.form.to_dict(flat=False)
+
+    if not params:
+        raise InvalidRequest('No paypal parameters', 400)
+
     return paypal_ipn(
         params,
         allow_emails=email_only or request.headers.get('Allow-emails') == 'true',
@@ -351,37 +361,34 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
                         )
 
                 if tickets:
-                    for i, _ticket in enumerate(tickets):
-                        _ticket['order_id'] = order.id
-                        ticket = Ticket(**_ticket)
-                        if not email_only:
+                    if not email_only:
+                        for i, _ticket in enumerate(tickets):
+                            _ticket['order_id'] = order.id
+                            ticket = Ticket(**_ticket)
                             dao_create_record(ticket)
-                        else:
-                            ticket.event = dao_get_event_by_id(ticket.event_id)
-                        tickets[i]['ticket_id'] = ticket.id
-                        tickets[i]['title'] = ticket.event.title
 
                     storage = Storage(current_app.config['STORAGE'])
-                    for ticket in tickets:
+                    for ticket in order.tickets:
+                        event_title = dao_get_event_by_id(ticket.event_id).title
                         link_to_post = '{}{}'.format(
                             current_app.config['API_BASE_URL'],
-                            url_for('.use_ticket', ticket_id=ticket['ticket_id'])
+                            url_for('.use_ticket', ticket_id=ticket.id)
                         )
                         img = pyqrcode.create(link_to_post)
                         buffer = io.BytesIO()
                         img.png(buffer, scale=2)
 
                         img_b64 = base64.b64encode(buffer.getvalue())
-                        target_image_filename = '{}/{}'.format('qr_codes', str(ticket['ticket_id']))
+                        target_image_filename = '{}/{}'.format('qr_codes', str(ticket.id))
                         storage.upload_blob_from_base64string('qr.code', target_image_filename, img_b64)
 
                         message += '<div><span><img src="{}/{}"></span>'.format(
                             current_app.config['IMAGES_URL'], target_image_filename)
 
-                        event_date = dao_get_event_date_by_id(ticket['eventdate_id'])
+                        event_date = dao_get_event_date_by_id(ticket.eventdate_id)
                         minutes = ':%M' if event_date.event_datetime.minute > 0 else ''
                         message += "<div>{} on {}</div></div>".format(
-                            ticket['title'], event_date.event_datetime.strftime('%-d %b at %-I{}%p'.format(minutes)))
+                            event_title, event_date.event_datetime.strftime('%-d %b at %-I{}%p'.format(minutes)))
 
                         if event_date.event.remote_access:
                             message += f"<br><div>Meeting id: {event_date.event.remote_access}"
@@ -422,13 +429,14 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
                 message + product_message + delivery_message + error_message
             )
 
-            dao_update_record(
-                Order, order.id,
-                email_status=email_status_code,
-                email_provider_id=email_provider_id
-            )
             if email_only:
-                return email_status_code
+                return jsonify({"message": "email confirmation setup", "email_status_code": email_status_code})
+            else:
+                dao_update_record(
+                    Order, order.id,
+                    email_status=email_status_code,
+                    email_provider_id=email_provider_id
+                )
     else:
         if v_response == 'INVALID':
             current_app.logger.info('INVALID %r', params['txn_id'])

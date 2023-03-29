@@ -955,7 +955,7 @@ class Ticket(db.Model):
         return {
             'id': str(self.id),
             'event_id': str(self.event_id),
-            'event': self.event.serialize(with_dates=False),
+            'event': self.event.serialize(with_dates=False) if self.event else None,
             'old_id': self.old_id,
             'ticket_type': self.ticket_type,
             'eventdate_id': str(self.eventdate_id),
