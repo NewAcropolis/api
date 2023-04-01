@@ -132,7 +132,7 @@ def replay_paypal_ipn(txn_id=None):
     return _replay_paypal_ipn(txn_id)
 
 
-@orders_blueprint.route('/orders/replay_confirmation_email/<string:txn_id>', methods=['POST'])
+@orders_blueprint.route('/orders/replay_confirmation_email/<string:txn_id>', methods=['GET'])
 @jwt_required
 def replay_confirmation_email(txn_id=None):
     return _replay_paypal_ipn(txn_id=txn_id, email_only=True)
@@ -367,20 +367,22 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
                             ticket = Ticket(**_ticket)
                             dao_create_record(ticket)
 
-                    storage = Storage(current_app.config['STORAGE'])
+                    storage = Storage(current_app.config['STORAGE']) if not email_only else None
                     for ticket in order.tickets:
                         event_title = dao_get_event_by_id(ticket.event_id).title
                         link_to_post = '{}{}'.format(
                             current_app.config['API_BASE_URL'],
                             url_for('.use_ticket', ticket_id=ticket.id)
                         )
-                        img = pyqrcode.create(link_to_post)
-                        buffer = io.BytesIO()
-                        img.png(buffer, scale=2)
-
-                        img_b64 = base64.b64encode(buffer.getvalue())
                         target_image_filename = '{}/{}'.format('qr_codes', str(ticket.id))
-                        storage.upload_blob_from_base64string('qr.code', target_image_filename, img_b64)
+
+                        if not email_only:
+                            img = pyqrcode.create(link_to_post)
+                            buffer = io.BytesIO()
+                            img.png(buffer, scale=2)
+
+                            img_b64 = base64.b64encode(buffer.getvalue())
+                            storage.upload_blob_from_base64string('qr.code', target_image_filename, img_b64)
 
                         message += '<div><span><img src="{}/{}"></span>'.format(
                             current_app.config['IMAGES_URL'], target_image_filename)
