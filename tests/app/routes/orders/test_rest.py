@@ -624,8 +624,6 @@ class WhenHandlingPaypalIPN:
     def it_sends_confirmation_email_on_replay_using_txn_id(
         self, mocker, client, db_session, sample_event_with_dates, sample_email_provider
     ):
-        mocker.patch('app.routes.orders.rest.Storage')
-        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
         mock_send_email = mocker.patch(
             'app.routes.orders.rest.send_email', return_value=(200, sample_email_provider.id))
 
@@ -646,7 +644,7 @@ class WhenHandlingPaypalIPN:
 
             orders = dao_get_orders()
 
-            client.post(
+            client.get(
                 url_for('orders.replay_confirmation_email', txn_id=txn_id),
                 content_type="application/x-www-form-urlencoded",
                 headers=[
