@@ -805,6 +805,7 @@ class Order(db.Model):
     is_giftaid = db.Column(db.Boolean)
     params = db.Column(db.String)
     email_status = db.Column(db.String)
+    email_sent_at = db.Column(db.DateTime)
     email_provider_id = db.Column(UUID(as_uuid=True), db.ForeignKey('email_providers.id'))
     address_street = db.Column(db.String)
     address_city = db.Column(db.String)
@@ -878,6 +879,8 @@ class Order(db.Model):
             'refund_issued': self.refund_issued,
             'notes': self.notes,
             'email_status': self.email_status,
+            'email_sent_at': (
+                None if not self.email_sent_at else get_local_time(self.email_sent_at).strftime('%Y-%m-%d %H:%M')),
             'email_provider_id': self.email_provider_id,
         }
 

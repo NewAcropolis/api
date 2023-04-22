@@ -39,6 +39,7 @@ from app.models import (
 from app.routes.orders.schemas import post_update_order_address_schema, post_update_order_schema
 from app.schema_validation import validate
 from app.utils.storage import Storage
+from app.utils.time import get_local_time
 
 from na_common.delivery import DELIVERY_ZONES, statuses, get_delivery_zone
 
@@ -369,6 +370,12 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
 
                     storage = Storage(current_app.config['STORAGE']) if not email_only else None
                     for ticket in order.tickets:
+                        if not ticket.eventdate_id:
+                            error_msg = f'No event date for ticket: {ticket.id}'
+                            current_app.logger.warn(error_msg)
+                            errors.append(error_msg)
+                            continue
+
                         event_title = dao_get_event_by_id(ticket.event_id).title
                         link_to_post = '{}{}'.format(
                             current_app.config['API_BASE_URL'],
@@ -430,14 +437,26 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
                 'New Acropolis Order',
                 message + product_message + delivery_message + error_message
             )
+            now = datetime.utcnow()
+
+            dao_update_record(
+                Order, order.id,
+                email_sent_at=now,
+                email_status=email_status_code,
+                email_provider_id=email_provider_id
+            )
 
             if email_only:
-                return jsonify({"message": "email confirmation setup", "email_status_code": email_status_code})
-            else:
-                dao_update_record(
-                    Order, order.id,
-                    email_status=email_status_code,
-                    email_provider_id=email_provider_id
+                _errors = []
+                for e in errors:
+                    _errors.append({'error': e})
+
+                return jsonify(
+                    {
+                        "email_sent_at": get_local_time(now).strftime('%Y-%m-%d %H:%M'),
+                        "errors": _errors,
+                        "email_status": email_status_code
+                    }
                 )
     else:
         if v_response == 'INVALID':
