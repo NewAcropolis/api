@@ -313,6 +313,7 @@ class WhenPostingUpdateArticle:
     ):
         data = {
             'title': 'Updated',
+            'magazine_id': '',
             'author': 'Updated Somone',
             'content': 'Something updated',
             'image_filename': f'{str(sample_article.id)}-temp?222',

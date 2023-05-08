@@ -163,7 +163,7 @@ def update_article_by_id(article_id):
     validate(data, post_update_article_schema)
 
     try:
-        article = dao_get_article_by_id(article_id)
+        article = dao_get_article_by_id(str(article_id))
     except NoResultFound:
         raise InvalidRequest('article not found: {}'.format(article_id), 400)
 
@@ -171,7 +171,10 @@ def update_article_by_id(article_id):
     article_data = {}
     for k in data.keys():
         if hasattr(Article, k):
-            article_data[k] = data[k]
+            if k == 'magazine_id' and data[k] == '':
+                continue
+            else:
+                article_data[k] = data[k]
 
     res = dao_update_article(article.id, **article_data)
 
