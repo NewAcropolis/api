@@ -14,7 +14,7 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 from html.parser import HTMLParser
 
-from app.na_celery import email_tasks, revoke_task
+from app.na_celery import email_tasks
 from app.comms.email import get_email_html, send_email, send_smtp_email
 from app.dao.emails_dao import (
     dao_create_email,
