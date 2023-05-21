@@ -4,6 +4,8 @@ import sys
 from logging.handlers import RotatingFileHandler
 
 import jinja2
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy

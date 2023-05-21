@@ -30,14 +30,14 @@ register_errors(user_blueprint)
 
 
 @users_blueprint.route('/users')
-@jwt_required
+@jwt_required()
 def get_users():
     users = [s.serialize() if s else None for s in dao_get_users()]
     return jsonify(users)
 
 
 @user_blueprint.route('/user/<email>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_user_by_email(email):
     user = dao_get_user_by_email(email)
     if user:
@@ -46,7 +46,7 @@ def get_user_by_email(email):
 
 
 @user_blueprint.route('/user/<email>/is_admin', methods=['GET'])
-@jwt_required
+@jwt_required()
 def is_admin(email):
     return jsonify({
         'email': email,
@@ -56,7 +56,7 @@ def is_admin(email):
 
 
 @user_blueprint.route('/user', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_user():
     data = request.get_json(force=True)
 
@@ -86,7 +86,7 @@ def create_user():
 
 
 @user_blueprint.route('/user/<uuid:user_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_user(user_id):
     data = request.get_json(force=True)
 

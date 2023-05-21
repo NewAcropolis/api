@@ -1,4 +1,6 @@
 from email.mime.text import MIMEText
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import current_app, jsonify, render_template
 from html import escape
 import json

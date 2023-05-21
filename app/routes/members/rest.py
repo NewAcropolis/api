@@ -33,7 +33,7 @@ register_errors(members_blueprint)
 
 
 @members_blueprint.route('/member/subscribe', methods=['POST'])
-@jwt_required
+@jwt_required()
 def subscribe_member():
     data = request.get_json(force=True)
 
@@ -83,7 +83,7 @@ def _get_member_from_unsubcode(unsubcode):
 
 
 @members_blueprint.route('/member/unsubscribe/<unsubcode>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def unsubscribe_member(unsubcode):
     member = _get_member_from_unsubcode(unsubcode)
     dao_update_member(member.id, active=False)
@@ -105,7 +105,7 @@ def unsubscribe_member(unsubcode):
 
 
 @members_blueprint.route('/member/<unsubcode>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_member_from_unsubcode(unsubcode):
     member = _get_member_from_unsubcode(unsubcode)
 
@@ -113,7 +113,7 @@ def get_member_from_unsubcode(unsubcode):
 
 
 @members_blueprint.route('/member/update/<unsubcode>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_member(unsubcode):
     data = request.get_json(force=True)
 
@@ -127,7 +127,7 @@ def update_member(unsubcode):
 
 
 @members_blueprint.route('/members', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_members():
     members = [m.serialize() for m in dao_get_members()]
 
@@ -135,7 +135,7 @@ def get_members():
 
 
 @members_blueprint.route('/members/import', methods=['POST'])
-@jwt_required
+@jwt_required()
 def import_members():
     text = request.get_data(as_text=True)
     text = text.replace('"EmailAdd": "anon"', '"EmailAdd": null')

@@ -11,7 +11,7 @@ register_errors(stats_blueprint)
 
 
 @stats_blueprint.route('/stats/social')
-@jwt_required
+@jwt_required()
 def send_social_stats():
     current_app.logger.info("Sending social stats...")
     _, _, facebook_count, instagram_count = send_num_subscribers_and_social_stats(inc_subscribers=False)
@@ -20,7 +20,7 @@ def send_social_stats():
 
 
 @stats_blueprint.route('/stats/subscribers_and_social')
-@jwt_required
+@jwt_required()
 def send_subscribers_and_social_stats():
     current_app.logger.info("Sending subscribers and social stats...")
     num_subscribers, num_new_subscribers, facebook_count, instagram_count = send_num_subscribers_and_social_stats(
@@ -31,7 +31,7 @@ def send_subscribers_and_social_stats():
 
 
 @stats_blueprint.route('/stats/emails/<int:month>/<int:year>')
-@jwt_required
+@jwt_required()
 def send_email_stats(month=None, year=None):
     count = dao_get_emails_sent_count(month=month, year=year)
 

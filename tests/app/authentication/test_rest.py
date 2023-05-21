@@ -87,7 +87,7 @@ class WhenDoingLogout(object):
         mock_store_token = mocker.patch("app.routes.authentication.rest.store_token")
         mock_prune_database = mocker.patch("app.routes.authentication.rest.prune_database")
         mocker.patch(
-            "app.routes.authentication.rest.get_raw_jwt",
+            "app.routes.authentication.rest.get_jwt",
             return_value=sample_decoded_token
         )
 
@@ -154,7 +154,7 @@ class WhenAccessingAProtectedEndpoint(object):
         register_errors(auth_blueprint)
 
         @auth_blueprint.route('/protected')
-        @jwt_required
+        @jwt_required()
         def protected():
             return 'protected', 200
 

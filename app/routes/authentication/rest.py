@@ -9,8 +9,7 @@ from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
     get_jwt_identity,
-    get_raw_jwt,
-    jwt_refresh_token_required,
+    get_jwt,
     jwt_required,
 )
 from app import jwt
@@ -25,8 +24,8 @@ auth_blueprint = Blueprint('auth', __name__, url_prefix='/auth')
 register_errors(auth_blueprint)
 
 
-@jwt.token_in_blacklist_loader
-def check_if_token_in_blacklist(decrypted_token):
+@jwt.token_in_blocklist_loader
+def check_if_token_in_blocklist(decrypted_token):
     jti = decrypted_token['jti']
     current_app.logger.info('check_token: {}, {}'.format(jti, blacklist))
     return is_token_revoked(decrypted_token)
@@ -61,7 +60,7 @@ def login():
 
 
 @auth_blueprint.route('/refresh', methods=['POST'])
-@jwt_refresh_token_required
+@jwt_required(refresh=True)
 def refresh():
     username = get_jwt_identity()
     if username != current_app.config['ADMIN_CLIENT_ID']:
@@ -74,17 +73,17 @@ def refresh():
 
 
 @auth_blueprint.route('/logout', methods=['DELETE'])
-@jwt_required
+@jwt_required()
 def logout():
     prune_database()
-    store_token(get_raw_jwt())
+    store_token(get_jwt())
     return jsonify({"logout": True}), 200
 
 
 # Endpoint for revoking the current users refresh token
 @auth_blueprint.route('/logout-refresh', methods=['DELETE'])
-@jwt_refresh_token_required
+@jwt_required(refresh=True)
 def logout_refresh():
     prune_database()
-    store_token(get_raw_jwt())
+    store_token(get_jwt())
     return jsonify({"logout": True}), 200

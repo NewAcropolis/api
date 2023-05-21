@@ -60,7 +60,7 @@ def extract_startdate(json):
 
 
 @events_blueprint.route('/paypal/<item_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_test_paypal(item_id):
     if current_app.config['ENVIRONMENT'] == 'live':
         return 'Cannot test paypal on live environment'
@@ -72,7 +72,7 @@ def create_test_paypal(item_id):
 
 
 @events_blueprint.route('/event', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_event():
     data = request.get_json(force=True)
     event_year = None
@@ -151,7 +151,7 @@ def create_event():
 
 
 @events_blueprint.route('/event/<uuid:event_id>', methods=['DELETE'])
-@jwt_required
+@jwt_required()
 def delete_event(event_id):
     dao_delete_event(event_id)
 
@@ -166,7 +166,7 @@ def delete_event(event_id):
 
 
 @events_blueprint.route('/event/sync_paypal/<uuid:event_id>')
-@jwt_required
+@jwt_required()
 def sync_paypal(event_id):
     paypal_tasks.create_update_paypal_button_task.apply_async((str(event_id),))
 
@@ -174,7 +174,7 @@ def sync_paypal(event_id):
 
 
 @events_blueprint.route('/event/<uuid:event_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_event(event_id):
     data = request.get_json(force=True)
 
@@ -371,7 +371,7 @@ def update_event(event_id):
 
 
 @events_blueprint.route('/events')
-@jwt_required
+@jwt_required()
 def get_events():
     events = [e.serialize() if e else None for e in dao_get_events()]
 
@@ -380,14 +380,14 @@ def get_events():
 
 
 @events_blueprint.route('/event/<uuid:event_id>')
-@jwt_required
+@jwt_required()
 def get_event_by_id(event_id):
     event = dao_get_event_by_id(event_id)
     return jsonify(event.serialize())
 
 
 @events_blueprint.route('/events/year/<int:year>')
-@jwt_required
+@jwt_required()
 def get_events_in_year(year):
     events = [e.serialize() if e else None for e in dao_get_events_in_year(year)]
 
@@ -396,7 +396,7 @@ def get_events_in_year(year):
 
 
 @events_blueprint.route('/events/limit/<int:limit>')
-@jwt_required
+@jwt_required()
 def get_limited_events(limit):
     if limit > current_app.config['EVENTS_MAX']:
         raise InvalidRequest("{} is greater than events max".format(limit), 400)
@@ -407,7 +407,7 @@ def get_limited_events(limit):
 
 
 @events_blueprint.route('/events/future')
-@jwt_required
+@jwt_required()
 def get_future_events():
     events = [e.serialize() if e else None for e in dao_get_future_events()]
 
@@ -416,7 +416,7 @@ def get_future_events():
 
 
 @events_blueprint.route('/events/past_year')
-@jwt_required
+@jwt_required()
 def get_past_year_events():
     events = [e.serialize() if e else None for e in dao_get_past_year_events()]
 
@@ -440,7 +440,7 @@ def extract_speakers():
 
 
 @events_blueprint.route('/events/import', methods=['POST'])
-@jwt_required
+@jwt_required()
 def import_events():
     data = request.get_json(force=True)
 
@@ -550,7 +550,7 @@ def import_events():
 
 
 @events_blueprint.route('/event/reserve', methods=['POST'])
-@jwt_required
+@jwt_required()
 def reserve_place():
     data = request.get_json(force=True)
     validate(data, post_reserve_place_schema)
@@ -589,7 +589,7 @@ def reserve_place():
 
 
 @events_blueprint.route('/event/tickets_and_reserved/<uuid:eventdate_id>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_tickets_and_reserved_places(eventdate_id):
     reserved_places = dao_get_reserved_places(eventdate_id)
     tickets = dao_get_tickets_for_event_date(eventdate_id)

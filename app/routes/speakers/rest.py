@@ -27,14 +27,14 @@ register_errors(speaker_blueprint)
 
 
 @speakers_blueprint.route('/speakers')
-@jwt_required
+@jwt_required()
 def get_speakers():
     speakers = [s.serialize() if s else None for s in dao_get_speakers()]
     return jsonify(speakers)
 
 
 @speakers_blueprint.route('/speakers', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_speakers():
     data = request.get_json(force=True)
 
@@ -53,7 +53,7 @@ def create_speakers():
 
 
 @speakers_blueprint.route('/speakers/import', methods=['POST'])
-@jwt_required
+@jwt_required()
 def import_speakers():
     data = request.get_json(force=True)
 
@@ -100,7 +100,7 @@ def import_speakers():
 
 
 @speaker_blueprint.route('/speaker/<uuid:speaker_id>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_speaker_by_id(speaker_id):
     current_app.logger.info('get_speaker: {}'.format(speaker_id))
     speaker = dao_get_speaker_by_id(speaker_id)
@@ -108,7 +108,7 @@ def get_speaker_by_id(speaker_id):
 
 
 @speaker_blueprint.route('/speaker', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_speaker():
     data = request.get_json(force=True)
 
@@ -127,7 +127,7 @@ def create_speaker():
 
 
 @speaker_blueprint.route('/speaker/<uuid:speaker_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_speaker(speaker_id):
     data = request.get_json()
 

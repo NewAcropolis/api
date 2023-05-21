@@ -2,11 +2,11 @@ beautifulsoup4==4.6.0
 celery==5.2.2
 cryptography==2.4.2
 dateutils==0.6.7
-Flask==1.1.4
+Flask==2.2.5
 Flask-Migrate==1.8.0
 Flask-Script==2.0.5
-Flask-SQLAlchemy==2.1 
-Flask-JWT-Extended==3.25.0
+Flask-SQLAlchemy==2.5.1 
+Flask-JWT-Extended==4.4.4
 google-cloud-storage==1.44.0
 gevent==22.10.2
 gunicorn==20.0.2
@@ -15,7 +15,7 @@ imagehash==4.0
 iso8601==0.1.12
 jsonschema==2.6.0
 kombu==5.2.2
-markupsafe==1.1.1
+markupsafe==2.1.1
 pdftotext==2.2.2
 pillow==9.3.0
 protobuf==3.19.5
@@ -29,6 +29,7 @@ six==1.15.0
 SQLAlchemy==1.4
 vine==5.0.0
 Wand==0.5.8
-Werkzeug==0.16.0
+Werkzeug==2.2.2
+# Werkzeug==0.16.0
 
 -e git+https://github.com/NewAcropolis/na-common.git@4efb1dabcaa55e0c24562f7dcb56f429e90b45c1#egg=na-common

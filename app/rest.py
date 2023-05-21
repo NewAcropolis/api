@@ -1,6 +1,8 @@
 import threading
 from queue import Queue
 from celery.app import control
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import Blueprint, jsonify, current_app
 
 from app import db

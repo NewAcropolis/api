@@ -1,3 +1,5 @@
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
     jsonify,
     current_app,
@@ -14,7 +16,7 @@ from flask_jwt_extended.exceptions import (
     RevokedTokenError,
     FreshTokenRequired,
     CSRFError,
-    UserLoadError,
+    UserLookupError,
     UserClaimsVerificationError
 )
 

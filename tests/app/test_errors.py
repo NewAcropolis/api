@@ -9,7 +9,7 @@ from flask_jwt_extended.exceptions import (
     RevokedTokenError,
     FreshTokenRequired,
     CSRFError,
-    UserLoadError,
+    UserLookupError,
     UserClaimsVerificationError
 )
 from jsonschema import ValidationError

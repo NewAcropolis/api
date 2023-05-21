@@ -88,7 +88,7 @@ def get_orders(year=None, _filter=None):
 
 
 @orders_blueprint.route('/order/<string:txn_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_order(txn_id):
     data = request.get_json(force=True)
 
@@ -101,7 +101,7 @@ def update_order(txn_id):
 
 
 @orders_blueprint.route('/order/update_address/<string:txn_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_order_address(txn_id):
     data = request.get_json(force=True)
 
@@ -128,13 +128,13 @@ def _get_nice_cost(cost):
 
 @orders_blueprint.route('/orders/paypal/replay_ipn', methods=['POST'])
 @orders_blueprint.route('/orders/paypal/replay_ipn/<string:txn_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def replay_paypal_ipn(txn_id=None):
     return _replay_paypal_ipn(txn_id)
 
 
 @orders_blueprint.route('/orders/replay_confirmation_email/<string:txn_id>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def replay_confirmation_email(txn_id=None):
     return _replay_paypal_ipn(txn_id=txn_id, email_only=True)
 
@@ -158,7 +158,7 @@ def _replay_paypal_ipn(txn_id=None, email_only=False):
 
 
 @orders_blueprint.route('/orders/paypal/ipn/queued', methods=['POST'])
-@jwt_required
+@jwt_required()
 def paypal_ipn_queued():
     return paypal_ipn(ipn_queued=True)
 

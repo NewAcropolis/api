@@ -33,21 +33,21 @@ register_errors(book_blueprint)
 
 
 @books_blueprint.route('/books')
-@jwt_required
+@jwt_required()
 def get_books():
     books = [a.serialize() if a else None for a in dao_get_books()]
     return jsonify(books)
 
 
 @book_blueprint.route('/book/<uuid:book_id>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_book_by_id(book_id):
     book = dao_get_book_by_id(book_id)
     return jsonify(book.serialize())
 
 
 @book_blueprint.route('/book/<uuid:book_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_book(book_id):
     data = request.get_json(force=True)
 
@@ -72,7 +72,7 @@ def update_book(book_id):
 
 
 @book_blueprint.route('/book', methods=['POST'])
-@jwt_required
+@jwt_required()
 def add_book():
     data = request.get_json(force=True)
 
@@ -103,7 +103,7 @@ def add_book():
 
 
 @books_blueprint.route('/books/import', methods=['POST'])
-@jwt_required
+@jwt_required()
 def import_books():
     data = request.get_json(force=True)
 
