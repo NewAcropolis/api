@@ -2,7 +2,7 @@ beautifulsoup4==4.6.0
 celery==5.2.2
 cryptography==2.4.2
 dateutils==0.6.7
-Flask==2.2.5
+Flask==2.0.0
 Flask-Migrate==1.8.0
 Flask-Script==2.0.5
 Flask-SQLAlchemy==2.5.1 
@@ -29,7 +29,7 @@ six==1.15.0
 SQLAlchemy==1.4
 vine==5.0.0
 Wand==0.5.8
-Werkzeug==2.2.2
+Werkzeug==2.0.0
 # Werkzeug==0.16.0
 
 -e git+https://github.com/NewAcropolis/na-common.git@4efb1dabcaa55e0c24562f7dcb56f429e90b45c1#egg=na-common
