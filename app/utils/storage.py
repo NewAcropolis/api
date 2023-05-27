@@ -4,6 +4,9 @@ from io import BytesIO, StringIO
 import os
 import sys
 
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from flask import current_app
 from PIL import Image
 

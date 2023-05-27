@@ -1,3 +1,6 @@
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from flask import json, jsonify, url_for
 from tests.conftest import create_authorization_header
 

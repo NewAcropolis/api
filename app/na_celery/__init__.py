@@ -1,5 +1,8 @@
 from celery import Celery
 from celery.schedules import crontab
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from flask import current_app
 
 

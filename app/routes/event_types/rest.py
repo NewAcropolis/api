@@ -1,4 +1,6 @@
 import os
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
     Blueprint,
     current_app,

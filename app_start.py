@@ -3,6 +3,8 @@ import json
 import os
 import re
 import requests
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask_script import Manager, Server
 from app import create_app, db
 from app.comms.encryption import decrypt, encrypt, get_tokens

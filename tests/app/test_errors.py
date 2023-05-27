@@ -1,4 +1,6 @@
 import pytest
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 
 from flask import json, url_for, Blueprint, Flask, jsonify, abort
 from flask_jwt_extended.exceptions import (
