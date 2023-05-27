@@ -8,7 +8,7 @@ import requests
 import smtplib
 import ssl
 
-from html.parser import HTMLParser
+from html import unescape
 
 from na_common.dates import get_nice_event_dates
 
@@ -26,8 +26,6 @@ from app.dao.email_providers_dao import (
     dao_get_first_email_provider, dao_get_next_email_provider, dao_get_next_available_email_provider
 )
 from app.dao.magazines_dao import dao_get_magazine_by_id
-
-h = HTMLParser()
 
 
 def get_email_provider(override=False, email_provider=None, use_minute_limit=True):
@@ -119,7 +117,7 @@ def get_email_html(email_type, **kwargs):
             'emails/events.html',
             event=event,
             event_dates=get_nice_event_dates(event.event_dates),
-            description=h.unescape(event.description),
+            description=unescape(event.description),
             details=kwargs.get('details'),
             extra_txt=kwargs.get('extra_txt'),
             unsubcode=unsubcode,
