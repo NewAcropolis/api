@@ -134,10 +134,10 @@ class WhenRefreshingToken(object):
                 ('Authorization', 'invalid')
             ]
         )
-        assert response.status_code == 400
+        assert response.status_code == 401
 
         json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['message'] == 'Invalid header error'
+        assert json_resp['message'] == 'Unauthorized, authentication token must be provided'
 
 
 class WhenAccessingAProtectedEndpoint(object):

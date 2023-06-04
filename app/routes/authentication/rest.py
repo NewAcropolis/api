@@ -25,7 +25,7 @@ register_errors(auth_blueprint)
 
 
 @jwt.token_in_blocklist_loader
-def check_if_token_in_blocklist(decrypted_token):
+def check_if_token_in_blocklist(jwt_header, decrypted_token):
     jti = decrypted_token['jti']
     current_app.logger.info('check_token: {}, {}'.format(jti, blacklist))
     return is_token_revoked(decrypted_token)
