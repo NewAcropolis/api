@@ -1,10 +1,10 @@
 import threading
 from queue import Queue
-from celery.app import control
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import Blueprint, jsonify, current_app
 
+from app import celery
 from app import db
 from app.errors import register_errors
 
@@ -14,7 +14,7 @@ register_errors(base_blueprint)
 
 def are_celery_workers_running():
     def worker(q):
-        i = control.inspect()
+        i = celery.control.inspect()
         q.put(i.stats())
 
     q = Queue()
@@ -27,8 +27,8 @@ def are_celery_workers_running():
 @base_blueprint.route('/')
 def get_info():
     workers_running = False
-    # if 'http://localhost' not in current_app.config['API_BASE_URL']:
-    workers_running = are_celery_workers_running()
+    if 'http://localhost' not in current_app.config['API_BASE_URL']:
+        workers_running = are_celery_workers_running()
 
     current_app.logger.info('get_info')
     query = 'SELECT version_num FROM alembic_version'
