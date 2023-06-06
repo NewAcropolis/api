@@ -1,6 +1,9 @@
 import base64
 import os
 from random import randint
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from flask import (
     Blueprint,
     current_app,
@@ -37,7 +40,7 @@ register_errors(article_blueprint)
 
 
 @articles_blueprint.route('/articles')
-@jwt_required
+@jwt_required()
 def get_articles():
     articles = [a.serialize() if a else None for a in dao_get_articles()]
     return jsonify(articles)
@@ -45,7 +48,7 @@ def get_articles():
 
 @articles_blueprint.route('/articles/summary')
 @articles_blueprint.route('/articles/summary/<string:ids>')
-@jwt_required
+@jwt_required()
 def get_articles_summary(ids=None):
     if not ids:
         current_app.logger.info('Limit articles summary to 5')
@@ -68,14 +71,14 @@ def get_articles_summary(ids=None):
 
 
 @article_blueprint.route('/article/<uuid:article_id>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_article_by_id(article_id):
     article = dao_get_article_by_id(article_id)
     return jsonify(article.serialize())
 
 
 @articles_blueprint.route('/articles/import', methods=['POST'])
-@jwt_required
+@jwt_required()
 def import_articles():
     data = request.get_json(force=True)
 
@@ -114,7 +117,7 @@ def import_articles():
 
 
 @article_blueprint.route('/article', methods=['POST'])
-@jwt_required
+@jwt_required()
 def add_article():
     data = request.get_json(force=True)
 
@@ -156,7 +159,7 @@ def add_article():
 
 
 @article_blueprint.route('/article/<uuid:article_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_article_by_id(article_id):
     data = request.get_json(force=True)
 

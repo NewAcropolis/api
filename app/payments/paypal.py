@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import current_app
 import json
 import requests

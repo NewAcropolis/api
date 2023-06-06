@@ -1,3 +1,6 @@
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from flask import (
     Blueprint,
     current_app,
@@ -23,7 +26,7 @@ register_errors(email_providers_blueprint)
 
 
 @email_providers_blueprint.route('/email_provider', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_email_provider():
     data = request.get_json(force=True)
 
@@ -37,7 +40,7 @@ def create_email_provider():
 
 
 @email_providers_blueprint.route('/email_provider/<uuid:email_provider_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_email_provider(email_provider_id):
     data = request.get_json(force=True)
 
@@ -51,7 +54,7 @@ def update_email_provider(email_provider_id):
 
 
 @email_providers_blueprint.route('/email_providers', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_email_providers():
     email_providers = []
     for fetched_email_provider in dao_get_email_providers():

@@ -1,4 +1,7 @@
 import os
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from flask import (
     Blueprint,
     current_app,
@@ -32,7 +35,7 @@ register_errors(venue_blueprint)
 
 
 @venues_blueprint.route('/venues')
-@jwt_required
+@jwt_required()
 def get_venues():
     venues = [e.serialize() if e else None for e in dao_get_venues()]
     return jsonify(venues)
@@ -58,7 +61,7 @@ def create_venue():
 
 
 @venues_blueprint.route('/venues', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_venues():
     data = request.get_json(force=True)
 
@@ -77,7 +80,7 @@ def create_venues():
 
 
 @venues_blueprint.route('/venues/import', methods=['POST'])
-@jwt_required
+@jwt_required()
 def import_venues():
     data = request.get_json(force=True)
 

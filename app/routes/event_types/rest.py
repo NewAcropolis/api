@@ -1,4 +1,6 @@
 import os
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
     Blueprint,
     current_app,
@@ -31,7 +33,7 @@ register_errors(event_type_blueprint)
 
 
 @event_types_blueprint.route('/event_types')
-@jwt_required
+@jwt_required()
 def get_event_types():
     current_app.logger.info('get_event_types')
     event_types = [e.serialize() if e else None for e in dao_get_event_types()]
@@ -46,7 +48,7 @@ def get_event_type_by_id(event_type_id):
 
 
 @event_type_blueprint.route('/event_type', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_event_type():
     data = request.get_json()
 
@@ -59,7 +61,7 @@ def create_event_type():
 
 
 @event_types_blueprint.route('/event_types/import', methods=['POST'])
-@jwt_required
+@jwt_required()
 def import_event_types():
     data = request.get_json(force=True)
 
@@ -84,7 +86,7 @@ def import_event_types():
 
 
 @event_type_blueprint.route('/event_type/<uuid:event_type_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_event_type(event_type_id):
     data = request.get_json()
 

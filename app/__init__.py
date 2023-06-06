@@ -4,6 +4,8 @@ import sys
 from logging.handlers import RotatingFileHandler
 
 import jinja2
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
@@ -185,5 +187,6 @@ class LogTruncatingFormatter(logging.Formatter):
     def format(self, record):
         START_LOG = '127.0.0.1 - - ['
         if 'msg' in dir(record) and str(record.msg)[:15] == START_LOG:
-            record.msg = record.msg[42:]
+            offset = 37 if record.msg[37:].startswith("\"%s\"") else 42
+            record.msg = record.msg[offset:]
         return super().format(record)

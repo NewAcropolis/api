@@ -1,4 +1,6 @@
 import base64
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
     Blueprint,
     current_app,
@@ -32,7 +34,7 @@ register_errors(magazines_blueprint)
 
 
 @magazines_blueprint.route('/magazine/import', methods=['POST'])
-@jwt_required
+@jwt_required()
 def import_magazine():
     data = request.get_json(force=True)
 
@@ -51,7 +53,7 @@ def import_magazine():
 
 
 @magazines_blueprint.route('/magazine', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_magazine():
     data = request.get_json(force=True)
 
@@ -75,7 +77,7 @@ def create_magazine():
 
 
 @magazines_blueprint.route('/magazine/<uuid:id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_magazine(id):
     data = request.get_json(force=True)
 
@@ -109,7 +111,7 @@ def update_magazine(id):
 
 
 @magazines_blueprint.route('/magazine/latest', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_latest_magazine():
     magazine = dao_get_latest_magazine()
 
@@ -117,7 +119,7 @@ def get_latest_magazine():
 
 
 @magazines_blueprint.route('/magazines', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_magazines():
     magazines = [m.serialize() if m else None for m in dao_get_magazines()]
 
@@ -125,14 +127,14 @@ def get_magazines():
 
 
 @magazines_blueprint.route('/magazine/<uuid:id>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_magazine_by_id(id):
     magazine = dao_get_magazine_by_id(id)
     return jsonify(magazine.serialize())
 
 
 @magazines_blueprint.route('/magazine/<int:old_id>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_magazine_by_old_id(old_id):
     magazine = dao_get_magazine_by_old_id(old_id)
     return jsonify(magazine.serialize())

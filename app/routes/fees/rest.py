@@ -1,3 +1,5 @@
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
     Blueprint,
     current_app,
@@ -20,7 +22,7 @@ register_errors(fee_blueprint)
 
 
 @fees_blueprint.route('/fees')
-@jwt_required
+@jwt_required()
 def get_fees():
     current_app.logger.info('get_fees')
     fees = [f.serialize() if f else None for f in dao_get_fees()]
@@ -28,7 +30,7 @@ def get_fees():
 
 
 @fee_blueprint.route('/fee/<uuid:fee_id>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_fee_by_id(fee_id):
     current_app.logger.info('get_fee: {}'.format(fee_id))
     fee = dao_get_fee_by_id(fee_id)
@@ -36,7 +38,7 @@ def get_fee_by_id(fee_id):
 
 
 @fee_blueprint.route('/fee', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_fee():
     data = request.get_json()
 
@@ -49,7 +51,7 @@ def create_fee():
 
 
 @fee_blueprint.route('/fee/<uuid:fee_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_fee(fee_id):
     data = request.get_json()
 

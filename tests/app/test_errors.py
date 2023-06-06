@@ -1,4 +1,6 @@
 import pytest
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 
 from flask import json, url_for, Blueprint, Flask, jsonify, abort
 from flask_jwt_extended.exceptions import (
@@ -9,7 +11,7 @@ from flask_jwt_extended.exceptions import (
     RevokedTokenError,
     FreshTokenRequired,
     CSRFError,
-    UserLoadError,
+    UserLookupError,
     UserClaimsVerificationError
 )
 from jsonschema import ValidationError
@@ -45,7 +47,7 @@ class WhenAnErrorOccurs(object):
 
         @error_blueprint.route('/revoked-token')
         def revoked_token():
-            raise RevokedTokenError("Revoked token error")
+            raise RevokedTokenError({}, {})
 
         @error_blueprint.route('/decode-error')
         def decode_error():
@@ -138,7 +140,7 @@ class WhenAnErrorOccurs(object):
         )
         assert response.status_code == 400
         json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['message'] == "Revoked token error"
+        assert json_resp['message'] == "Token has been revoked"
 
     def it_handles_decode_error(self, error_app):
         response = error_app.get(

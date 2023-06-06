@@ -1,4 +1,6 @@
-from io import StringIO
+from io import StringIO, BytesIO
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import Blueprint, current_app, jsonify, request, send_file
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -30,7 +32,10 @@ def image_handler():
     storage = Storage(current_app.config['STORAGE'])
 
     img = StringIO(storage.get_blob(image_size + imagefile))
-    return send_file(img, mimetype='image/jpeg')
+    buffer = BytesIO()
+    buffer.write(img.getvalue().encode())
+    buffer.seek(0)
+    return send_file(buffer, mimetype='image/jpeg')
 
 
 @legacy_blueprint.route('/legacy/event_handler', methods=['GET'])

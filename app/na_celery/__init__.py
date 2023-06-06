@@ -1,6 +1,8 @@
 from celery import Celery
 from celery.schedules import crontab
-from celery.task.control import revoke
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from flask import current_app
 
 
@@ -30,9 +32,3 @@ class NewAcropolisCelery(Celery):  # pragma: no cover
                     return self.run(*args, **kwargs)
 
         self.Task = ContextTask
-
-
-def revoke_task(task_id):  # pragma: no cover
-    res = revoke(task_id, terminate=True)
-    current_app.logger.info('Task revoked: %d, %r', task_id, res)
-    return res

@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 import json
 import os
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
     Blueprint,
     current_app,
@@ -14,7 +16,7 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 from html.parser import HTMLParser
 
-from app.na_celery import email_tasks, revoke_task
+from app.na_celery import email_tasks
 from app.comms.email import get_email_html, send_email, send_smtp_email
 from app.dao.emails_dao import (
     dao_create_email,
@@ -60,7 +62,7 @@ def email_preview():
 
 
 @emails_blueprint.route('/email', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_email():
     data = request.get_json(force=True)
 
@@ -74,7 +76,7 @@ def create_email():
 
 
 @emails_blueprint.route('/email/<uuid:email_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_email(email_id):
     data = request.get_json(force=True)
 
@@ -151,13 +153,13 @@ def update_email(email_id):
 
 
 @emails_blueprint.route('/email/types', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_email_types():
     return jsonify([{'type': email_type} for email_type in MANAGED_EMAIL_TYPES])
 
 
 @emails_blueprint.route('/email/default_details/<uuid:event_id>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_default_details(event_id):
     event = dao_get_event_by_id(event_id)
     fees = f"<div><strong>Fees:</strong> £{event.fee}, £{event.conc_fee} concession for students, "\
@@ -174,7 +176,7 @@ def get_default_details(event_id):
 
 
 @emails_blueprint.route('/emails/future', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_future_emails():
     emails = dao_get_future_emails()
 
@@ -182,7 +184,7 @@ def get_future_emails():
 
 
 @emails_blueprint.route('/emails/latest', methods=['GET'])
-@jwt_required
+@jwt_required()
 def get_latest_emails():
     emails = dao_get_latest_emails()
 
@@ -190,7 +192,7 @@ def get_latest_emails():
 
 
 @emails_blueprint.route('/emails/import', methods=['POST'])
-@jwt_required
+@jwt_required()
 def import_emails():
     data = request.get_json(force=True)
 
@@ -258,7 +260,7 @@ def import_emails():
 
 
 @emails_blueprint.route('/emails/members/import', methods=['POST'])
-@jwt_required
+@jwt_required()
 def import_emails_members_sent_to():
     data = request.get_json(force=True)
 
@@ -309,7 +311,7 @@ def import_emails_members_sent_to():
 
 
 @emails_blueprint.route('/send_message', methods=['POST'])
-@jwt_required
+@jwt_required()
 def send_message():
     data = request.get_json(force=True)
     current_app.logger.info('send_message: %r', data)
@@ -326,7 +328,7 @@ def send_message():
 
 
 @emails_blueprint.route('/email/test')
-@jwt_required
+@jwt_required()
 def send_test_email():  # pragma:no cover
     current_app.logger.info('Sending test email...')
     res = send_smtp_email(
@@ -341,7 +343,7 @@ def send_test_email():  # pragma:no cover
 
 
 @emails_blueprint.route('/email/send/<uuid:email_id>')
-@jwt_required
+@jwt_required()
 def send_email_by_id(email_id):  # pragma:no cover
     current_app.logger.info(f'Sending email by id: {email_id}')
     from app.na_celery.email_tasks import send_emails as send_email_task
@@ -353,7 +355,7 @@ def send_email_by_id(email_id):  # pragma:no cover
 
 
 @emails_blueprint.route('/emails/approved')
-@jwt_required
+@jwt_required()
 def get_approved_emails():
     emails = dao_get_approved_emails_for_sending()
 

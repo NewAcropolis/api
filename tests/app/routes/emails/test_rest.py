@@ -1,3 +1,6 @@
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from datetime import datetime, timedelta
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime

@@ -1,3 +1,6 @@
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from flask import current_app, url_for
 from freezegun import freeze_time
 import json

@@ -1,8 +1,10 @@
 import threading
 from queue import Queue
-from celery.task.control import inspect
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import Blueprint, jsonify, current_app
 
+from app import celery
 from app import db
 from app.errors import register_errors
 
@@ -12,7 +14,7 @@ register_errors(base_blueprint)
 
 def are_celery_workers_running():
     def worker(q):
-        i = inspect()
+        i = celery.control.inspect()
         q.put(i.stats())
 
     q = Queue()

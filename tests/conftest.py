@@ -5,9 +5,15 @@ import datetime
 
 from bs4 import BeautifulSoup
 
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 import pytest
 from alembic.command import upgrade
 from alembic.config import Config
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 import sqlalchemy

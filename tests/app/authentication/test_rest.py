@@ -1,5 +1,8 @@
 import pytest
 
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 from flask import json, url_for, Blueprint, Flask
 from flask_jwt_extended import (
     JWTManager,
@@ -87,7 +90,7 @@ class WhenDoingLogout(object):
         mock_store_token = mocker.patch("app.routes.authentication.rest.store_token")
         mock_prune_database = mocker.patch("app.routes.authentication.rest.prune_database")
         mocker.patch(
-            "app.routes.authentication.rest.get_raw_jwt",
+            "app.routes.authentication.rest.get_jwt",
             return_value=sample_decoded_token
         )
 
@@ -134,10 +137,10 @@ class WhenRefreshingToken(object):
                 ('Authorization', 'invalid')
             ]
         )
-        assert response.status_code == 400
+        assert response.status_code == 401
 
         json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['message'] == 'Invalid header error'
+        assert json_resp['message'] == 'Unauthorized, authentication token must be provided'
 
 
 class WhenAccessingAProtectedEndpoint(object):
@@ -154,7 +157,7 @@ class WhenAccessingAProtectedEndpoint(object):
         register_errors(auth_blueprint)
 
         @auth_blueprint.route('/protected')
-        @jwt_required
+        @jwt_required()
         def protected():
             return 'protected', 200
 

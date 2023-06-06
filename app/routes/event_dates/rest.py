@@ -1,4 +1,6 @@
 import os
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
     abort,
     Blueprint,
@@ -31,7 +33,7 @@ register_errors(event_date_blueprint)
 
 
 @event_dates_blueprint.route('/event_dates')
-@jwt_required
+@jwt_required()
 def get_event_dates():
     current_app.logger.info('get_event_dates')
     event_dates = [e.serialize() if e else None for e in dao_get_event_dates()]
@@ -46,7 +48,7 @@ def get_event_date_by_id(event_date_id):
 
 
 @event_date_blueprint.route('/event_date', methods=['POST'])
-@jwt_required
+@jwt_required()
 def create_event_date():
     data = request.get_json()
 
@@ -65,7 +67,7 @@ def create_event_date():
 
 
 @event_date_blueprint.route('/event_date/<uuid:event_date_id>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def update_event_date(event_date_id):
     data = request.get_json()
 
