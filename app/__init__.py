@@ -41,7 +41,7 @@ def create_app(**kwargs):
     if kwargs.get('is_celery'):
         celery.init_app(application)
 
-    register_blueprint()
+    register_blueprints()
 
     init_app(application)
 
@@ -63,7 +63,12 @@ def init_app(app):
         pass
 
 
-def register_blueprint():
+def register_blueprint(bp):
+    if bp.name not in application.blueprints.keys():
+        application.register_blueprint(bp)
+
+
+def register_blueprints():
     from app.rest import base_blueprint
     from app.routes.articles.rest import article_blueprint, articles_blueprint
     from app.routes.authentication.rest import auth_blueprint
@@ -83,33 +88,33 @@ def register_blueprint():
     from app.routes.stats.rest import stats_blueprint
     from app.routes.users.rest import users_blueprint, user_blueprint
     from app.routes.venues.rest import venues_blueprint, venue_blueprint
-    application.register_blueprint(base_blueprint)
-    application.register_blueprint(auth_blueprint)
-    application.register_blueprint(article_blueprint)
-    application.register_blueprint(articles_blueprint)
-    application.register_blueprint(book_blueprint)
-    application.register_blueprint(books_blueprint)
-    application.register_blueprint(emails_blueprint)
-    application.register_blueprint(email_providers_blueprint)
-    application.register_blueprint(events_blueprint)
-    application.register_blueprint(event_date_blueprint)
-    application.register_blueprint(event_dates_blueprint)
-    application.register_blueprint(event_types_blueprint)
-    application.register_blueprint(event_type_blueprint)
-    application.register_blueprint(fees_blueprint)
-    application.register_blueprint(fee_blueprint)
-    application.register_blueprint(legacy_blueprint)
-    application.register_blueprint(magazines_blueprint)
-    application.register_blueprint(marketings_blueprint)
-    application.register_blueprint(members_blueprint)
-    application.register_blueprint(orders_blueprint)
-    application.register_blueprint(speakers_blueprint)
-    application.register_blueprint(speaker_blueprint)
-    application.register_blueprint(stats_blueprint)
-    application.register_blueprint(users_blueprint)
-    application.register_blueprint(user_blueprint)
-    application.register_blueprint(venues_blueprint)
-    application.register_blueprint(venue_blueprint)
+    register_blueprint(base_blueprint)
+    register_blueprint(auth_blueprint)
+    register_blueprint(article_blueprint)
+    register_blueprint(articles_blueprint)
+    register_blueprint(book_blueprint)
+    register_blueprint(books_blueprint)
+    register_blueprint(emails_blueprint)
+    register_blueprint(email_providers_blueprint)
+    register_blueprint(events_blueprint)
+    register_blueprint(event_date_blueprint)
+    register_blueprint(event_dates_blueprint)
+    register_blueprint(event_types_blueprint)
+    register_blueprint(event_type_blueprint)
+    register_blueprint(fees_blueprint)
+    register_blueprint(fee_blueprint)
+    register_blueprint(legacy_blueprint)
+    register_blueprint(magazines_blueprint)
+    register_blueprint(marketings_blueprint)
+    register_blueprint(members_blueprint)
+    register_blueprint(orders_blueprint)
+    register_blueprint(speakers_blueprint)
+    register_blueprint(speaker_blueprint)
+    register_blueprint(stats_blueprint)
+    register_blueprint(users_blueprint)
+    register_blueprint(user_blueprint)
+    register_blueprint(venues_blueprint)
+    register_blueprint(venue_blueprint)
 
 
 def get_env():
