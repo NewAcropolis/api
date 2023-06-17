@@ -8,7 +8,7 @@ from app import celery
 from app import db
 from app.errors import register_errors
 
-base_blueprint = Blueprint('', __name__)
+base_blueprint = Blueprint('base', __name__)
 register_errors(base_blueprint)
 
 
