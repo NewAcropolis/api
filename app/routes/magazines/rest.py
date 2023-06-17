@@ -150,4 +150,4 @@ def download_pdf(magazine_id, category="magazine_download"):
     storage = Storage(current_app.config['STORAGE'])
 
     pdf = BytesIO(storage.get_blob(pdf_filename))
-    return send_file(pdf, as_attachment=True, attachment_filename=magazine.filename, mimetype='application/pdf')
+    return send_file(pdf, as_attachment=True, download_name=magazine.filename, mimetype='application/pdf')
