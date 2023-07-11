@@ -5,7 +5,7 @@ export JWT_SECRET=test
 export ADMIN_CLIENT_ID=test-admin
 export ADMIN_CLIENT_SECRET=test-secret
 export API_BASE_URL=http://localhost:5001
-export PREVIEW_API_BASE_URL=<< preview api url >>
+export PREVIEW_API_BASE_URL=http://localhost:5001
 
 export EMAIL_DISABLED=
 export DISABLE_STATS=1
