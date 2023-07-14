@@ -45,6 +45,7 @@ class Article(db.Model):
     title = db.Column(db.String(255))
     author = db.Column(db.String(255))
     image_filename = db.Column(db.String(255))
+    source_filename = db.Column(db.String(255))
     content = db.Column(db.Text())
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     article_state = db.Column(
