@@ -1,6 +1,8 @@
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
+import base64
+import os
 import pytest
 import uuid
 
@@ -423,3 +425,33 @@ class WhenPostingUpdateArticle:
 
         assert mock_send_email.called
         assert json_resp['errors'] == ['Problem sending smtp emails: 400']
+
+
+class WhenPostingImportZip:
+
+    def it_uploads_articles(self, client, db_session, sample_magazine):
+        DATA_ROOT = os.path.join(os.path.dirname(__file__), "../../../../data/articles/")
+        filename = f"{DATA_ROOT}art.zip"
+
+        articles_data = ''
+        with open(filename, "rb") as f:
+            data_bytes = f.read()
+
+            articles_data = base64.b64encode(data_bytes)
+
+        articles_data = str(articles_data, 'utf-8')
+
+        data = {
+            'magazine_id': sample_magazine.id,
+            'articles_data': articles_data
+        }
+
+        response = client.post(
+            url_for('articles.upload_articles'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        print(json_resp)
+        assert False

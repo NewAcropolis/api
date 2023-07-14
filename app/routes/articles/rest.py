@@ -1,6 +1,10 @@
 import base64
+import docx
+import io
 import os
 from random import randint
+from zipfile import ZipFile
+
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
@@ -27,7 +31,11 @@ from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.errors import register_errors, InvalidRequest
 
 from app.routes.articles.schemas import (
-    post_import_articles_schema, post_update_article_schema, post_create_article_schema)
+    post_import_articles_schema,
+    post_update_article_schema,
+    post_create_article_schema,
+    post_upload_articles_schema
+)
 
 from app.models import Article, APPROVED, READY, REJECTED
 from app.schema_validation import validate
@@ -114,6 +122,83 @@ def import_articles():
         res['errors'] = errors
 
     return jsonify(res), 201 if articles else 400 if errors else 200
+
+
+@articles_blueprint.route('/articles/upload', methods=['POST'])
+@jwt_required()
+def upload_articles():
+    data = request.get_json(force=True)
+    validate(data, post_upload_articles_schema)
+
+    file_like_object = io.BytesIO(base64.b64decode(data['articles_data']))
+    zipfile_ob = ZipFile(file_like_object)
+
+    articles = []
+    errors = []
+
+    for name in zipfile_ob.namelist():
+        article = zipfile_ob.read(name)
+
+        z_article = ZipFile(io.BytesIO(article))
+        for n in z_article.namelist():
+            if n.startswith('word/media/'):
+                image1 = z_article.open(n).read()
+                f = open('image1.jpeg', 'wb')
+                f.write(image1)
+
+        doc = docx.Document(io.BytesIO(article))
+        fullText = []
+        article_html = author = title = ""
+        is_title = True
+        sources_found = False
+        for para in doc.paragraphs:
+            if not para.text.strip():
+                continue
+            fullText.append(para.text)
+            if is_title:
+                # if the title is more than 255 chars long then take title from the filename
+                # assumes that title has '_final.docx' suffix
+                if len(para.text) < 256:
+                    article_html += f"<h1>{para.text}</h1>"
+                    title = para.text
+                else:
+                    article_html += f"<p>{para.text}</p>"
+                    title = name.replace("_final.docx", "")
+                is_title = False
+            else:
+                article_html += f"<p>{para.text}</p>"
+
+                # usually author is at the end of the article unless sources are provided
+                if para.text.lower() == "sources:":
+                    sources_found = True
+                elif not sources_found:
+                    author = para.text
+
+        # for idx, s in enumerate(doc.inline_shapes, 1):
+        #     if s.type != 3: # wdInlineShapePicture
+        #         continue
+        #     import pdb; pdb.set_trace()
+        #     pic = s.range.CopyAsPicture()
+
+        try:
+            dao_create_article(
+                Article(
+                    source_filename=name,
+                    title=title,
+                    author=author,
+                    content=article_html,
+                    magazine_id=data['magazine_id']
+                )
+            )
+            articles.append(name)
+        except Exception as e:
+            print(e)
+            errors.append(str(e))
+
+    return {
+        'articles': articles,
+        'errors': errors
+    }
 
 
 @article_blueprint.route('/article', methods=['POST'])
