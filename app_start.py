@@ -4,6 +4,8 @@ import os
 import re
 import requests
 import werkzeug
+from zipfile import ZipFile
+
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask_script import Manager, Server
 from app import create_app, db
@@ -72,6 +74,15 @@ def extract_first_page():
 def send_stats():
     from app.na_celery.stats_tasks import send_num_subscribers_and_social_stats
     send_num_subscribers_and_social_stats(inc_subscribers=False)
+
+
+@manager.command
+def create_test_zip():
+    """Create zipfile for testing"""
+    DATA_ROOT = "data/articles/"
+    with ZipFile(f"{DATA_ROOT}art.zip", 'w') as myzip:
+        myzip.write(f"{DATA_ROOT}Test 1.docx")
+        myzip.write(f"{DATA_ROOT}Test 2.docx")
 
 
 @manager.command
