@@ -4,7 +4,7 @@ import os
 import re
 import requests
 import werkzeug
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask_script import Manager, Server
@@ -80,9 +80,10 @@ def send_stats():
 def create_test_zip():
     """Create zipfile for testing"""
     DATA_ROOT = "data/articles/"
-    with ZipFile(f"{DATA_ROOT}art.zip", 'w') as myzip:
-        myzip.write(f"{DATA_ROOT}Test 1.docx")
-        myzip.write(f"{DATA_ROOT}Test 2.docx")
+    with ZipFile(f"{DATA_ROOT}art.zip", 'w', ZIP_DEFLATED) as myzip:
+        os.chdir(DATA_ROOT + "/docs")
+        myzip.write("Test 1.docx", arcname="test_1_final.docx")
+        myzip.write("Test 2.docx", arcname="test_2_final.docx")
 
 
 @manager.command
