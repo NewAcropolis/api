@@ -1,6 +1,8 @@
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
+import base64
+import os
 import pytest
 import uuid
 
@@ -10,6 +12,7 @@ from mock import call
 
 from sqlalchemy.orm.exc import NoResultFound
 
+from app.dao.articles_dao import dao_get_articles
 from app.models import Article, DRAFT, READY, APPROVED, REJECTED
 from tests.conftest import create_authorization_header, base64img_encoded, TEST_ADMIN_USER
 
@@ -423,3 +426,63 @@ class WhenPostingUpdateArticle:
 
         assert mock_send_email.called
         assert json_resp['errors'] == ['Problem sending smtp emails: 400']
+
+
+class WhenPostingImportZip:
+
+    @pytest.fixture
+    def mock_articles_data(self):
+        DATA_ROOT = os.path.join(os.path.dirname(__file__), "../../../../data/articles/")
+        filename = f"{DATA_ROOT}art.zip"
+
+        articles_data = ''
+        with open(filename, "rb") as f:
+            data_bytes = f.read()
+
+            articles_data = base64.b64encode(data_bytes)
+
+        return str(articles_data, 'utf-8')
+
+    def it_uploads_articles(self, client, db_session, sample_magazine, mock_articles_data):
+        data = {
+            'magazine_id': sample_magazine.id,
+            'articles_data': mock_articles_data
+        }
+
+        response = client.post(
+            url_for('articles.upload_articles'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp == {
+            'articles': ['test_1_final.docx', 'test_2_final.docx']
+        }
+
+        articles = dao_get_articles()
+        assert len(articles) == 2
+        assert articles[0].title == 'Test 1'
+        assert articles[1].title == 'Test 2'
+
+    def it_handles_errors(self, mocker, client, db_session, sample_magazine, mock_articles_data):
+        from zipfile import BadZipFile
+        mocker.patch('app.routes.articles.rest.ZipFile.namelist', side_effect=BadZipFile("Bad Zip"))
+
+        data = {
+            'magazine_id': sample_magazine.id,
+            'articles_data': mock_articles_data
+        }
+
+        response = client.post(
+            url_for('articles.upload_articles'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp == {
+            'articles': [],
+            'errors': ["Bad Zip"]
+        }

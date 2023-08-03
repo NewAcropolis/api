@@ -1,6 +1,10 @@
 import base64
+import docx
+import io
 import os
 from random import randint
+from zipfile import ZipFile
+
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
@@ -27,7 +31,11 @@ from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.errors import register_errors, InvalidRequest
 
 from app.routes.articles.schemas import (
-    post_import_articles_schema, post_update_article_schema, post_create_article_schema)
+    post_import_articles_schema,
+    post_update_article_schema,
+    post_create_article_schema,
+    post_upload_articles_schema
+)
 
 from app.models import Article, APPROVED, READY, REJECTED
 from app.schema_validation import validate
@@ -114,6 +122,71 @@ def import_articles():
         res['errors'] = errors
 
     return jsonify(res), 201 if articles else 400 if errors else 200
+
+
+@articles_blueprint.route('/articles/upload', methods=['POST'])
+@jwt_required()
+def upload_articles():
+    data = request.get_json(force=True)
+    validate(data, post_upload_articles_schema)
+
+    file_like_object = io.BytesIO(base64.b64decode(data['articles_data']))
+    zipfile_ob = ZipFile(file_like_object)
+
+    articles = []
+    errors = []
+
+    try:
+        for name in zipfile_ob.namelist():
+            article = zipfile_ob.read(name)
+
+            doc = docx.Document(io.BytesIO(article))
+            fullText = []
+            article_html = author = title = ""
+            is_title = True
+            sources_found = False
+            for para in doc.paragraphs:
+                if not para.text.strip():
+                    continue
+                fullText.append(para.text)
+                if is_title:
+                    # if the title is more than 255 chars long then take title from the filename
+                    # assumes that title has '_final.docx' suffix
+                    if len(para.text) < 256:
+                        article_html += f"<h1>{para.text}</h1>"
+                        title = para.text
+                    else:
+                        article_html += f"<p>{para.text}</p>"
+                        title = name.replace("_final.docx", "").replace("_", " ").capitalize()
+                    is_title = False
+                else:
+                    article_html += f"<p>{para.text}</p>"
+
+                    # usually author is at the end of the article unless sources are provided
+                    if para.text.lower() == "sources:":
+                        sources_found = True
+                    elif not sources_found:
+                        author = para.text
+
+            dao_create_article(
+                Article(
+                    source_filename=name,
+                    title=title,
+                    author=author,
+                    content=article_html,
+                    magazine_id=data['magazine_id']
+                )
+            )
+            articles.append(name)
+    except Exception as e:
+        errors.append(str(e))
+    resp = {
+        'articles': articles
+    }
+
+    if errors:
+        resp.update({'errors': errors})
+    return resp
 
 
 @article_blueprint.route('/article', methods=['POST'])

@@ -31,6 +31,22 @@ post_import_articles_schema = {
     }
 }
 
+post_upload_articles_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for uploading articles",
+    "type": "object",
+    "properties": {
+        "magazine_id": uuid,
+        "articles_data": {
+            "type": ["string", "null"],
+            "media": {
+                "binaryEncoding": "base64",
+                "type": "application/zip"
+            }
+        }
+    }
+}
+
 post_update_article_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "POST schema for updating article",
