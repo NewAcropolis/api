@@ -5,6 +5,7 @@ import base64
 import os
 import pytest
 import uuid
+from zipfile import BadZipFile
 
 from flask import json, url_for
 from freezegun import freeze_time
@@ -432,8 +433,7 @@ class WhenPostingImportZip:
 
     @pytest.fixture
     def mock_articles_data(self):
-        DATA_ROOT = os.path.join(os.path.dirname(__file__), "../../../../data/articles/")
-        filename = f"{DATA_ROOT}art.zip"
+        filename = os.path.join('tests', 'test_files', 'art.zip')
 
         articles_data = ''
         with open(filename, "rb") as f:
@@ -466,7 +466,6 @@ class WhenPostingImportZip:
         assert articles[1].title == 'Test 2'
 
     def it_handles_errors(self, mocker, client, db_session, sample_magazine, mock_articles_data):
-        from zipfile import BadZipFile
         mocker.patch('app.routes.articles.rest.ZipFile.namelist', side_effect=BadZipFile("Bad Zip"))
 
         data = {

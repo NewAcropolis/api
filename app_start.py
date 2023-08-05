@@ -79,7 +79,7 @@ def send_stats():
 @manager.command
 def create_test_zip():
     """Create zipfile for testing"""
-    DATA_ROOT = "data/articles/"
+    DATA_ROOT = os.path.join('tests', 'test_files')
     with ZipFile(f"{DATA_ROOT}art.zip", 'w', ZIP_DEFLATED) as myzip:
         os.chdir(DATA_ROOT + "/docs")
         myzip.write("Test 1.docx", arcname="test_1_final.docx")
