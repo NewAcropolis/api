@@ -23,6 +23,7 @@ psycopg2-binary==2.8.5
 pyOpenSSL==18.0.0
 pypng==0.0.20
 pyqrcode==1.2.1
+python-docx
 redis==3.5.3
 requests>=2.0.0
 six==1.15.0
