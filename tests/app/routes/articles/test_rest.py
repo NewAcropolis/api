@@ -13,7 +13,7 @@ from mock import call
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.dao.articles_dao import dao_get_articles
+from app.dao.articles_dao import dao_create_article, dao_get_articles
 from app.models import Article, DRAFT, READY, APPROVED, REJECTED
 from tests.conftest import create_authorization_header, base64img_encoded, TEST_ADMIN_USER
 
@@ -485,3 +485,29 @@ class WhenPostingImportZip:
             'articles': [],
             'errors': ["Bad Zip"]
         }
+
+    def it_handles_duplicate_articles(self, client, db_session, sample_magazine, mock_articles_data):
+        data = {
+            'magazine_id': sample_magazine.id,
+            'articles_data': mock_articles_data
+        }
+
+        article = Article(title="Test 2", author="Test author")
+        dao_create_article(article)
+
+        response = client.post(
+            url_for('articles.upload_articles'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp == {
+            'articles': ['test_1_final.docx'],
+            'errors': [f'Article: Test 2 by Test author exists ({article.id})']
+        }
+
+        articles = dao_get_articles()
+        assert len(articles) == 2
+        assert articles[0].title == 'Test 1'
+        assert articles[1].title == 'Test 2'
