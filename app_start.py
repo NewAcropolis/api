@@ -80,7 +80,7 @@ def send_stats():
 def create_test_zip():
     """Create zipfile for testing"""
     DATA_ROOT = os.path.join('tests', 'test_files')
-    with ZipFile(f"{DATA_ROOT}art.zip", 'w', ZIP_DEFLATED) as myzip:
+    with ZipFile(f"{DATA_ROOT}/art.zip", 'w', ZIP_DEFLATED) as myzip:
         os.chdir(DATA_ROOT + "/docs")
         myzip.write("Test 1.docx", arcname="test_1_final.docx")
         myzip.write("Test 2.docx", arcname="test_2_final.docx")
