@@ -35,3 +35,7 @@ def dao_get_articles_with_images():
 
 def dao_get_article_by_id(article_id):
     return Article.query.filter_by(id=article_id).one()
+
+
+def dao_get_article_by_title_author(title, author):
+    return Article.query.filter_by(title=title, author=author).first()

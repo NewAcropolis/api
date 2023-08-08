@@ -25,7 +25,8 @@ from app.dao.articles_dao import (
     dao_get_articles,
     dao_update_article,
     dao_get_article_by_id,
-    dao_get_articles_with_images
+    dao_get_articles_with_images,
+    dao_get_article_by_title_author
 )
 from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.errors import register_errors, InvalidRequest
@@ -168,16 +169,20 @@ def upload_articles():
                     elif not sources_found:
                         author = para.text
 
-            dao_create_article(
-                Article(
-                    source_filename=name,
-                    title=title,
-                    author=author,
-                    content=article_html,
-                    magazine_id=data['magazine_id']
+            article_from_db = dao_get_article_by_title_author(title, author)
+            if article_from_db:
+                errors.append(f"Article: {title} by {author} exists ({str(article_from_db.id)})")
+            else:
+                dao_create_article(
+                    Article(
+                        source_filename=name,
+                        title=title,
+                        author=author,
+                        content=article_html,
+                        magazine_id=data['magazine_id']
+                    )
                 )
-            )
-            articles.append(name)
+                articles.append(name)
     except Exception as e:
         errors.append(str(e))
     resp = {
@@ -201,12 +206,17 @@ def add_article():
         author=data['author'],
         content=data['content'],
         image_filename=data['image_filename'],
-        magazine_id=data['magazine_id'],
+        magazine_id=data.get('magazine_id'),
         tags=data['tags'],
         article_state=data['article_state']
     )
 
-    dao_create_article(article)
+    article_from_db = dao_get_article_by_title_author(data['title'], data['author'])
+
+    if article_from_db:
+        raise InvalidRequest(f"Article: {data['title']} by {data['author']} exists ({str(article_from_db.id)})", 400)
+    else:
+        dao_create_article(article)
 
     image_filename = data.get('image_filename')
 
