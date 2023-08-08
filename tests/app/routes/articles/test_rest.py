@@ -206,6 +206,29 @@ class WhenPostingAddArticle:
         assert articles[0].tags == data['tags']
         assert articles[0].magazine_id == sample_magazine.id
 
+    def it_handles_duplicate_article_when_adding(self, client, db_session, sample_article):
+        data = {
+            'title': 'Ancient Greece',
+            'author': 'Mrs Black',
+            'content': 'Something interesting',
+            'image_filename': 'new_filename.jpg',
+            'image_data': base64img_encoded(),
+            'tags': 'Some tag',
+            'article_state': 'draft'
+        }
+        response = client.post(
+            url_for('article.add_article'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 400
+        assert response.json['message'] == f"Article: Ancient Greece by Mrs Black exists ({sample_article.id})"
+        assert response.json['result'] == 'error'
+
+        articles = Article.query.all()
+
+        assert len(articles) == 1
+
     def it_raises_400_if_image_filename_not_found(
         self, client, db_session, sample_magazine, mock_storage_no_blob
     ):

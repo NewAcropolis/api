@@ -206,12 +206,17 @@ def add_article():
         author=data['author'],
         content=data['content'],
         image_filename=data['image_filename'],
-        magazine_id=data['magazine_id'],
+        magazine_id=data.get('magazine_id'),
         tags=data['tags'],
         article_state=data['article_state']
     )
 
-    dao_create_article(article)
+    article_from_db = dao_get_article_by_title_author(data['title'], data['author'])
+
+    if article_from_db:
+        raise InvalidRequest(f"Article: {data['title']} by {data['author']} exists ({str(article_from_db.id)})", 400)
+    else:
+        dao_create_article(article)
 
     image_filename = data.get('image_filename')
 
