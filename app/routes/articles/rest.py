@@ -171,18 +171,30 @@ def upload_articles():
 
             article_from_db = dao_get_article_by_title_author(title, author)
             if article_from_db:
-                errors.append(f"Article: {title} by {author} exists ({str(article_from_db.id)})")
-            else:
-                dao_create_article(
-                    Article(
-                        source_filename=name,
-                        title=title,
-                        author=author,
-                        content=article_html,
-                        magazine_id=data['magazine_id']
-                    )
+                errors.append(
+                    {
+                        "article": f"{title} by {author} exists",
+                        "id": str(article_from_db.id)
+                    }
                 )
-                articles.append(name)
+            else:
+                article = Article(
+                    source_filename=name,
+                    title=title,
+                    author=author,
+                    content=article_html,
+                    magazine_id=data['magazine_id'] if data['magazine_id'] else None
+                )
+                dao_create_article(
+                    article
+                )
+                articles.append(
+                    {
+                        "name": name,
+                        "id": str(article.id)
+                    }
+                )
+                current_app.logger.info(f"Uploading article {title} by {author}, {article.id}")
     except Exception as e:
         errors.append(str(e))
     resp = {
@@ -191,7 +203,7 @@ def upload_articles():
 
     if errors:
         resp.update({'errors': errors})
-    return resp
+    return jsonify(resp)
 
 
 @article_blueprint.route('/article', methods=['POST'])
