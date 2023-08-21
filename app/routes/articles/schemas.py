@@ -1,4 +1,4 @@
-from app.schema_validation.definitions import uuid, number, state
+from app.schema_validation.definitions import number, state
 
 
 post_import_article_schema = {
@@ -36,7 +36,6 @@ post_upload_articles_schema = {
     "description": "POST schema for uploading articles",
     "type": "object",
     "properties": {
-        "magazine_id": uuid,
         "articles_data": {
             "type": ["string", "null"],
             "media": {

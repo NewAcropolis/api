@@ -478,9 +478,20 @@ class WhenPostingImportZip:
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
+        articles = Article.query.all()
+
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp == {
-            'articles': ['test_1_final.docx', 'test_2_final.docx']
+            'articles': [
+                {
+                    'name': articles[0].source_filename,
+                    'id': str(articles[0].id)
+                },
+                {
+                    'name': articles[1].source_filename,
+                    'id': str(articles[1].id)
+                }
+            ]
         }
 
         articles = dao_get_articles()
@@ -515,8 +526,8 @@ class WhenPostingImportZip:
             'articles_data': mock_articles_data
         }
 
-        article = Article(title="Test 2", author="Test author")
-        dao_create_article(article)
+        article_2 = Article(title="Test 2", author="Test author")
+        dao_create_article(article_2)
 
         response = client.post(
             url_for('articles.upload_articles'),
@@ -524,10 +535,19 @@ class WhenPostingImportZip:
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
+        article_1 = Article.query.filter_by(source_filename='test_1_final.docx').one()
+
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp == {
-            'articles': ['test_1_final.docx'],
-            'errors': [f'Article: Test 2 by Test author exists ({article.id})']
+            'articles': [
+                {'name': article_1.source_filename, 'id': str(article_1.id)}
+            ],
+            'errors': [
+                {
+                    'article': 'Test 2 by Test author exists',
+                    'id': str(article_2.id)
+                }
+            ]
         }
 
         articles = dao_get_articles()
