@@ -25,7 +25,7 @@ jobs:
       TEST_DATABASE_URI: postgresql://postgres@localhost/na_api_test
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - name: Setup dependencies
