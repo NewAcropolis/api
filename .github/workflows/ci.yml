@@ -33,16 +33,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends postgresql-client
           sudo apt-get install build-essential libpoppler-cpp-dev pkg-config
-          sudo apt-get install ghostscript
+          sudo apt-get install ghostscript imagemagick
           sudo mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.off
       - name: Run tests
         run: |
           rm -rf env
           python3 -m venv env
-          source env/bin/activate
+          source ./env/bin/activate
+          pip install -r requirements_tests.txt
           pip install coveralls==2.2.0
-      - name: Run tests
-        run: ./scripts/run_tests.sh
+
+          ./scripts/run_tests.sh
       - name: Coveralls
         run: coveralls
         env:
