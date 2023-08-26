@@ -839,7 +839,7 @@ class Order(db.Model):
             for item in array:
                 _json = item.serialize()
                 if 'created_at' in _json and delete_created_at:
-                    del(_json['created_at'])
+                    del _json['created_at']
                 _list.append(_json)
             return _list
 

@@ -25,23 +25,27 @@ jobs:
       TEST_DATABASE_URI: postgresql://postgres@localhost/na_api_test
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.10'
       - name: Setup dependencies
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends postgresql-client
           sudo apt-get install build-essential libpoppler-cpp-dev pkg-config
-          sudo apt-get install ghostscript
+          sudo apt-get install ghostscript imagemagick
           sudo mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.off
-
-          ./scripts/bootstrap.sh
-          pip install coveralls==2.2.0
       - name: Run tests
-        run: ./scripts/run_tests.sh
+        run: |
+          rm -rf env
+          python3 -m venv env
+          source ./env/bin/activate
+          pip install -r requirements_tests.txt
+          pip install -U coveralls==3.3.1
+
+          ./scripts/run_tests.sh
       - name: Coveralls
-        run: coveralls
+        uses: coverallsapp/github-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   deploy_to_test:

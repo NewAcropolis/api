@@ -1,11 +1,11 @@
 -r requirements.txt
 
 argh==0.26.2
-flake8==3.6.0
+flake8==6.0.0
 freezegun==0.3.15
 mock==2.0.0
-pycodestyle==2.4.0
-pytest==5.2
+pycodestyle==2.10.0
+pytest==7.2
 pytest-cov==2.11.1
 pytest-eradicate==0.0.3
 pytest-flake8==1.0.0
