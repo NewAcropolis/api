@@ -35,8 +35,11 @@ jobs:
           sudo apt-get install build-essential libpoppler-cpp-dev pkg-config
           sudo apt-get install ghostscript
           sudo mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.off
-
-          ./scripts/bootstrap.sh
+      - name: Run tests
+        run: |
+          rm -rf env
+          python3 -m venv env
+          source env/bin/activate
           pip install coveralls==2.2.0
       - name: Run tests
         run: ./scripts/run_tests.sh
