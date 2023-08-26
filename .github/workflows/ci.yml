@@ -41,7 +41,7 @@ jobs:
           python3 -m venv env
           source ./env/bin/activate
           pip install -r requirements_tests.txt
-          pip install -U coveralls
+          pip install -U coveralls==3.3.1
 
           ./scripts/run_tests.sh
       - name: Coveralls
