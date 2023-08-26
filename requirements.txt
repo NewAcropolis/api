@@ -1,4 +1,4 @@
-beautifulsoup4==4.6.0
+beautifulsoup4==4.12.2
 celery==5.2.2
 cryptography==41.0.0
 dateutils==0.6.7
