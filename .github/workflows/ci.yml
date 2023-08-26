@@ -41,11 +41,11 @@ jobs:
           python3 -m venv env
           source ./env/bin/activate
           pip install -r requirements_tests.txt
-          pip install coveralls==2.2.0
+          pip install -U coveralls
 
           ./scripts/run_tests.sh
       - name: Coveralls
-        run: coveralls
+        uses: coverallsapp/github-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   deploy_to_test:
