@@ -6,6 +6,11 @@ if [ -z "$VIRTUAL_ENV" ] && [ -d env ]; then
   source ./env/bin/activate
 fi
 
+if [ -z "$DB_HOST" ]; then
+  echo 'setting DB_HOST to localhost'
+  DB_HOST=localhost
+fi
+
 ENV=development
 www_dir="www-$ENV"
 
@@ -36,7 +41,7 @@ eval "DATABASE_URL=$DATABASE_URL_ENV"
 if psql -lqt "${DATABASE_URL}" | cut -d \| -f 1 | grep -qw ${DATABASE_URL##*/}; then
   echo ${DATABASE_URL##*/} 'already exists'
 else
-  createdb ${DATABASE_URL##*/}
+  createdb -h $DB_HOST ${DATABASE_URL##*/}
   echo ${DATABASE_URL##*/} 'created'
 fi
 

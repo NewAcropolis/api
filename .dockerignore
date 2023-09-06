@@ -1,0 +1,9 @@
+.cache
+.pytest_cache
+.vscode
+data
+env
+venv
+venv*
+notes
+*environment.sh

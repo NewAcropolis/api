@@ -1,0 +1,101 @@
+version: "3"
+
+services:
+  na_api:
+    container_name: na_api
+    env_file:
+      - .env
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    links:
+      - na_db:db
+      - na_storage:storage
+    depends_on: 
+      - na_db
+      - na_redis
+    command: >
+      bash -c "
+      ./scripts/run_app.sh development"
+    # tail -f /dev/null
+    volumes:
+      - api_data:/usr/lib/na_api
+    networks:
+      - na_net
+
+  setup_na_api:
+    container_name: setup_na_api
+    env_file:
+      - .env
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    links:
+      - na_db:db
+      - na_api
+      - na_storage:storage
+    depends_on: 
+      - na_db
+      - na_api
+      - na_storage
+    command: >
+      bash -c "
+      . ./docker/setup-data.sh"
+    volumes:
+      - api_data:/usr/lib/na_api
+    networks:
+      - na_net
+
+  na_db:
+    container_name: na_db
+    build:
+      context: ../
+      dockerfile: docker/postgres.Dockerfile
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - PGDATA=/var/lib/postgresql/data/na_api/
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - na_net
+
+  na_redis:
+    container_name: na_redis
+    image: redis:6.2.5-alpine3.14
+    networks:
+      - na_net
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ../
+      dockerfile: docker/nginx.Dockerfile
+    links:
+      - na_api:api
+      - na_storage:storage
+    ports:
+      - 0.0.0.0:5001:80
+    networks:
+      - na_net
+
+  na_storage:
+    container_name: na_storage
+    image: fsouza/fake-gcs-server
+    ports:
+      - 8083:8083
+    command: ["-scheme", "http", "-port", "8083", "-external-url", "http://[::]:8083", "-backend", "memory"]
+    volumes:
+      - ./data:/data
+    networks:
+      - na_net
+
+volumes:
+  api_data:
+  pg_data:
+  redis_data:
+
+networks:
+  na_net:
+      driver: bridge
