@@ -54,9 +54,10 @@ class MockBucket:
 
 
 class MockEmptyStorageClient:
-    def __init__(self, credentials=None, project=None):
+    def __init__(self, credentials=None, project=None, client_options=None):
         self.credentials = credentials
         self.project = project
+        self.client_options = client_options
         self.buckets = []
 
     def list_buckets(self):
@@ -308,3 +309,27 @@ class WhenUsingStorage:
             assert expected_hash == uploaded_hash
 
         assert "pdfs" == store.bucket.blob.filename.split('/')[1]
+
+    def it_uses_anonymous_client_in_docker(self, app, mocker):
+        mocker.patch.dict('app.utils.storage.current_app.config', {
+            'GOOGLE_APPLICATION_CREDENTIALS': '',
+            'PROJECT': 'test-project'
+        })
+
+        mocker.patch.dict('os.environ', {
+            'DB_HOST': 'db'
+        })
+
+        mocker.patch('app.utils.storage.Storage.is_running_docker', return_value=True)
+
+        mocker.patch("google.cloud.storage.Client", MockEmptyStorageClient)
+        mock_anon_creds = mocker.patch("app.utils.storage.AnonymousCredentials", return_value='anon-credentials')
+        mocker.patch("app.utils.storage.ClientOptions", return_value='test-options')
+
+        store = Storage('test-store')
+
+        assert mock_anon_creds.called
+        assert store.storage_client.credentials == 'anon-credentials'
+        assert store.storage_client.project == 'test-project'
+        assert store.storage_client.client_options == 'test-options'
+        assert store.storage_client.list_buckets() == ['test-store']

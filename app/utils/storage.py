@@ -10,6 +10,8 @@ werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import current_app
 from PIL import Image
 
+from google.api_core.client_options import ClientOptions
+from google.auth.credentials import AnonymousCredentials
 from google.auth import compute_engine
 from google.cloud import storage
 
@@ -19,15 +21,21 @@ from app.utils.pdf import extract_first_page
 class Storage(object):
 
     def __init__(self, bucket_name):
-        if self.no_google_config():
-            current_app.logger.info('Google credentials not available')
-            return
-
-        if not current_app.config["GOOGLE_APPLICATION_CREDENTIALS"]:
-            credentials = compute_engine.Credentials()
-            self.storage_client = storage.Client(credentials=credentials, project=current_app.config['PROJECT'])
+        if self.is_running_docker():
+            self.storage_client = storage.Client(
+                credentials=AnonymousCredentials(), project=current_app.config['PROJECT'],
+                client_options=ClientOptions(api_endpoint='http://storage:8083')
+            )
         else:
-            self.storage_client = storage.Client()
+            if self.no_google_config():
+                current_app.logger.info('Google credentials not available')
+                return
+
+            if not current_app.config["GOOGLE_APPLICATION_CREDENTIALS"]:
+                credentials = compute_engine.Credentials()
+                self.storage_client = storage.Client(credentials=credentials, project=current_app.config['PROJECT'])
+            else:
+                self.storage_client = storage.Client()
 
         if bucket_name not in [b.name for b in self.storage_client.list_buckets()]:
             self.bucket = self.storage_client.create_bucket(bucket_name)
@@ -35,10 +43,13 @@ class Storage(object):
         else:
             self.bucket = self.storage_client.get_bucket(bucket_name)
 
+    def is_running_docker(self):
+        return not current_app.config.get('TESTING') and os.environ.get("DB_HOST") == 'db'
+
     def no_google_config(self):
         return (
             not current_app.config.get('GOOGLE_APPLICATION_CREDENTIALS') and
-            current_app.config['ENVIRONMENT'] == 'development')
+            current_app.config['ENVIRONMENT'] == 'development' and not self.is_running_docker())
 
     def upload_blob(self, source_file_name, destination_blob_name, set_public=True):
         if self.no_google_config():

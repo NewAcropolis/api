@@ -1,0 +1,16 @@
+[
+    {
+        "id": "1",
+        "name": "Head Branch",
+        "address": "19 Compton Terrace N1 2UN, next door to Union Chapel.",
+        "tube": "Highbury & Islington (Victoria Line), 2 minutes walk",
+        "bus": "Bus routes 4, 19, 30, 43 & 277 stop nearby"
+    },
+    {
+        "id": "2",
+        "name": "Online Event",
+        "address": "Online",
+        "tube": "",
+        "bus": ""
+    }
+]

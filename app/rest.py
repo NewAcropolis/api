@@ -3,6 +3,7 @@ from queue import Queue
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import Blueprint, jsonify, current_app
+import os
 
 from app import celery
 from app import db
@@ -27,7 +28,7 @@ def are_celery_workers_running():
 @base_blueprint.route('/')
 def get_info():
     workers_running = False
-    if 'http://localhost' not in current_app.config['API_BASE_URL']:
+    if 'http://localhost' not in current_app.config['API_BASE_URL'] and os.environ.get('DB_HOST') != 'db':
         workers_running = are_celery_workers_running()
 
     current_app.logger.info('get_info')

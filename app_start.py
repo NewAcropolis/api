@@ -87,11 +87,13 @@ def create_test_zip():
 
 
 @manager.command
-def upload_file(filename):
+def upload_file(filename, target_filename=None):
     """Upload file."""
+    if not target_filename:
+        target_filename = f'test/{filename}'
     application.logger.info('Upload file')
     storage = Storage(application.config['STORAGE'])
-    storage.upload_blob(filename, f'test/{filename}', set_public=True)
+    storage.upload_blob(filename, target_filename, set_public=True)
 
 
 @manager.command

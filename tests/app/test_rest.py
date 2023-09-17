@@ -12,7 +12,11 @@ def mock_stats(mocker):
 
 class WhenAccessingSiteInfo(object):
 
-    def it_shows_info(self, mock_stats, client, db):
+    def it_shows_info(self, mocker, mock_stats, client, db):
+        mocker.patch.dict('os.environ', {
+            'DB_HOST': ''
+        })
+
         response = client.get(
             url_for('.get_info')
         )

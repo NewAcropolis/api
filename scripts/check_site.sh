@@ -10,6 +10,10 @@ do
     if [ ! -z "$json" ]; then
         commit=$(echo $json | jq -r '.commit')
         if [ "$commit" = "$GITHUB_SHA" ]; then
+            if [ "$2" = "no_workers" ]; then
+                echo "ok"
+                exit 0
+            fi
             workers=$(echo $json | jq -r '.workers')
             if [ "$workers" = "Running" ]; then
                 break
