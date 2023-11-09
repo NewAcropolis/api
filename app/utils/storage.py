@@ -85,14 +85,17 @@ class Storage(object):
 
         binary = base64.b64decode(base64data)
 
-        if content_type == 'application/pdf':
-            source_img = extract_first_page(binary)
+        try:
+            if content_type == 'application/pdf':
+                source_img = extract_first_page(binary)
 
-            self.generate_web_image(
-                destination_blob_name + '.png', BytesIO(source_img))
+                self.generate_web_image(
+                    destination_blob_name + '.png', BytesIO(source_img))
 
-        elif 'image/' in content_type and 'qr_codes/' not in destination_blob_name:
-            self.generate_web_image(destination_blob_name, BytesIO(binary))
+            elif 'image/' in content_type and 'qr_codes/' not in destination_blob_name:
+                self.generate_web_image(destination_blob_name, BytesIO(binary))
+        except Exception as e:
+            current_app.logger.error(f"Upload problem creating PDF web images: {str(e)}")
 
         blob.upload_from_string(binary, content_type=content_type)
         blob.make_public()

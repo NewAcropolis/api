@@ -310,6 +310,34 @@ class WhenUsingStorage:
 
         assert "pdfs" == store.bucket.blob.filename.split('/')[1]
 
+    def it_logs_error_when_exception_thrown_creating_pdf_web_images(self, app, mocker):
+        mocker.patch.dict('os.environ', {
+            'GOOGLE_APPLICATION_CREDENTIALS': 'path/to/creds'
+        })
+
+        mock_generate_web_image = mocker.patch(
+            "app.utils.storage.Storage.generate_web_image",
+            side_effect=Exception('Generate web image error')
+        )
+        mock_logger = mocker.patch("app.utils.storage.current_app.logger.error")
+
+        mocker.patch("google.cloud.storage.Client", MockStorageClient)
+        mocker.patch("google.auth.compute_engine.Credentials")
+
+        store = Storage('test-store')
+
+        with pytest.raises(expected_exception=Exception):
+            with open(os.path.join('tests', 'test_files', 'simple.pdf'), "rb") as f:
+                pdf = f.read()
+                store.upload_blob_from_base64string(
+                    'simple.pdf', 'simple.pdf', base64.b64encode(pdf), content_type='application/pdf')
+
+                assert store.bucket.blob.source_strings[2] == pdf
+
+        assert mock_logger.called
+        assert mock_logger.call_args[0][0] == "Upload problem creating PDF web images: Generate web image error"
+        assert mock_generate_web_image.called
+
     def it_uses_anonymous_client_in_docker(self, app, mocker):
         mocker.patch.dict('app.utils.storage.current_app.config', {
             'GOOGLE_APPLICATION_CREDENTIALS': '',
