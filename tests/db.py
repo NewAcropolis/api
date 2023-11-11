@@ -288,13 +288,15 @@ def create_magazine(
     old_filename=None,
     filename='new filename',
     tags='',
+    topics=''
 ):
     data = {
         'old_id': old_id,
         'title': title,
         'old_filename': old_filename,
         'filename': filename,
-        'tags': tags
+        'tags': tags,
+        'topics': topics
     }
 
     magazine = Magazine(**data)

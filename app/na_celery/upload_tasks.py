@@ -33,13 +33,14 @@ def upload_magazine(magazine_id, pdf_data):
             content_type='application/pdf'
         )
 
-        try:
-            topics = extract_topics(base64.b64decode(decoded_data))
-        except Exception as e:
-            topics = []
-            current_app.logger.error("Error extracting topics: %r", e)
+        if not magazine.topics:
+            try:
+                topics = extract_topics(base64.b64decode(decoded_data))
+            except Exception as e:
+                topics = []
+                current_app.logger.error("Error extracting topics: %r", e)
 
-        dao_update_record(Magazine, magazine_id, topics=topics)
+            dao_update_record(Magazine, magazine_id, topics=topics)
 
         email = dao_get_email_by_magazine_id(magazine_id)
 
