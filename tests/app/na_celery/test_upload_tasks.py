@@ -1,6 +1,6 @@
 from app.models import MAGAZINE
 from app.na_celery.upload_tasks import upload_magazine
-from tests.db import create_email
+from tests.db import create_email, create_magazine
 
 
 class WhenUploadingMagazinePdfs:
@@ -27,6 +27,22 @@ class WhenUploadingMagazinePdfs:
         assert mock_send_email.called
         assert '<div>Please review this email: {}/emails/{}</div>'.format(
             app.config['FRONTEND_ADMIN_URL'], str(email.id)) in mock_send_email.call_args[0][2]
+
+    def it_uploads_a_magazine_pdf_and_reuses_email_without_updating_topics(
+            self, app, db_session, mocker, sample_user):
+        magazine = create_magazine(topics="Test: Test topic")
+        mocker.patch('app.na_celery.upload_tasks.Storage')
+        mocker.patch('app.na_celery.upload_tasks.base64')
+        mocker.patch('app.na_celery.upload_tasks.extract_topics', return_value='Philosophy: Meaning of Life And Death')
+        mock_send_email = mocker.patch('app.na_celery.upload_tasks.send_smtp_email', return_value=200)
+        email = create_email(magazine_id=magazine.id, email_type=MAGAZINE)
+
+        upload_magazine(magazine.id, 'pdf data')
+
+        assert mock_send_email.called
+        assert '<div>Please review this email: {}/emails/{}</div>'.format(
+            app.config['FRONTEND_ADMIN_URL'], str(email.id)) in mock_send_email.call_args[0][2]
+        assert 'Test topic' in mock_send_email.call_args[0][2]
 
     def it_logs_errors(self, app, db_session, mocker, sample_magazine, sample_uuid):
         mocker.patch('app.na_celery.upload_tasks.dao_get_magazine_by_id')
