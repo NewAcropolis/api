@@ -19,6 +19,7 @@ pip uninstall flower
 
 # kill existing celery workers
 ps auxww | grep "celery worker -n worker-$ENV" | awk '{print $2}' | xargs kill -9
+ps auxww | grep "run_celery.celery beat" | awk '{print $2}' | xargs kill -9
 
 # give time for workers to shutdown
 sleep 10
