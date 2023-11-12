@@ -4,7 +4,7 @@ set -o pipefail
 echo "Checking: $1"
 
 n=0
-until [ $n -ge 10 ]
+until [ $n -ge 20 ]
 do
     json=$(curl -s -X GET "$1")
     if [ ! -z "$json" ]; then
