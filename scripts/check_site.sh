@@ -28,7 +28,7 @@ do
 done
 
 if [ -z "$commit" -o "$commit" != $GITHUB_SHA ]; then
-    echo 'failed '$commit
+    echo 'failed '$commit' expecting '$GITHUB_SHA
     exit 1
 else
     if [ "$workers" != "Running" ]; then
