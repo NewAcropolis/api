@@ -5,9 +5,8 @@ echo "Checking: $1"
 
 n=0
 until [ $n -ge 20 ]
-do
-    json=$(curl -s -X GET "$1")
-    echo "json: "$json
+do    
+    json=$(curl -s -X --connect-timeout 30 --max-time 120 GET "$1")
     if [ ! -z "$json" ]; then
         commit=$(echo $json | jq -r '.commit')
         if [ "$commit" = "$GITHUB_SHA" ]; then
