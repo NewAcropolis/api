@@ -7,6 +7,7 @@ n=0
 until [ $n -ge 20 ]
 do
     json=$(curl -s -X GET "$1")
+    echo "json: "$json
     if [ ! -z "$json" ]; then
         commit=$(echo $json | jq -r '.commit')
         if [ "$commit" = "$GITHUB_SHA" ]; then
