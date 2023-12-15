@@ -1,5 +1,6 @@
 import base64
 from datetime import datetime
+from io import BytesIO
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
@@ -146,7 +147,21 @@ def create_event():
 
         image_filename = target_image_filename
     elif image_filename:
-        if not storage.blob_exists(image_filename):
+        target_image_filename = '{}/{}'.format(event_year, str(event.id))
+        if 'tmp/' in image_filename:
+            try:
+                binary = storage.get_blob(image_filename)
+
+                current_app.logger.info(f"Moving {image_filename}")
+                storage.rename_image(image_filename, target_image_filename)
+
+                current_app.logger.info(f"Generating web images for {image_filename}")
+
+                storage.generate_web_image(target_image_filename, BytesIO(binary))
+                image_filename = target_image_filename
+            except Exception as e:
+                current_app.logger.error(f"Problem processing images {image_filename}: {str(e)}")
+        elif not storage.blob_exists(image_filename):
             raise InvalidRequest('{} does not exist'.format(image_filename), 400)
 
     event.image_filename = image_filename
@@ -314,22 +329,40 @@ def update_event(event_id):
             current_app.logger.warn('Storage not setup')
         else:
             storage = Storage(current_app.config['STORAGE'])
+            event_year = str(event.event_dates[0].event_datetime).split('-')[0]
+            target_image_filename = '{}/{}'.format(event_year, str(event_id))
+
+            if data.get('event_state') != APPROVED:
+                target_image_filename += '-temp'
+
             if image_data:
-                event_year = str(event.event_dates[0].event_datetime).split('-')[0]
-                target_image_filename = '{}/{}'.format(event_year, str(event_id))
-
-                if data.get('event_state') != APPROVED:
-                    target_image_filename += '-temp'
-
                 storage.upload_blob_from_base64string(
                     image_filename, target_image_filename, base64.b64decode(image_data))
 
                 unix_time = time.time()
                 image_filename = '{}?{}'.format(target_image_filename, unix_time)
             elif image_filename:
-                image_filename_without_cache_buster = image_filename.split('?')[0]
-                if not storage.blob_exists(image_filename_without_cache_buster):
-                    raise InvalidRequest('{} does not exist'.format(image_filename_without_cache_buster), 400)
+                if 'tmp/' in image_filename:
+                    current_app.logger.info(f"Moving {image_filename}")
+                    try:
+                        binary = storage.get_blob(image_filename)
+
+                        storage.rename_image(image_filename, target_image_filename)
+
+                        unix_time = time.time()
+                        image_filename = '{}?{}'.format(target_image_filename, unix_time)
+
+                        current_app.logger.info(f"Generating web images for {image_filename}")
+
+                        storage.generate_web_image(target_image_filename, BytesIO(binary))
+
+                        dao_update_event(event.id, image_filename=image_filename)
+                    except Exception as e:
+                        current_app.logger.error(f"Problem processing images {image_filename}: {str(e)}")
+                else:
+                    image_filename_without_cache_buster = image_filename.split('?')[0]
+                    if not storage.blob_exists(image_filename_without_cache_buster):
+                        raise InvalidRequest('{} does not exist'.format(image_filename_without_cache_buster), 400)
 
         if image_filename:
             if data.get('event_state') == APPROVED:
