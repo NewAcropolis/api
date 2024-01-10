@@ -22,6 +22,7 @@ from app.dao.events_dao import (
     dao_has_reserved_place,
     dao_get_reserved_places,
     dao_delete_event,
+    dao_get_existing_event_at_venue,
     dao_get_events,
     dao_get_event_by_id,
     dao_get_events_in_year,
@@ -106,6 +107,11 @@ def create_event():
         remote_access=data.get('remote_access'),
         remote_pw=data.get('remote_pw'),
     )
+
+    if dao_get_existing_event_at_venue(
+        [d['event_date'] for d in data.get('event_dates')], data.get('venue_id')
+    ):
+        raise InvalidRequest(f'{data["title"]} not added, already an event on same date and venue', 400)
 
     for event_date in data.get('event_dates'):
         if not event_year:
