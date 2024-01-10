@@ -95,3 +95,12 @@ def dao_get_past_year_events():
             EventDate.event_datetime > datetime.today() - timedelta(days=365)
         )
     ).join(Event.event_dates).order_by(EventDate.event_datetime).all()
+
+
+def dao_get_existing_event_at_venue(event_dates, venue_id):
+    return Event.query.filter(
+        and_(
+            Event.event_dates.any(EventDate.event_datetime.in_(event_dates)),
+            Event.venue_id == venue_id
+        )
+    ).join(Event.event_dates).order_by(EventDate.event_datetime).all()
