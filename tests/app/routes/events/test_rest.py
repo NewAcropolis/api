@@ -15,7 +15,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from app.errors import PaypalException
 from app.models import Event, EventDate, RejectReason, ReservedPlace, APPROVED, DRAFT, READY, REJECTED
 
-from tests.conftest import create_authorization_header, TEST_ADMIN_USER
+from tests.conftest import create_authorization_header, sample_event_with_dates, TEST_ADMIN_USER
 from tests.db import create_event, create_event_date, create_event_type, create_speaker, DATA_MAP
 
 base64img = (
@@ -750,6 +750,27 @@ class WhenPostingCreatingAnEvent:
         data = json.loads(response.get_data(as_text=True))
 
         assert data == {"message": "venue not found: {}".format(sample_uuid), "result": "error"}
+
+    def it_raises_400_when_creating_event_with_existing_dates_and_venue(
+            self, client, sample_req_event_data, sample_event_with_dates
+    ):
+        data = {
+            "event_type_id": sample_req_event_data['event_type'].id,
+            "title": "Test title",
+            "description": "Test description",
+            "event_dates": [{"event_date": str(sample_event_with_dates.event_dates[0].event_datetime)}],
+            "venue_id": sample_event_with_dates.venue_id,
+        }
+
+        response = client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+        data = json.loads(response.get_data(as_text=True))
+        assert data == {'message': 'Test title not added, already an event on same date and venue', 'result': 'error'}
 
     @freeze_time("2019-03-01T23:10:00")
     def it_stores_the_image_in_google_store(

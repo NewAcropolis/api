@@ -12,6 +12,7 @@ from app.dao.events_dao import (
     dao_get_future_events,
     dao_get_limited_events,
     dao_get_past_year_events,
+    dao_get_existing_event_at_venue
 )
 from app.models import Event, EventDate, RejectReason
 
@@ -190,3 +191,19 @@ class WhenUsingEventsDAO(object):
         assert len(events_from_db) == 2
         assert events_from_db[0] == event_2
         assert events_from_db[1] == sample_event_with_dates
+
+    def it_gets_existing_event_at_venue(self, db_session, sample_event_with_dates, sample_event, sample_event_type):
+        create_event(
+            title='another event',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2017-12-31T23:59:59')]
+        )
+
+        duplicate_events = dao_get_existing_event_at_venue(
+            [
+                str(sample_event_with_dates.event_dates[0].event_datetime),
+                str(sample_event_with_dates.event_dates[1].event_datetime)
+            ],
+            sample_event_with_dates.venue_id)
+
+        assert len(duplicate_events) == 1
