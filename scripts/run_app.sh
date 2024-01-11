@@ -13,11 +13,16 @@ fi
 
 ENV=development
 www_dir="www-$ENV"
+num_workers=1
 
 port=5001
 
 if [ ! -z "$1" ]; then
     ENV=$1
+
+    if [ "$ENV" = "live" ]; then
+      num_workers=3
+    fi
 
     if [ "$ENV" = "gunicorn" ]; then
       ENV=development
@@ -58,7 +63,7 @@ if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
   SOCKFILE=sock
   USER=root
   GROUP=root
-  NUM_WORKERS=3
+  NUM_WORKERS=$num_workers
   TIMEOUT=240
   
   echo "Starting $NAME"
