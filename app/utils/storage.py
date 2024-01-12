@@ -117,29 +117,35 @@ class Storage(object):
 
     def rename_image(self, source_name, target_name):  # pragma: no cover
         image_blob = self.bucket.get_blob(source_name)
-        standard_blob = self.bucket.get_blob("standard/" + source_name)
-        thumbnail_blob = self.bucket.get_blob("thumbnail/" + source_name)
-        self.bucket.rename_blob(image_blob, target_name)
-        self.bucket.rename_blob(standard_blob, "standard/" + target_name)
-        self.bucket.rename_blob(thumbnail_blob, "thumbnail/" + target_name)
-        current_app.logger.info(f"Object renamed: {source_name} to {target_name}")
+        if image_blob:
+            self.bucket.rename_blob(image_blob, target_name)
+            if not source_name.startswith('tmp/'):
+                standard_blob = self.bucket.get_blob("standard/" + source_name)
+                thumbnail_blob = self.bucket.get_blob("thumbnail/" + source_name)
+                self.bucket.rename_blob(standard_blob, "standard/" + target_name)
+                self.bucket.rename_blob(thumbnail_blob, "thumbnail/" + target_name)
+            current_app.logger.info(f"Object renamed: {source_name} to {target_name}")
 
     def get_blob(self, image_filename):  # pragma: no cover
         blob = self.bucket.get_blob(image_filename)
-        current_app.logger.info('Getting %s', image_filename)
-        blob_data = blob.download_as_string()
-        return blob_data
+        if blob:
+            current_app.logger.info('Getting %s', image_filename)
+            blob_data = blob.download_as_string()
+            return blob_data
+        else:
+            current_app.logger.info('Image not found: %s', image_filename)
+            return
 
     def generate_web_images(self, year=None):
         if not year:
             year = datetime.now().strftime("%Y")
 
-        print('Generate web images for {}/{}'.format(self.bucket.name, year))
+        current_app.logger.info('Generate web images for {}/{}'.format(self.bucket.name, year))
 
         for blob in self.storage_client.list_blobs(self.bucket.name, prefix='{}/'.format(year), delimiter='/'):
             source_img = BytesIO()
             blob.download_to_file(source_img)
-            print('Loaded {} bytes for {}'.format(sizeof_fmt(sys.getsizeof(source_img)), blob.name))
+            current_app.logger.info('Loaded {} bytes for {}'.format(sizeof_fmt(sys.getsizeof(source_img)), blob.name))
             self.generate_web_image(blob.name, source_img)
 
     def generate_web_image(self, filename, source_img, size=None):

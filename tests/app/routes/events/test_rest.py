@@ -165,11 +165,14 @@ def mock_paypal_task(mocker):
 def mock_storage_without_asserts(mocker):
     mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
     mocker.patch("app.utils.storage.Storage.blob_exists", return_value=True)
+    mocker.patch("app.utils.storage.Storage.get_blob", return_value=b'test_blob')
     mocker.patch("app.utils.storage.Storage.upload_blob")
     mock_storage_rename = mocker.patch("app.utils.storage.Storage.rename_image")
+    mock_storage_generate_web_image = mocker.patch("app.utils.storage.Storage.generate_web_image")
 
     return {
-        'mock_storage_rename': mock_storage_rename
+        'mock_storage_rename': mock_storage_rename,
+        'mock_storage_generate_web_image': mock_storage_generate_web_image
     }
 
 
@@ -505,10 +508,10 @@ class WhenPostingImportEvents(object):
 
 
 class WhenPostingCreatingAnEvent:
-    @pytest.fixture
-    def mock_storage_without_asserts(self, mocker):
-        mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
-        mocker.patch("app.utils.storage.Storage.upload_blob_from_base64string")
+    # @pytest.fixture
+    # def mock_storage_without_asserts(self, mocker):
+    #     mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+    #     mocker.patch("app.utils.storage.Storage.upload_blob_from_base64string")
 
     @pytest.fixture
     def mock_storage(self, mocker):
@@ -663,6 +666,77 @@ class WhenPostingCreatingAnEvent:
         assert json_events["title"] == data["title"]
         assert json_events["remote_access"] == data["remote_access"]
         assert json_events["remote_pw"] == data["remote_pw"]
+
+    def it_renames_tmp_directory_and_create_web_images(
+        self, mocker, client, db_session, sample_req_event_data_with_event,
+        mock_storage_without_asserts
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "tmp/11112222",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": APPROVED,
+        }
+
+        response = client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 201
+
+        assert mock_storage_without_asserts['mock_storage_rename'].called
+        assert mock_storage_without_asserts['mock_storage_rename'].call_args == call(
+            'tmp/11112222', f"2019/{response.json['id']}")
+        assert mock_storage_without_asserts['mock_storage_generate_web_image'].called
+        assert response.json['image_filename'].startswith(f"2019/{response.json['id']}")
+
+    def it_handles_error_with_tmp_directory(
+        self, mocker, client, db_session, sample_req_event_data_with_event
+    ):
+        mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mocker.patch("app.utils.storage.Storage.get_blob", side_effect=Exception('Storage error'))
+        mock_logger = mocker.patch('app.routes.events.rest.current_app.logger.error')
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "tmp/11112222",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": APPROVED,
+        }
+
+        client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert mock_logger.called
+        assert (mock_logger.call_args[0]) == ('Problem processing images tmp/11112222: Storage error',)
 
     def it_raises_400_when_missing_required_fields(self, client):
         response = client.post(
@@ -1255,6 +1329,77 @@ class WhenPostingUpdatingAnEvent:
         assert mock_storage_without_asserts['mock_storage_rename'].called
         assert mock_storage_without_asserts['mock_storage_rename'].call_args == call('2019/XX-temp', '2019/XX')
         assert response.json['image_filename'] == '2019/XX'
+
+    def it_renames_tmp_directory_and_create_web_images(
+        self, mocker, client, db_session, sample_req_event_data_with_event,
+        mock_storage_without_asserts
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "tmp/11112222",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": APPROVED,
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        assert mock_storage_without_asserts['mock_storage_rename'].called
+        assert mock_storage_without_asserts['mock_storage_rename'].call_args == call(
+            'tmp/11112222', f"2019/{sample_req_event_data_with_event['event'].id}")
+        assert mock_storage_without_asserts['mock_storage_generate_web_image'].called
+        assert response.json['image_filename'].startswith(f"2019/{sample_req_event_data_with_event['event'].id}")
+
+    def it_handles_error_with_tmp_directory(
+        self, mocker, client, db_session, sample_req_event_data_with_event
+    ):
+        mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
+        mocker.patch("app.utils.storage.Storage.get_blob", side_effect=Exception('Storage error'))
+        mock_logger = mocker.patch('app.routes.events.rest.current_app.logger.error')
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "tmp/11112222",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": APPROVED,
+        }
+
+        client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert mock_logger.called
+        assert (mock_logger.call_args[0]) == ('Problem processing images tmp/11112222: Storage error',)
 
     def it_logs_warning_if_no_temp_image_file_when_approved(
         self, mocker, client, db_session, sample_req_event_data_with_event,
