@@ -18,6 +18,8 @@ do
             if [ "$workers" = "Running" ]; then
                 break
             fi
+        else
+            echo "got $commit"
         fi
     fi
 
