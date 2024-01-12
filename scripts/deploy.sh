@@ -177,7 +177,7 @@ set +a
     fi
 
     if [ -z "$RESTART_CELERY" ]; then
-        ./scripts/check_site.sh localhost:$port
+       source ./scripts/check_site.sh localhost:$port
     fi
 else
     echo "$port"
