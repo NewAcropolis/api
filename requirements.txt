@@ -11,13 +11,13 @@ google-cloud-storage==1.44.0
 gevent==23.9.1
 gunicorn==20.0.2
 idna==2.7
-imagehash==4.0
+imagehash==4.3.1
 iso8601==0.1.12
 jsonschema==2.6.0
 kombu==5.2.2
 markupsafe==2.1.1
 pdftotext==2.2.2
-pillow==9.3.0
+pillow==10.2.0
 protobuf==3.19.5
 psycopg2-binary==2.9.7
 pyOpenSSL==18.0.0
