@@ -156,7 +156,7 @@ class Storage(object):
 
         img = Image.open(source_img)
 
-        img.thumbnail(size, Image.ANTIALIAS)
+        img.thumbnail(size, Image.LANCZOS)
         img.save(standard_img, "PNG", optimize=True, quality=80)
 
         # create the image object to be the final product
@@ -169,7 +169,7 @@ class Storage(object):
             standard_img.getvalue()
         )
 
-        img.thumbnail(current_app.config.get('THUMBNAIL_MAXSIZE'), Image.ANTIALIAS)
+        img.thumbnail(current_app.config.get('THUMBNAIL_MAXSIZE'), Image.LANCZOS)
         img.save(thumbnail_img, "PNG", optimize=True, quality=80)
 
         self.upload_web_image(
