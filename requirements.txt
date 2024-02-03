@@ -1,6 +1,6 @@
 beautifulsoup4==4.12.2
 celery==5.2.2
-cryptography==41.0.0
+cryptography==41.0.6
 dateutils==0.6.7
 Flask==2.3.2
 Flask-Migrate==2.6.0
