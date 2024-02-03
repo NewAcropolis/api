@@ -1,6 +1,26 @@
 # New Acropolis UK API  [![Build Status](https://travis-ci.org/NewAcropolis/api.svg?branch=master)](https://travis-ci.org/NewAcropolis/api)
 [![Coverage Status](https://coveralls.io/repos/github/NewAcropolis/api/badge.svg?branch=master)](https://coveralls.io/github/NewAcropolis/api?branch=master)
 
+## Quickstart with docker
+
+Install [Docker](https://docs.docker.com/desktop/install/mac-install/) first before starting the docker engine and run this command on the terminal - 
+
+`docker-compose -f docker/docker-compose.yml up`
+
+This will set up a docker stack with test data which the frontend app will be able to connect to. If you make changes to the code you will need to run a `build` command (replacing the `up` command) before doing another `up`. Another useful `docker-compose` command is `down` in place of `up` which clears down the docker stack. 
+
+If you want to make code changes directly on the docker container then you can run a `docker exec -it na_api bash` and then locate the file that you want to change and edit it using `vi`, please note that if you want to keep any changes you will have to copy them to the source code.
+
+Finally to clear out docker images and other resource files that you don't need run a `docker system prune`.
+
+## Running the API directly on a machine
+
+## Start local celery workers
+
+Celery workers process tasks in the background so that the main app can continue processing requests without blocking.
+
+`make start-local-celery`
+
 ## Create virtualenv
 
 A Virtual Environment is an isolated working copy of Python which
