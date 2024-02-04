@@ -30,6 +30,6 @@ six==1.15.0
 SQLAlchemy==1.4
 vine==5.0.0
 Wand==0.5.8
-Werkzeug==2.3.3
+Werkzeug==2.3.8
 
 -e git+https://github.com/NewAcropolis/na-common.git@4efb1dabcaa55e0c24562f7dcb56f429e90b45c1#egg=na-common
