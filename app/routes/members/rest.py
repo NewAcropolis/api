@@ -11,6 +11,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from flask_jwt_extended import jwt_required
 
+from app.comms.encryption import encrypt
 from app.dao.members_dao import (
     dao_create_member,
     dao_get_members,
@@ -123,7 +124,7 @@ def update_member(unsubcode):
 
     member = _get_member_from_unsubcode(unsubcode)
     old_name = member.name
-    dao_update_member(member.id, name=data['name'], email=data['email'])
+    dao_update_member(member.id, name=data['name'], email=data['email'], active=data['active'])
 
     return jsonify({'message': '{} updated'.format(old_name)})
 
@@ -134,6 +135,23 @@ def get_members():
     members = [m.serialize() for m in dao_get_members()]
 
     return jsonify(members)
+
+
+@members_blueprint.route('/member/email/<email>', methods=['GET'])
+@jwt_required()
+def get_member_by_email(email):
+    member = dao_get_member_by_email(email)
+
+    if member:
+        _member = member.serialize()
+        unsubcode = encrypt(
+            "{}={}".format(current_app.config['EMAIL_TOKENS']['member_id'], _member['id']),
+            current_app.config['EMAIL_UNSUB_SALT']
+        )
+        _member['unsubcode'] = unsubcode
+        return jsonify(_member)
+    else:
+        return {'message': f'No member found for {email}'}, 404
 
 
 @members_blueprint.route('/members/import', methods=['POST'])

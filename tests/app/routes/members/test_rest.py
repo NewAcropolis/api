@@ -1,7 +1,7 @@
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
-from flask import json, jsonify, url_for
+from flask import current_app, json, jsonify, url_for
 from tests.conftest import create_authorization_header
 
 from app.comms.encryption import encrypt
@@ -23,6 +23,29 @@ class WhenGettingMembers:
         assert len(response.json) == 2
         assert response.json[0] == jsonify(sample_member.serialize()).json
         assert response.json[1] == jsonify(member.serialize()).json
+
+    def it_returns_member_by_email(self, client, db_session, sample_member):
+        member = create_member(name='Sid Green', email='sid@example.com', active=True)
+        unsubcode = encrypt(
+            "{}={}".format(current_app.config['EMAIL_TOKENS']['member_id'], member.id),
+            current_app.config['EMAIL_UNSUB_SALT']
+        )
+        _member_json = member.serialize()
+        _member_json['unsubcode'] = unsubcode
+
+        response = client.get(
+            url_for('members.get_member_by_email', email=member.email),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.json == jsonify(_member_json).json
+
+    def it_returns_404_nonmember_by_email(self, client, db_session, sample_member):
+        response = client.get(
+            url_for('members.get_member_by_email', email='unknown@email.com'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.json == {'message': 'No member found for unknown@email.com'}
 
     def it_gets_member_from_unsubcode(self, app, client, db_session, sample_member):
         unsubcode = encrypt(
@@ -115,6 +138,7 @@ class WhenPostingMembers:
         data = {
             'name': 'New test member',
             'email': 'new_email@test.com',
+            'active': True,
         }
 
         response = client.post(
