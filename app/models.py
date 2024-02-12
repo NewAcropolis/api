@@ -725,7 +725,7 @@ class TokenBlacklist(db.Model):
         }
 
 
-ACCESS_AREAS = ['email', 'event', 'article', 'cache', 'magazine', 'order']
+ACCESS_AREAS = ['email', 'event', 'article', 'cache', 'magazine', 'order', 'member']
 USER_ADMIN = 'admin'
 
 
