@@ -51,6 +51,7 @@ post_update_member_schema = {
     "properties": {
         "name": {"type": "string"},
         "email": {"format": "email", "type": "string"},
+        "active": {"type": "boolean"}
     },
     "required": ["name", "email"]
 }
