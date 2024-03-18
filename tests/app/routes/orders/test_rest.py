@@ -1146,8 +1146,8 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
-            "<td> = 5</td></tr></table><p>Not enough delivery paid, &pound;1.50 due. Please <a href='"
-            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/1.50'>complete</a> your order.</p>")
+            "<td> = 5</td></tr></table><p>Not enough delivery paid, &pound;2.50 due. Please <a href='"
+            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/2.50'>complete</a> your order.</p>")
 
     def it_sends_an_email_if_delivery_zone_not_recognized(
         self, mocker, app, client, db_session, sample_book, sample_admin_user
@@ -1182,8 +1182,8 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
-            "<td> = 5</td></tr></table><p>No delivery fee paid, &pound;6 due. Please <a href='"
-            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/6'>complete</a> your order.</p>"
+            "<td> = 5</td></tr></table><p>No delivery fee paid, &pound;10 due. Please <a href='"
+            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/10'>complete</a> your order.</p>"
             f"<p>Errors in order: <div>Delivery zone: Unknown not found</div></p>")
         assert mock_send_smtp_email.called
 
@@ -1213,8 +1213,8 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args == call(
             'payer@example.com', 'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td>"
-            "<td> x 1</td><td> = 5</td></tr></table><p>No delivery fee paid, &pound;6 due. "
-            f"Please <a href='http://frontend-test/order/extra/{orders[0].txn_id}/RoW/6'>complete</a> your order.</p>"
+            "<td> x 1</td><td> = 5</td></tr></table><p>No delivery fee paid, &pound;10 due. "
+            f"Please <a href='http://frontend-test/order/extra/{orders[0].txn_id}/RoW/10'>complete</a> your order.</p>"
         )
 
     def it_sends_payer_and_admin_emails_if_more_than_1_delivery_id_refund(
@@ -1249,15 +1249,15 @@ class WhenHandlingPaypalIPN:
         assert mock_send_smtp_email.call_args_list[0] == call(
             'admin@example.com', 'New Acropolis refund',
             f"Transaction ID: {orders[0].txn_id}<br>Order ID: {orders[0].id}<br>"
-            "Refund of &pound;3 due as wrong delivery fee paid.<p>Order delivery zones: <table>"
-            "<tr><td>Europe</td><td>4.50</td></tr><tr><td>Europe</td><td>4.50</td></tr></table>Total: &pound;9</p>"
-            "<p>Expected delivery zone: RoW - &pound;6</p>"
+            "Refund of &pound;5 due as wrong delivery fee paid.<p>Order delivery zones: <table>"
+            "<tr><td>Europe</td><td>7.50</td></tr><tr><td>Europe</td><td>7.50</td></tr></table>Total: &pound;15</p>"
+            "<p>Expected delivery zone: RoW - &pound;10</p>"
         )
         assert len(mock_send_email.call_args_list) == 1
         assert mock_send_email.call_args_list[0] == call(
             'payer@example.com', 'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
-            f"<td> = 5</td></tr></table><p>Refund of &pound;3 due as wrong delivery fee paid"
+            f"<td> = 5</td></tr></table><p>Refund of &pound;5 due as wrong delivery fee paid"
             f", please send a message to website admin if there is no refund within 5 working days.</p>"
         )
 
@@ -1325,8 +1325,8 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args == call(
             'payer@example.com', 'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
-            "<td> = 5</td></tr></table><p>No delivery fee paid, &pound;4.50 due. Please <a href='"
-            f"http://frontend-test/order/extra/{orders[0].txn_id}/Europe/4.50'>complete</a> your order.</p><p>Errors "
+            "<td> = 5</td></tr></table><p>No delivery fee paid, &pound;7.50 due. Please <a href='"
+            f"http://frontend-test/order/extra/{orders[0].txn_id}/Europe/7.50'>complete</a> your order.</p><p>Errors "
             "in order: <div>Delivery zone: Unknown not found</div><div>Delivery zone: Unknown not found</div></p>")
         assert mock_send_smtp_email.called
 
