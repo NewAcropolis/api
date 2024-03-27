@@ -273,6 +273,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
                         "no refund within 5 working days.</p>"
             else:
                 if products:
+                    shipping_cost = order_data.get('shipping_cost', 0)
                     for product in products:
                         if product['type'] == BOOK:
                             book_to_order = BookToOrder(
@@ -294,30 +295,34 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
                         delivery_message = "No address supplied. "
                         status = "missing_address"
                     else:
-                        address_delivery_zone = get_delivery_zone(order_data['address_country_code'])
-                        admin_message = ""
-
                         total_cost = 0
-                        for dz in delivery_zones:
-                            _d = [_dz for _dz in DELIVERY_ZONES if _dz['name'] == dz]
-                            if _d:
-                                d = _d[0]
-                                total_cost += d['price']
-                                _price = _get_nice_cost(d['price'])
-                                admin_message += f"<tr><td>{d['name']}</td><td>{_price}</td></tr>"
-                            else:
-                                errors.append(f'Delivery zone: {dz} not found')
-                                admin_message += f"<tr><td>{dz}</td><td>Not found</td></tr>"
-                        _total_cost = _get_nice_cost(total_cost)
-                        _price = _get_nice_cost(address_delivery_zone['price'])
-                        diff = total_cost - address_delivery_zone['price']
+                        address_delivery_zone = get_delivery_zone(order_data['address_country_code'])
+                        shipping_price = order_data['shipping_cost']
+                        admin_message = ""
+                        _address_delivery_zone_price = _get_nice_cost(address_delivery_zone['price'])
+
+                        if shipping_cost != "0.00":
+                            diff = Decimal(shipping_price) - Decimal(address_delivery_zone['price'])
+                        else:
+                            for dz in delivery_zones:
+                                _d = [_dz for _dz in DELIVERY_ZONES if _dz['name'] == dz]
+                                if _d:
+                                    d = _d[0]
+                                    total_cost += d['price']
+                                    _price = _get_nice_cost(d['price'])
+                                    admin_message += f"<tr><td>{d['name']}</td><td>{_price}</td></tr>"
+                                else:
+                                    errors.append(f'Delivery zone: {dz} not found')
+                                    admin_message += f"<tr><td>{dz}</td><td>Not found</td></tr>"
+                            _total_cost = _get_nice_cost(total_cost)
+                            diff = total_cost - address_delivery_zone['price']
 
                         if diff != 0:
                             admin_message = f"<p>Order delivery zones: <table>{admin_message}" \
                                 f"</table>Total: &pound;{_total_cost}</p>"
 
                             admin_message += "<p>Expected delivery zone: " \
-                                f"{address_delivery_zone['name']} - &pound;{_price}</p>"
+                                f"{address_delivery_zone['name']} - &pound;{_address_delivery_zone_price}</p>"
 
                             order_data['delivery_balance'] = _get_nice_cost(diff)
                             if diff > 0:
@@ -518,6 +523,7 @@ def get_order_mapping(ipn, is_giftaid):
         'mc_gross': 'payment_total',
         'txn_id': 'txn_id',
         'payment_date': 'created_at',
+        'mc_shipping': 'shipping_cost',
     }
 
     counter = 1
