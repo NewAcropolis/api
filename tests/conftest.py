@@ -351,7 +351,7 @@ def create_test_db_if_does_not_exist(db):
             dbname = db_url.database
 
             if db_url.drivername == 'postgresql':
-                subprocess.call(['/usr/bin/env', 'createdb', '-h', 'db', '-U', 'postgres', dbname])
+                subprocess.call(['/usr/bin/env', 'createdb', '-h', 'localhost', '-U', 'postgres', dbname])
         else:
             raise
 

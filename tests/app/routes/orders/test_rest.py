@@ -175,6 +175,24 @@ sample_book_order_ipn = (
     "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
 )
 
+sample_book_order_ipn_shipping_cost = (
+    "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
+    "item_number1={book_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
+    "payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&option_name2_1=Course+Member+name&option_name2_2=Course+Member+name&"
+    "option_selection1_1=Full&payment_status=Completed&charset=windows-1252&"
+    "address_zip=n1+1aa&mc_shipping=3.50&first_name=TestName&mc_fee=0.54&"
+    "address_country_code={country_code}&address_name=Test+Name"
+    "&notify_version=3.9&custom=&payer_status=unverified&business=test%40test.com&address_country=United+Kingdom"
+    "&um_cart_items=2&mc_handling1=0.00&nmc_handling2=0.00&address_city=London&verify_sign=AXl-"
+    "x13NMy7f84hsUb1AfdPySBVSAn5cuQjLRnnBnlH2cpx64XuK5l34&payer_email={payer_email}&btn_id1=123456789&"
+    "btn_id2=012345678&option_name1_1=Type&option_name1_2=Type&txn_id=1122334455&payment_type=instant&"
+    "option_selection2_1=-&last_name=Test&address_state=&option_selection2_2=-&item_name1=Philosophy+Test"
+    "&receiver_email=receiver%40example.com&item_name2=Postage&payment_fee=&shipping_discount=0.00&quantity1=1&"
+    "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=5.00&mc_currency=GBP"
+    "&mc_gross_2=5.00&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&"
+    "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
+)
+
 sample_double_book_order_ipn = (
     "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
     "item_number1={book_id}&item_number2={delivery_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
@@ -881,6 +899,38 @@ class WhenHandlingPaypalIPN:
             "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
+    def it_creates_a_book_order_for_correct_delivery_zone_with_shipping_cost(
+        self, app, mocker, client, db_session, sample_book
+    ):
+        mocker.patch('app.routes.orders.rest.Storage')
+        mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
+        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+
+        _sample_ipn = sample_book_order_ipn_shipping_cost.format(
+            book_id=f'book-{sample_book.id}', payer_email="payer@example.com",
+            delivery_zone='UK',
+            country_code='GB'
+        )
+
+        with requests_mock.mock() as r:
+            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
+
+            client.post(
+                url_for('orders.paypal_ipn'),
+                data=_sample_ipn,
+                content_type="application/x-www-form-urlencoded"
+            )
+
+        orders = dao_get_orders()
+        assert len(orders) == 1
+        assert mock_send_email.call_args == call(
+            'payer@example.com',
+            'New Acropolis Order',
+            f"<p>Thank you for your order ({orders[0].id})</p>"
+            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
+            "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
+        )
+
     def it_creates_a_book_order_for_old_id(
         self, app, mocker, client, db_session, sample_book,
     ):
@@ -1217,6 +1267,7 @@ class WhenHandlingPaypalIPN:
             f"Please <a href='http://frontend-test/order/extra/{orders[0].txn_id}/RoW/10'>complete</a> your order.</p>"
         )
 
+    # @pytest.mark.skip("Switching to shipping costs")
     def it_sends_payer_and_admin_emails_if_more_than_1_delivery_id_refund(
         self, mocker, app, client, db_session, sample_book, sample_admin_user
     ):
