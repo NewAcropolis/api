@@ -819,6 +819,7 @@ class Order(db.Model):
     delivery_zone = db.Column(db.String)
     delivery_status = db.Column(db.String(20))
     delivery_balance = db.Column(db.Numeric(4, 2), default=0)
+    shipping_cost = db.Column(db.Numeric(4, 2), default=0)
     delivery_sent = db.Column(db.Boolean)
     refund_issued = db.Column(db.Boolean)
     books = db.relationship(
