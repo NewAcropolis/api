@@ -22,4 +22,4 @@ pycodestyle .
 display_result $? 1 "Code style check"
 
 ## Code coverage
-py.test --cov=app --cov-report=term-missing tests/ --junitxml=test_results.xml --strict -v --disable-pytest-warnings
+py.test --cov=app --cov-report=lcov tests/ --junitxml=test_results.xml --strict -v --disable-pytest-warnings
