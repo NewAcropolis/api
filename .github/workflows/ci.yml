@@ -41,13 +41,13 @@ jobs:
           python3 -m venv env
           source ./env/bin/activate
           pip install -r requirements_tests.txt
-          pip install -U coveralls==3.3.1
+          pip install -U coveralls==4.0.0
 
           ./scripts/run_tests.sh
       - name: Coveralls
-        uses: coverallsapp/github-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: coverallsapp/github-action@v2.2.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
   deploy_to_test:
     if: github.ref == 'refs/heads/test-deploy'
     environment: test
@@ -107,7 +107,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.10'
       - name: Deploy to preview
         env:
           deploy_host_preview: ${{ secrets.DEPLOY_HOST }}
@@ -157,7 +157,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.10'
       - name: Deploy to live
         env:
           deploy_host_live: ${{ secrets.DEPLOY_HOST }}
