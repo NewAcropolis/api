@@ -1,8 +1,9 @@
-FROM ubuntu:jammy
+# FROM ubuntu:jammy
+FROM arm64v8/ubuntu:jammy
 
 ENV TZ="Europe/London"
 ENV NA_HOME=/usr/lib/na_api
-ENV NA_VENV=$NA_HOME/venv
+ENV NA_VENV=$NA_HOME/env
 ENV PATH=${NA_VENV}/bin:${PATH}
 
 RUN apt-get update && \
@@ -25,6 +26,6 @@ RUN chown -R na_api:na_api $NA_HOME $NA_VENV
 
 USER na_api
 
-RUN python3 -m venv $NA_VENV
+RUN python3 -m venv $NA_VENV && . $NA_VENV/bin/activate
 
 RUN pip3 install -U --exists-action=b --force-reinstall -r requirements_tests.txt
