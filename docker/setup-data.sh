@@ -1,6 +1,11 @@
 #!/bin/bash
 set -o pipefail
 
+if [ -z "$VIRTUAL_ENV" ] && [ -d env ]; then
+  echo 'activate env'
+  source ./env/bin/activate
+fi
+
 GITHUB_SHA=$(git rev-parse HEAD) ./scripts/check_site.sh na_api:5001/info no_workers
 
 # import venues
