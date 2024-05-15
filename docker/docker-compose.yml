@@ -17,7 +17,31 @@ services:
     command: >
       bash -c "
       ./scripts/run_app.sh development"
-    # tail -f /dev/null
+    # tail -f /dev/null"
+    volumes:
+      - api_data:/usr/lib/na_api
+    networks:
+      - na_net
+
+  na_celery:
+    container_name: na_celery
+    env_file:
+      - .env
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    links:
+      - na_db:db
+      - na_storage:storage
+      - na_redis:redis
+    depends_on: 
+      - na_db
+      - na_redis
+    command: >
+      bash -c "
+      eval \"celery -A run_celery.celery beat\" >>/var/log/na-api/celery-development.log 2>&1 &
+      celery -A run_celery.celery worker -n worker-development --loglevel=INFO --concurrency=1"
+    # tail -f /dev/null"
     volumes:
       - api_data:/usr/lib/na_api
     networks:
@@ -41,6 +65,7 @@ services:
     command: >
       bash -c "
       . ./docker/setup-data.sh"
+    # tail -f /dev/null"
     volumes:
       - api_data:/usr/lib/na_api
     networks:
