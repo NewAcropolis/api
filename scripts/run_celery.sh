@@ -14,9 +14,6 @@ fi
 
 logoutput=" >>/var/log/na-api/celery-$ENV.log 2>&1 &"
 
-# remove celery flower
-pip uninstall flower
-
 # kill existing celery workers
 ps auxww | grep "celery worker -n worker-$ENV" | awk '{print $2}' | xargs kill -9
 ps auxww | grep "run_celery.celery beat" | awk '{print $2}' | xargs kill -9
