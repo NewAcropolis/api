@@ -250,7 +250,8 @@ def create_email(
         created_at=None,
         send_starts_at=None,
         expires=None,
-        send_after=None
+        send_after=None,
+        admin_email_sent_at=None
 ):
     if magazine_id:
         old_event_id = None
@@ -274,7 +275,8 @@ def create_email(
         'created_at': created_at,
         'send_starts_at': send_starts_at,
         'expires': expires,
-        'send_after': send_after
+        'send_after': send_after,
+        'admin_email_sent_at': admin_email_sent_at
     }
     email = Email(**data)
 

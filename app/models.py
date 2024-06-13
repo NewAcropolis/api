@@ -239,6 +239,7 @@ class Email(db.Model):
     send_starts_at = db.Column(db.DateTime)
     send_after = db.Column(db.DateTime)
     expires = db.Column(db.DateTime)
+    admin_email_sent_at = db.Column(db.DateTime)
     task_id = db.Column(db.String)
     members_sent_to = db.relationship(
         'Member',
@@ -325,7 +326,9 @@ class Email(db.Model):
             'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d') if self.send_starts_at else None,
             'expires': self.expires.strftime('%Y-%m-%d') if self.expires else self.get_expired_date(),
             'send_after': get_local_time(self.send_after).strftime('%Y-%m-%d %H:%M') if self.send_after else None,
-            'emails_sent_counts': self.get_emails_sent_counts()
+            'emails_sent_counts': self.get_emails_sent_counts(),
+            'admin_email_sent_at':
+                self.admin_email_sent_at.strftime('%Y-%m-%d %H:%M') if self.admin_email_sent_at else None
         }
 
 
