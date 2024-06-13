@@ -140,7 +140,10 @@ class WhenUsingBookModel(object):
 class WhenUsingEmailModel:
     def it_shows_email_json_on_serialize(self, db, db_session):
         email = create_email(
-            created_at='2019-06-01T10:00:00', send_starts_at='2019-06-02T11:00:00', send_after='2019-06-02T12:00:00')
+            created_at='2019-06-01T10:00:00',
+            send_starts_at='2019-06-02T11:00:00',
+            send_after='2019-06-02T12:00:00',
+            admin_email_sent_at='2019-06-02T13:00:00')
 
         assert email.serialize() == {
             'id': str(email.id),
@@ -158,6 +161,7 @@ class WhenUsingEmailModel:
             'send_starts_at': '2019-06-02',
             'expires': '2019-06-21',
             'send_after': get_local_time(email.send_after).strftime('%Y-%m-%d %H:%M'),
+            'admin_email_sent_at': email.admin_email_sent_at.strftime('%Y-%m-%d %H:%M'),
             'emails_sent_counts': {
                 'success': 0,
                 'failed': 0,
@@ -169,7 +173,8 @@ class WhenUsingEmailModel:
         email = create_email(
             created_at='2019-06-01T10:00:00',
             send_starts_at='2019-06-02T11:00:00',
-            send_after='2019-06-02T12:00:00'
+            send_after='2019-06-02T12:00:00',
+            admin_email_sent_at='2019-06-02T13:00:00'
         )
 
         create_member(name='Active 1', email='test1@example.com', created_at='2019-04-09T19:00:00')
@@ -208,6 +213,7 @@ class WhenUsingEmailModel:
             'send_starts_at': '2019-06-02',
             'expires': '2019-06-21',
             'send_after': get_local_time(email.send_after).strftime('%Y-%m-%d %H:%M'),
+            'admin_email_sent_at': email.admin_email_sent_at.strftime('%Y-%m-%d %H:%M'),
             'emails_sent_counts': {
                 'success': 0,
                 'failed': 0,
@@ -219,7 +225,9 @@ class WhenUsingEmailModel:
         email = create_email(
             email_type=MAGAZINE, magazine_id=sample_magazine.id,
             old_event_id=None,
-            created_at='2019-06-30T10:00:00', send_starts_at='2019-07-01T11:00:00')
+            created_at='2019-06-30T10:00:00',
+            send_starts_at='2019-07-01T11:00:00'
+        )
 
         assert email.serialize() == {
             'id': str(email.id),
@@ -237,6 +245,7 @@ class WhenUsingEmailModel:
             'send_starts_at': '2019-07-01',
             'expires': '2019-07-15',
             'send_after': None,
+            'admin_email_sent_at': None,
             'emails_sent_counts': {
                 'success': 0,
                 'failed': 0,

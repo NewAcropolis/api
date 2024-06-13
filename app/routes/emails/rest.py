@@ -147,6 +147,7 @@ def update_email(email_id):
         email_json = email.serialize()
         if response:
             email_json['email_status_code'] = response
+            dao_update_email(email_id, admin_email_sent_at=datetime.utcnow())
         return jsonify(email_json), 200
 
     raise InvalidRequest('{} did not update email'.format(email_id), 400)

@@ -22,4 +22,10 @@ pycodestyle .
 display_result $? 1 "Code style check"
 
 ## Code coverage
-py.test --cov=app --cov-report=lcov tests/ --junitxml=test_results.xml --strict -v --disable-pytest-warnings
+if [ -z "$GITHUB_SHA" ]; then
+  COV_REPORT=term
+else
+  COV_REPORT=lcov
+fi
+
+py.test --cov=app --cov-report=${COV_REPORT} tests/ --junitxml=test_results.xml --strict -v --disable-pytest-warnings
