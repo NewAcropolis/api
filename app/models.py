@@ -885,6 +885,7 @@ class Order(db.Model):
             'delivery_sent': self.delivery_sent,
             'refund_issued': self.refund_issued,
             'notes': self.notes,
+            'email_address': self.email_address,
             'email_status': self.email_status,
             'email_sent_at': (
                 None if not self.email_sent_at else get_local_time(self.email_sent_at).strftime('%Y-%m-%d %H:%M')),

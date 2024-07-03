@@ -299,6 +299,7 @@ class WhenUsingOrderModel:
             'delivery_sent': order.delivery_sent,
             'refund_issued': order.refund_issued,
             'delivery_balance': f"{order.delivery_balance:.2f}",
+            'email_address': order.email_address,
             'email_status': order.email_status,
             'email_sent_at': order.email_sent_at,
             'email_provider_id': order.email_provider_id,
