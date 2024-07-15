@@ -303,7 +303,8 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
 
                         if shipping_cost != "0.00":
                             diff = Decimal(shipping_price) - Decimal(address_delivery_zone['price'])
-                        else:
+                        else:  # pragma: no cover
+                            # do not test coverage as only UK shipping supported at the moment
                             for dz in delivery_zones:
                                 _d = [_dz for _dz in DELIVERY_ZONES if _dz['name'] == dz]
                                 if _d:
@@ -317,7 +318,8 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
                             _total_cost = _get_nice_cost(total_cost)
                             diff = total_cost - address_delivery_zone['price']
 
-                        if diff != 0:
+                        if diff != 0:  # pragma: no cover
+                            # do not test coverage as only UK shipping supported at the moment
                             admin_message = f"<p>Order delivery zones: <table>{admin_message}" \
                                 f"</table>Total: &pound;{_total_cost}</p>"
 
@@ -356,7 +358,8 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
 
                     if delivery_message:
                         order_data['delivery_status'] = status
-                        if status == 'refund':
+                        if status == 'refund':  # pragma: no cover
+                            # do not test coverage as only UK shipping supported at the moment
                             delivery_message = f"<p>{delivery_message}, please send a message " \
                                 "to website admin if there is no refund within 5 working days.</p>"
                         else:
@@ -651,7 +654,8 @@ def parse_ipn(ipn, replace_order=False, email_only=False):
                 delivery_zone = ipn['option_selection1_%d' % counter]
                 if 'delivery_zone' not in order_data.keys():
                     order_data['delivery_zone'] = delivery_zone
-                else:
+                else:  # pragma: no cover
+                    # do not test coverage as only UK shipping supported at the moment
                     current_app.logger.error(f"Multiple delivery costs in order: {order_data['txn_id']}")
                 delivery_zones.append(delivery_zone)
             elif ipn['item_number%d' % counter].startswith('book-'):
