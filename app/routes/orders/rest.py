@@ -295,7 +295,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
                         delivery_message = "No address supplied. "
                         status = "missing_address"
                     else:
-                        total_cost = 0
+                        total_cost = _total_cost = 0
                         address_delivery_zone = get_delivery_zone(order_data['address_country_code'])
                         shipping_price = order_data['shipping_cost']
                         admin_message = ""
@@ -655,6 +655,8 @@ def parse_ipn(ipn, replace_order=False, email_only=False):
                     current_app.logger.error(f"Multiple delivery costs in order: {order_data['txn_id']}")
                 delivery_zones.append(delivery_zone)
             elif ipn['item_number%d' % counter].startswith('book-'):
+                if counter == 1 and 'shipping_cost' in order_data:
+                    price = Decimal(price) - Decimal(order_data['shipping_cost'])
                 book_id = ipn['item_number%d' % counter][len("book-"):]
                 UUID_LENGTH = 36
                 if len(book_id) < UUID_LENGTH:
