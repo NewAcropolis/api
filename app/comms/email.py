@@ -264,6 +264,7 @@ def send_email(to, subject, message, from_email=None, from_name=None, override=F
             'message': message
         }
         current_app.logger.info('No email providers configured, email would have sent: {}'.format(data))
+        return '404', ''
 
 
 def send_smtp_email(to, subject, message, from_email=None, from_name='', smtp_info=None):  # pragma: no cover
