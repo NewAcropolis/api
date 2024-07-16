@@ -158,11 +158,11 @@ sample_all_dates = (
 )
 
 sample_book_order_ipn = (
-    "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
+    "_notify-validate&mc_gross=13.50&protection_eligibility=Eligible&address_status=confirmed&"
     "item_number1={book_id}&item_number2={delivery_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
     "payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&option_name2_1=Course+Member+name&option_name2_2=Course+Member+name&"
     "option_selection1_1=Full&payment_status=Completed&option_selection1_2={delivery_zone}&charset=windows-1252&"
-    "address_zip=n1+1aa&mc_shipping=0.00&first_name=TestName&mc_fee=0.54&"
+    "address_zip=n1+1aa&mc_shipping=3.50&first_name=TestName&mc_fee=0.54&"
     "address_country_code={country_code}&address_name=Test+Name"
     "&notify_version=3.9&custom=&payer_status=unverified&business=test%40test.com&address_country=United+Kingdom"
     "&um_cart_items=2&mc_handling1=0.00&nmc_handling2=0.00&address_city=London&verify_sign=AXl-"
@@ -170,13 +170,13 @@ sample_book_order_ipn = (
     "btn_id2=012345678&option_name1_1=Type&option_name1_2=Type&txn_id=1122334455&payment_type=instant&"
     "option_selection2_1=-&last_name=Test&address_state=&option_selection2_2=-&item_name1=Philosophy+Test"
     "&receiver_email=receiver%40example.com&item_name2=Postage&payment_fee=&shipping_discount=0.00&quantity1=1&"
-    "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=5.00&mc_currency=GBP"
+    "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=8.50&mc_currency=GBP"
     "&mc_gross_2=5.00&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&"
     "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
 )
 
 sample_book_order_ipn_shipping_cost = (
-    "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
+    "_notify-validate&mc_gross=13.50&protection_eligibility=Eligible&address_status=confirmed&"
     "item_number1={book_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
     "payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&option_name2_1=Course+Member+name&option_name2_2=Course+Member+name&"
     "option_selection1_1=Full&payment_status=Completed&charset=windows-1252&"
@@ -188,17 +188,17 @@ sample_book_order_ipn_shipping_cost = (
     "btn_id2=012345678&option_name1_1=Type&option_name1_2=Type&txn_id=1122334455&payment_type=instant&"
     "option_selection2_1=-&last_name=Test&address_state=&option_selection2_2=-&item_name1=Philosophy+Test"
     "&receiver_email=receiver%40example.com&item_name2=Postage&payment_fee=&shipping_discount=0.00&quantity1=1&"
-    "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=5.00&mc_currency=GBP"
+    "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=8.50&mc_currency=GBP"
     "&mc_gross_2=5.00&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&"
     "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
 )
 
 sample_double_book_order_ipn = (
-    "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
+    "_notify-validate&mc_gross=13.50&protection_eligibility=Eligible&address_status=confirmed&"
     "item_number1={book_id}&item_number2={delivery_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
     "payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&option_name2_1=Course+Member+name&option_name2_2=Course+Member+name&"
     "option_selection1_1=Full&payment_status=Completed&option_selection1_2={delivery_zone}&charset=windows-1252&"
-    "address_zip=n1+1aa&mc_shipping=0.00&first_name=TestName&mc_fee=0.54&"
+    "address_zip=n1+1aa&mc_shipping=3.50&first_name=TestName&mc_fee=0.54&"
     "address_country_code={country_code}&address_name=Test+Name"
     "&notify_version=3.9&custom=&payer_status=unverified&business=test%40test.com&address_country=United+Kingdom"
     "&um_cart_items=3&mc_handling1=0.00&nmc_handling2=0.00&address_city=London&verify_sign=AXl-"
@@ -206,7 +206,7 @@ sample_double_book_order_ipn = (
     "btn_id2=012345678&option_name1_1=Type&option_name1_2=Type&txn_id=1122334455&payment_type=instant&"
     "option_selection2_1=-&last_name=Test&address_state=&option_selection2_2=-&item_name1=Philosophy+Test"
     "&receiver_email=receiver%40example.com&item_name2=Postage&payment_fee=&shipping_discount=0.00&quantity1=1&"
-    "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=5.00&mc_currency=GBP"
+    "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=8.50&mc_currency=GBP"
     "&mc_gross_2=5.00&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&"
     "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa&item_number3={book_id}&item_name3=Philosophy+Test2"
     "&mc_gross_3=5.00&quantity3=1"
@@ -231,11 +231,11 @@ sample_book_order_without_delivery_ipn = (
 )
 
 sample_book_order_multiple_delivery_ipn = (
-    "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&item_number1={book_id}&"
+    "_notify-validate&mc_gross=13.50&protection_eligibility=Eligible&address_status=confirmed&item_number1={book_id}&"
     "item_number2={delivery_id}&item_number3={delivery_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
     "payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&option_name2_1=Course+Member+name&option_name2_2=Course+Member+name&"
     "option_selection1_1=Full&payment_status=Completed&option_selection1_2={delivery_zone}&charset=windows-1252&"
-    "address_zip=n1+1aa&mc_shipping=0.00&first_name=TestName&mc_fee=0.54&"
+    "address_zip=n1+1aa&mc_shipping=3.50&first_name=TestName&mc_fee=0.54&"
     "address_country_code={country_code}&address_name=Test+Name"
     "&notify_version=3.9&custom=&payer_status=unverified&business=test%40test.com&address_country=United+Kingdom"
     "&um_cart_items=2&mc_handling1=0.00&nmc_handling2=0.00&address_city=London&verify_sign=AXl-"
@@ -243,14 +243,14 @@ sample_book_order_multiple_delivery_ipn = (
     "012345678&option_name1_1=Type&option_name1_2=Type&txn_id=1122334455&payment_type=instant&option_selection2_1=-&"
     "last_name=Test&address_state=&option_selection2_2=-&item_name1=Philosophy+Test&receiver_email=receiver%40example"
     ".com&item_name2=Postage&item_name3=Postage&payment_fee=&shipping_discount=0.00&quantity1=1&"
-    "insurance_amount=0.00&quantity2=1&quantity3=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=5.00"
+    "insurance_amount=0.00&quantity2=1&quantity3=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=8.50"
     "&mc_currency=GBP&mc_gross_2=5.00&mc_gross_3=5.00&residence_country=GB&receipt_id=0000-1111-2222-3333&"
     "shipping_method=Default&transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
     "&option_selection1_3={delivery_zone}&option_name1_3=Postage"
 )
 
 sample_mixed_order_ipn = (
-    "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
+    "_notify-validate&mc_gross=13.50&protection_eligibility=Eligible&address_status=confirmed&"
     "item_number1={book_id}&item_number2={delivery_id}&item_number3={event_id}"
     "&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
     "payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&"
@@ -258,7 +258,7 @@ sample_mixed_order_ipn = (
     "&option_selection1_3=Full&option_selection1_2={delivery_zone}&option_selection3_2=Full&"
     "option_selection2_1=-&option_selection3_1=Full&option_selection2_3=1&option_selection2_2=-"
     "&payment_status=Completed&charset=windows-1252&"
-    "address_zip=n1+1aa&mc_shipping=0.00&first_name=TestName&mc_fee=0.54&"
+    "address_zip=n1+1aa&mc_shipping=3.50&first_name=TestName&mc_fee=0.54&"
     "address_country_code={country_code}&address_name=Test+Name"
     "&notify_version=3.9&custom=&payer_status=unverified&business=test%40test.com&address_country=United+Kingdom"
     "&um_cart_items=3&mc_handling1=0.00&nmc_handling2=0.00&address_city=London&verify_sign=AXl-"
@@ -269,24 +269,24 @@ sample_mixed_order_ipn = (
     "item_name1=Philosophy+Book&item_name2=Postage&item_name3=Philosophy+Event"
     "&receiver_email=receiver%40example.com&payment_fee=&shipping_discount=0.00&"
     "insurance_amount=0.00&receiver_id=11223344&txn_type=cart&discount=0.00&"
-    "quantity1=1&quantity2=1&quantity3=1&mc_gross_1=5.00&mc_gross_2=5.00&mc_gross_3=10.00"
+    "quantity1=1&quantity2=1&quantity3=1&mc_gross_1=8.50&mc_gross_2=5.00&mc_gross_3=10.00"
     "&mc_currency=GBP&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&"
     "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
 )
 
 sample_book_order_without_address_ipn = (
-    "_notify-validate&mc_gross=10.00&protection_eligibility=Eligible&address_status=confirmed&"
+    "_notify-validate&mc_gross=13.50&protection_eligibility=Eligible&address_status=confirmed&"
     "item_number1={book_id}&item_number2={delivery_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
     "payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&option_name2_1=Course+Member+name&option_name2_2=Course+Member+name&"
     "option_selection1_1=Full&payment_status=Completed&option_selection1_2=Full&charset=windows-1252&"
-    "mc_shipping=0.00&first_name=TestName&mc_fee=0.54&"
+    "mc_shipping=3.50&first_name=TestName&mc_fee=0.54&"
     "&notify_version=3.9&custom=&payer_status=unverified&business=test%40test.com"
     "&um_cart_items=2&mc_handling1=0.00&nmc_handling2=0.00&verify_sign=AXl-"
     "x13NMy7f84hsUb1AfdPySBVSAn5cuQjLRnnBnlH2cpx64XuK5l34&payer_email={payer_email}&btn_id1=123456789&"
     "btn_id2=012345678&option_name1_1=Type&option_name1_2=Type&txn_id=1122334455&payment_type=instant&"
     "option_selection2_1=-&last_name=Test&option_selection2_2=-&item_name1=Philosophy+Test"
     "&receiver_email=receiver%40example.com&item_name2={delivery_zone}&payment_fee=&shipping_discount=0.00&quantity1=1&"
-    "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=5.00&mc_currency=GBP"
+    "insurance_amount=0.00&quantity2=1&receiver_id=11223344&txn_type=cart&discount=0.00&mc_gross_1=8.50&mc_currency=GBP"
     "&mc_gross_2=5.00&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&"
     "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
 )
@@ -295,7 +295,7 @@ sample_complete_order_ipn = (
     "_notify-validate&mc_gross={linked_payment}&protection_eligibility=Eligible&address_status=confirmed&"
     "item_number1={delivery_id}&payer_id=XXYYZZ&address_street=Flat+1%2C+1+Test+Place&"
     "payment_date=14%3A45%3A55+Jan+10%2C+2021+PDT&charset=windows-1252&"
-    "payment_status=Completed&address_zip=n1+1aa&mc_shipping=0.00&first_name=TestName&last_name=User&mc_fee=0.54&"
+    "payment_status=Completed&address_zip=n1+1aa&mc_shipping=3.50&first_name=TestName&last_name=User&mc_fee=0.54&"
     "address_country_code={country_code}&address_name=Test+Name"
     "&notify_version=3.9&custom={linked_txn_id}&payer_status=unverified&business=test%40test.com&"
     "address_country=United+Kingdom&address_city=London&verify_sign=AXl-"
@@ -303,7 +303,7 @@ sample_complete_order_ipn = (
     "&txn_id=2233445566&payment_type=instant&"
     "item_name1=UK"
     "&receiver_email=receiver%40example.com&payment_fee=&shipping_discount=0.00&quantity1=1&"
-    "insurance_amount=0.00&receiver_id=11223344&txn_type=web_accept&discount=0.00&mc_gross_1=5.00&mc_currency=GBP"
+    "insurance_amount=0.00&receiver_id=11223344&txn_type=web_accept&discount=0.00&mc_gross_1=8.50&mc_currency=GBP"
     "0&residence_country=GB&receipt_id=0000-1111-2222-3333&shipping_method=Default&"
     "transaction_subject=&payment_gross=&ipn_track_id=1122334455aa"
 )
@@ -863,16 +863,18 @@ class WhenHandlingPaypalIPN:
     @pytest.mark.parametrize(
         'country_code,delivery_zone', [
             ('GB', 'UK'),
-            ('FR', 'Europe'),
-            ('US', 'RoW')
+            # We only deliver to UK for the moment so don't test for other countries
+            # ('FR', 'Europe'),
+            # ('US', 'RoW')
         ]
     )
     def it_creates_a_book_order_for_correct_delivery_zone(
-        self, app, mocker, client, db_session, sample_book, country_code, delivery_zone
+        self, app, mocker, client, db_session, sample_book, country_code, delivery_zone, sample_email_provider
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email', return_value=('200', sample_email_provider.id))
 
         _sample_ipn = sample_book_order_ipn.format(
             book_id=f'book-{sample_book.id}', delivery_id=app.config['DELIVERY_ID'], payer_email="payer@example.com",
@@ -932,11 +934,12 @@ class WhenHandlingPaypalIPN:
         )
 
     def it_creates_a_book_order_for_old_id(
-        self, app, mocker, client, db_session, sample_book,
+        self, app, mocker, client, db_session, sample_book, sample_email_provider
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email', return_value=('200', sample_email_provider.id))
 
         _sample_ipn = sample_book_order_ipn.format(
             book_id=f'book-{sample_book.old_id}', delivery_id=app.config['DELIVERY_ID'],
@@ -965,11 +968,12 @@ class WhenHandlingPaypalIPN:
         )
 
     def it_creates_a_book_order_for_random_uuid_with_errors(
-        self, app, mocker, client, db_session, sample_uuid,
+        self, app, mocker, client, db_session, sample_uuid, sample_email_provider
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email', return_value=('200', sample_email_provider.id))
 
         _sample_ipn = sample_book_order_ipn.format(
             book_id=f'book-{sample_uuid}', delivery_id=app.config['DELIVERY_ID'],
@@ -1039,11 +1043,12 @@ class WhenHandlingPaypalIPN:
         assert orders[0].errors[1].error == 'Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c'
 
     def it_creates_a_mixed_order(
-        self, mocker, app, client, db_session, sample_book, sample_event_with_dates
+        self, mocker, app, client, db_session, sample_book, sample_event_with_dates, sample_email_provider
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email', return_value=('200', sample_email_provider.id))
 
         _sample_ipn = sample_mixed_order_ipn.format(
             book_id=f'book-{sample_book.id}', event_id=sample_event_with_dates.id,
@@ -1075,11 +1080,12 @@ class WhenHandlingPaypalIPN:
         )
 
     def it_creates_an_order_with_donation(
-        self, mocker, app, client, db_session, sample_event_with_dates
+        self, mocker, app, client, db_session, sample_event_with_dates, sample_email_provider
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email', return_value=('200', sample_email_provider.id))
 
         _sample_ipn = sample_donation.format(
             event_id=sample_event_with_dates.id,
@@ -1103,11 +1109,12 @@ class WhenHandlingPaypalIPN:
         assert orders[0].address_city is None
 
     def it_creates_an_order_with_donation_giftaid(
-        self, mocker, app, client, db_session, sample_event_with_dates
+        self, mocker, app, client, db_session, sample_event_with_dates, sample_email_provider
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email', return_value=('200', sample_email_provider.id))
 
         _sample_ipn = sample_donation_giftaid.format(
             event_id=sample_event_with_dates.id,
@@ -1132,11 +1139,12 @@ class WhenHandlingPaypalIPN:
         assert orders[0].address_city == 'London'
 
     def it_sends_an_email_if_missing_address_for_book_order(
-        self, mocker, app, client, db_session, sample_book
+        self, mocker, app, client, db_session, sample_book, sample_email_provider
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
+        mock_send_email = mocker.patch(
+            'app.routes.orders.rest.send_email', return_value=('200', sample_email_provider.id))
 
         _sample_ipn = sample_book_order_without_address_ipn.format(
             book_id=f'book-{sample_book.id}',
@@ -1166,6 +1174,7 @@ class WhenHandlingPaypalIPN:
             "<a href='http://frontend-test/order/missing_address/1122334455'>complete</a> your order.</p>"
         )
 
+    @pytest.mark.skip('Do not test for non UK delivery zones')
     def it_sends_an_email_if_wrong_delivery_zone_for_country(self, mocker, app, client, db_session, sample_book):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
@@ -1199,6 +1208,7 @@ class WhenHandlingPaypalIPN:
             "<td> = 5</td></tr></table><p>Not enough delivery paid, &pound;2.50 due. Please <a href='"
             f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/2.50'>complete</a> your order.</p>")
 
+    @pytest.mark.skip('Do not test for non UK delivery zones')
     def it_sends_an_email_if_delivery_zone_not_recognized(
         self, mocker, app, client, db_session, sample_book, sample_admin_user
     ):
@@ -1237,6 +1247,7 @@ class WhenHandlingPaypalIPN:
             f"<p>Errors in order: <div>Delivery zone: Unknown not found</div></p>")
         assert mock_send_smtp_email.called
 
+    @pytest.mark.skip('Not needed as fixed shipping to UK')
     def it_sends_an_email_if_no_delivery_id_for_country(self, mocker, app, client, db_session, sample_book):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
@@ -1267,7 +1278,7 @@ class WhenHandlingPaypalIPN:
             f"Please <a href='http://frontend-test/order/extra/{orders[0].txn_id}/RoW/10'>complete</a> your order.</p>"
         )
 
-    # @pytest.mark.skip("Switching to shipping costs")
+    @pytest.mark.skip("Not needed as fixed UK delivery")
     def it_sends_payer_and_admin_emails_if_more_than_1_delivery_id_refund(
         self, mocker, app, client, db_session, sample_book, sample_admin_user
     ):
@@ -1312,6 +1323,7 @@ class WhenHandlingPaypalIPN:
             f", please send a message to website admin if there is no refund within 5 working days.</p>"
         )
 
+    @pytest.mark.skip('Not needed as fixed delivery costs to UK')
     def it_sends_an_email_if_more_than_1_delivery_id_costs_not_met(self, mocker, app, client, db_session, sample_book):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
@@ -1344,6 +1356,7 @@ class WhenHandlingPaypalIPN:
             "<td> = 5</td></tr></table><p>Not enough delivery paid, &pound;0.50 due. Please "
             f"<a href='http://frontend-test/order/extra/{orders[0].txn_id}/Europe/0.50'>complete</a> your order.</p>")
 
+    @pytest.mark.skip('Not needed as shipping fixed only to UK')
     def it_sends_an_email_if_more_than_1_delivery_not_recognised(
         self, mocker, app, client, db_session, sample_book, sample_admin_user
     ):
