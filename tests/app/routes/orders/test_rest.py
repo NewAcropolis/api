@@ -897,8 +897,9 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
-            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
-            "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
+            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr>"
+            "<tr><td>Delivery cost</td><td> = &pound;3.50</td></tr><tr><td>Total</td><td> = &pound;13.50</td></tr>"
+            "</table><br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
     def it_creates_a_book_order_for_correct_delivery_zone_with_shipping_cost(
@@ -929,8 +930,9 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
-            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
-            "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
+            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr>"
+            "<tr><td>Delivery cost</td><td> = &pound;3.50</td></tr><tr><td>Total</td><td> = &pound;13.50</td></tr>"
+            "</table><br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
     def it_creates_a_book_order_for_old_id(
@@ -963,8 +965,9 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
-            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
-            "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
+            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr>"
+            "<tr><td>Delivery cost</td><td> = &pound;3.50</td></tr><tr><td>Total</td><td> = &pound;13.50</td></tr>"
+            "</table><br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
     def it_creates_a_book_order_for_random_uuid_with_errors(
@@ -1075,8 +1078,9 @@ class WhenHandlingPaypalIPN:
             f"<p>Thank you for your order ({orders[0].id})</p>"
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[0].id}">'
             '</span><div>test_title on 1 Jan at 7PM</div></div>'
-            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
-            "<br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
+            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr>"
+            "<tr><td>Delivery cost</td><td> = &pound;3.50</td></tr><tr><td>Total</td><td> = &pound;13.50</td></tr>"
+            "</table><br><div>Delivery to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
     def it_creates_an_order_with_donation(
@@ -1169,8 +1173,9 @@ class WhenHandlingPaypalIPN:
             'payer@example.com',
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
-            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr></table>"
-            "<p>No address supplied. Please "
+            "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = 5</td></tr>"
+            "<tr><td>Delivery cost</td><td> = &pound;3.50</td></tr><tr><td>Total</td><td> = &pound;13.50</td></tr>"
+            "</table><p>No address supplied. Please "
             "<a href='http://frontend-test/order/missing_address/1122334455'>complete</a> your order.</p>"
         )
 

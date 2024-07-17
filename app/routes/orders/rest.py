@@ -288,6 +288,14 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
                                 f'<tr><td>{product["title"]}</td><td> x {product["quantity"]}</td>'
                                 f'<td> = {_get_nice_cost(product["price"] * product["quantity"])}</td></tr>'
                             )
+                    product_message += (
+                        f'<tr><td>Delivery cost</td>'
+                        f'<td> = &pound;{order_data["shipping_cost"]}</td></tr>'
+                    )
+                    product_message += (
+                        f'<tr><td>Total</td>'
+                        f'<td> = &pound;{Decimal(order_data["payment_total"])}</td></tr>'
+                    )
                     product_message = f'<table>{product_message}</table>'
                     address_delivery_zone = None
 
