@@ -286,7 +286,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
 
                             product_message += (
                                 f'<tr><td>{product["title"]}</td><td> x {product["quantity"]}</td>'
-                                f'<td> = {_get_nice_cost(product["price"] * product["quantity"])}</td></tr>'
+                                f'<td> = &pound;{_get_nice_cost(product["price"] * product["quantity"])}</td></tr>'
                             )
                     product_message += (
                         f'<tr><td>Delivery cost</td>'
@@ -375,7 +375,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
                                 if address_delivery_zone else None
                     else:
                         product_message = (
-                            f'{product_message}<br><div>Delivery to: {order_data["address_street"]},'
+                            f'{product_message}<br><div>Deliver to: {order_data["address_street"]},'
                             f'{order_data["address_city"]}, '
                             f'{order_data["address_postal_code"]}, {order_data["address_country"]}</div>'
                         )
