@@ -898,7 +898,8 @@ class WhenHandlingPaypalIPN:
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
-            "<tr><td>Delivery cost</td><td> = &pound;3.50</td></tr><tr><td>Total</td><td> = &pound;13.50</td></tr>"
+            "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
+            "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
             "</table><br><div>Deliver to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
@@ -931,7 +932,8 @@ class WhenHandlingPaypalIPN:
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
-            "<tr><td>Delivery cost</td><td> = &pound;3.50</td></tr><tr><td>Total</td><td> = &pound;13.50</td></tr>"
+            "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
+            "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
             "</table><br><div>Deliver to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
@@ -966,7 +968,8 @@ class WhenHandlingPaypalIPN:
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
-            "<tr><td>Delivery cost</td><td> = &pound;3.50</td></tr><tr><td>Total</td><td> = &pound;13.50</td></tr>"
+            "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
+            "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
             "</table><br><div>Deliver to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
@@ -1079,7 +1082,8 @@ class WhenHandlingPaypalIPN:
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[0].id}">'
             '</span><div>test_title on 1 Jan at 7PM</div></div>'
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
-            "<tr><td>Delivery cost</td><td> = &pound;3.50</td></tr><tr><td>Total</td><td> = &pound;13.50</td></tr>"
+            "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
+            "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
             "</table><br><div>Deliver to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
         )
 
@@ -1174,7 +1178,8 @@ class WhenHandlingPaypalIPN:
             'New Acropolis Order',
             f"<p>Thank you for your order ({orders[0].id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
-            "<tr><td>Delivery cost</td><td> = &pound;3.50</td></tr><tr><td>Total</td><td> = &pound;13.50</td></tr>"
+            "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
+            "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
             "</table><p>No address supplied. Please "
             "<a href='http://frontend-test/order/missing_address/1122334455'>complete</a> your order.</p>"
         )
