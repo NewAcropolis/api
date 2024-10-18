@@ -28,10 +28,16 @@
                             <div class='email_text'>
                                 <h3>TABLE OF CONTENTS</h3>
                                 {% for topic in topics %}
+                                    {% if 'title' in topic %}
                                     <div>
                                         <span class='topic_title'>{{ topic.title }}:</span>
                                         <span>{{ topic.description }}</span>
                                     </div>
+                                    {% else %}
+                                    <div>
+                                        {{ topic }}
+                                    </div>
+                                    {% endif %}
                                 {% endfor %}
                                 {% if unsubcode %}
                                 {% include "components/unsub.html" %}

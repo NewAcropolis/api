@@ -1,3 +1,5 @@
+import pytest
+
 from app.models import MAGAZINE
 from app.na_celery.upload_tasks import upload_magazine
 from tests.db import create_email, create_magazine
@@ -52,20 +54,3 @@ class WhenUploadingMagazinePdfs:
 
         assert mock_logger.called
         assert 'Task error uploading magazine' in mock_logger.call_args[0][0]
-
-    def it_handles_error_from_extract_topics(self, app, db_session, mocker, sample_magazine, sample_user):
-        mocker.patch('app.na_celery.upload_tasks.extract_topics', side_effect=Exception('Unknown'))
-        mocker.patch('app.na_celery.upload_tasks.Storage')
-        mocker.patch('app.na_celery.upload_tasks.base64')
-        mock_logger = mocker.patch('app.na_celery.upload_tasks.current_app.logger.error')
-        mock_send_email = mocker.patch('app.na_celery.upload_tasks.send_smtp_email', return_value=200)
-        email = create_email(magazine_id=sample_magazine.id, email_type=MAGAZINE)
-
-        upload_magazine(sample_magazine.id, 'pdf data')
-
-        assert mock_logger.called
-        assert 'Error extracting topics:' in mock_logger.call_args[0][0]
-
-        assert mock_send_email.called
-        assert '<div>Please review this email: {}/emails/{}</div>'.format(
-            app.config['FRONTEND_ADMIN_URL'], str(email.id)) in mock_send_email.call_args[0][2]

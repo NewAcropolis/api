@@ -133,14 +133,11 @@ def get_email_html(email_type, **kwargs):
             magazine_topics = magazine.topics.strip()
             if all([':' in t for t in magazine_topics.split('\n')]):
                 _topics = [(t.split(':')[0], t.split(':')[1]) for t in magazine_topics.split('\n')]
+                for title, description in _topics:
+                    topics.append({'title': title, 'description': description})
             else:
-                _topics = [
-                    ("Missing divider", "Use : as divider between topic header and sub-header"),
-                    ("Topics", magazine_topics)
-                ]
+                topics = magazine_topics.split('\n')
 
-            for title, description in _topics:
-                topics.append({'title': title, 'description': description})
         return render_template(
             'emails/magazine.html',
             magazine=magazine,
