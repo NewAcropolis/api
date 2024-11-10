@@ -25,6 +25,7 @@ from app.dao.articles_dao import (
     dao_get_articles,
     dao_update_article,
     dao_get_article_by_id,
+    dao_get_articles_by_tags,
     dao_get_articles_with_images,
     dao_get_article_by_title_author
 )
@@ -52,6 +53,13 @@ register_errors(article_blueprint)
 @jwt_required()
 def get_articles():
     articles = [a.serialize() if a else None for a in dao_get_articles()]
+    return jsonify(articles)
+
+
+@articles_blueprint.route('/articles/<string:tags>')
+@jwt_required()
+def get_articles_by_tags(tags):
+    articles = [a.serialize() if a else None for a in dao_get_articles_by_tags(tags)]
     return jsonify(articles)
 
 
@@ -219,7 +227,7 @@ def add_article():
         content=data['content'],
         image_filename=data['image_filename'],
         magazine_id=data.get('magazine_id'),
-        tags=data['tags'],
+        tags=data['tags'] + ',',
         article_state=data['article_state']
     )
 

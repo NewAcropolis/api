@@ -98,6 +98,24 @@ class WhenGettingArticles:
         assert len(data) == 2
         assert set([str(sample_article.id), str(article_1.id)]) == set(article_ids.split(','))
 
+    def it_returns_articles_by_tags(self, client, sample_article, db_session):
+        article_1 = create_article(title='test 1', tags='music')
+        article_2 = create_article(title='test 2', tags='art')
+        article_3 = create_article(title='test 3', tags='music,art')
+        article_4 = create_article(title='test 4', tags='physics')
+        create_article(title='test 5', tags='')
+
+        response = client.get(
+            url_for('articles.get_articles_by_tags', tags='art,physics'),
+            headers=[create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+        data = json.loads(response.get_data(as_text=True))
+
+        assert len(data) == 2
+        assert [article_2.serialize(), article_4.serialize()] == data
+
 
 class WhenGettingArticleByID:
 
@@ -203,7 +221,7 @@ class WhenPostingAddArticle:
         assert len(articles) == 1
         assert articles[0].title == data['title']
         assert articles[0].article_state == DRAFT
-        assert articles[0].tags == data['tags']
+        assert articles[0].tags == data['tags'] + ","
         assert articles[0].magazine_id == sample_magazine.id
 
     def it_handles_duplicate_article_when_adding(self, client, db_session, sample_article):

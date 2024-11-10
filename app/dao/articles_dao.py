@@ -39,3 +39,11 @@ def dao_get_article_by_id(article_id):
 
 def dao_get_article_by_title_author(title, author):
     return Article.query.filter_by(title=title, author=author).first()
+
+
+def dao_get_articles_by_tags(tags):
+    articles = []
+    for tag in tags.split(","):
+        for article in Article.query.filter(Article.tags.like(f"{tag},")).all():
+            articles.append(article)
+    return articles
