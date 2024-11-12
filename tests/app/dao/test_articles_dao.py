@@ -2,7 +2,7 @@ import json
 
 from app.dao.articles_dao import dao_create_article, \
     dao_update_article, dao_get_articles, dao_get_article_by_id, dao_get_articles_by_tags
-from app.models import Article
+from app.models import Article, APPROVED
 
 from tests.db import create_article
 
@@ -38,9 +38,9 @@ class WhenUsingArticlesDAO:
         assert fetched_article == article
 
     def it_gets_articles_by_tags(self, db, db_session, sample_article):
-        article = create_article(tags='music')
-        art_article = create_article(tags='art')
-        create_article(tags='')
+        article = create_article(tags='music', image_filename='a.jpg', article_state=APPROVED)
+        art_article = create_article(tags='art', image_filename='a.jpg', article_state=APPROVED)
+        create_article(tags='', image_filename='a.jpg', article_state=APPROVED)
 
         fetched_articles = dao_get_articles_by_tags('music,art')
         assert fetched_articles == [article, art_article]

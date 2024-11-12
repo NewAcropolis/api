@@ -24,13 +24,18 @@ def dao_get_articles(article_ids=None):
         return Article.query.filter(Article.id.in_(article_ids)).order_by(Article.title).all()
 
 
-def dao_get_articles_with_images():
-    return Article.query.filter(
+def dao_get_articles_with_images(limit=None):
+    article_query = Article.query.filter(
         and_(
-            Article.image_filename != None,
+            Article.image_filename != None,  # noqa E711 SqlAlchemy syntax
             Article.article_state == APPROVED
         )
-    ).all()  # noqa E711 SqlAlchemy syntax
+    )
+
+    if not limit:
+        return article_query.all()  # noqa E711 SqlAlchemy syntax
+    else:
+        return article_query.limit(limit).all()
 
 
 def dao_get_article_by_id(article_id):
@@ -44,6 +49,12 @@ def dao_get_article_by_title_author(title, author):
 def dao_get_articles_by_tags(tags):
     articles = []
     for tag in tags.split(","):
-        for article in Article.query.filter(Article.tags.like(f"{tag},")).all():
+        for article in Article.query.filter(
+                and_(
+                    Article.tags.like(f"{tag},"),
+                    Article.image_filename != None,  # noqa E711 SqlAlchemy syntax
+                    Article.article_state == APPROVED
+                )
+        ).all():
             articles.append(article)
     return articles

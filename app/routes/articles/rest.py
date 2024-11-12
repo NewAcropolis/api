@@ -58,9 +58,24 @@ def get_articles():
 
 @articles_blueprint.route('/articles/<string:tags>')
 @jwt_required()
-def get_articles_by_tags(tags):
+def get_articles_by_tags(tags, all=False):
     articles = [a.serialize() if a else None for a in dao_get_articles_by_tags(tags)]
+
+    if all:
+        extra_articles = [a.serialize() if a else None for a in dao_get_articles_with_images()]
+        articles += extra_articles
+    elif len(articles) < 5:
+        num_extra_articles = 5 - len(articles)
+        extra_articles = [a.serialize() if a else None for a in dao_get_articles_with_images(num_extra_articles)]
+        articles += extra_articles
+
     return jsonify(articles)
+
+
+@articles_blueprint.route('/articles/all/<string:tags>')
+@jwt_required()
+def get_all_articles_with_tags_prioritised(tags):
+    return get_articles_by_tags(tags, all=True)
 
 
 @articles_blueprint.route('/articles/summary')
