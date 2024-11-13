@@ -451,6 +451,7 @@ class Event(db.Model):
     remote_access = db.Column(db.String())
     remote_pw = db.Column(db.String())
     show_banner_text = db.Column(db.Boolean, default=True)
+    headline = db.Column(db.Boolean, default=False)
 
     def serialize_event_dates(self):
         def serialize_speakers(speakers):
@@ -534,6 +535,7 @@ class Event(db.Model):
             'reject_reasons': serlialized_reject_reasons(),
             'has_expired': has_expired(_sorted_event_dates),
             'show_banner_text': self.show_banner_text,
+            'headline': self.headline,
         }
 
         if with_dates:

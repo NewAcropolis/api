@@ -351,6 +351,7 @@ class WhenUsingOrderModel:
                         'fee': 5,
                         'has_expired': True,
                         'show_banner_text': True,
+                        'headline': False,
                         'id': str(sample_event_with_dates.id),
                         'image_filename': None,
                         'multi_day_conc_fee': 10,
