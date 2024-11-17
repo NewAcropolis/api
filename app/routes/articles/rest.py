@@ -57,19 +57,31 @@ def get_articles():
 
 
 @articles_blueprint.route('/articles/<string:tags>')
+@articles_blueprint.route('/articles/tags/<string:tags>')
 @jwt_required()
-def get_articles_by_tags(tags, all=False):
-    articles = [a.serialize() if a else None for a in dao_get_articles_by_tags(tags)]
+def get_articles_by_tags(tags, all=False, summary=False):
+    articles = [
+        (a.serialize_summary() if summary else a.serialize()) if a else None for a in dao_get_articles_by_tags(tags)]
 
     if all:
-        extra_articles = [a.serialize() if a else None for a in dao_get_articles_with_images()]
+        extra_articles = [
+            (a.serialize_summary() if summary else a.serialize())
+            if a else None for a in dao_get_articles_with_images()]
         articles += extra_articles
     elif len(articles) < 5:
         num_extra_articles = 5 - len(articles)
-        extra_articles = [a.serialize() if a else None for a in dao_get_articles_with_images(num_extra_articles)]
+        extra_articles = [
+            (a.serialize_summary() if summary else a.serialize())
+            if a else None for a in dao_get_articles_with_images(num_extra_articles)]
         articles += extra_articles
 
     return jsonify(articles)
+
+
+@articles_blueprint.route('/articles/summary/tags/<string:tags>')
+@jwt_required()
+def get_articles_summary_by_tags(tags, all=False):
+    return get_articles_by_tags(tags, all, summary=True)
 
 
 @articles_blueprint.route('/articles/all/<string:tags>')
@@ -79,24 +91,20 @@ def get_all_articles_with_tags_prioritised(tags):
 
 
 @articles_blueprint.route('/articles/summary')
-@articles_blueprint.route('/articles/summary/<string:ids>')
 @jwt_required()
 def get_articles_summary(ids=None):
-    if not ids:
-        current_app.logger.info('Limit articles summary to 5')
-        articles = dao_get_articles_with_images()
-        len_articles = len(articles)
+    current_app.logger.info('Limit articles summary to 5')
+    articles = dao_get_articles_with_images()
+    len_articles = len(articles)
 
-        ids = []
+    ids = []
 
-        end = 5 if len_articles > 4 else len_articles
+    end = 5 if len_articles > 4 else len_articles
 
-        while len(ids) < end:
-            index = randint(0, len(articles) - 1)
-            if str(articles[index].id) not in ids:
-                ids.append(str(articles[index].id))
-    else:
-        ids = ids.split(',')
+    while len(ids) < end:
+        index = randint(0, len(articles) - 1)
+        if str(articles[index].id) not in ids:
+            ids.append(str(articles[index].id))
 
     articles = [a.serialize_summary() if a else None for a in dao_get_articles(ids)]
     return jsonify(articles)

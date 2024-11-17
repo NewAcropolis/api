@@ -82,23 +82,11 @@ class WhenGettingArticles:
 
         assert len(data) == 5
 
-    def it_returns_selected_article_summary(self, client, sample_article, db_session):
-        article_1 = create_article(title='test 1')
-        create_article(title='test 2')
-
-        article_ids = "{},{}".format(sample_article.id, article_1.id)
-        response = client.get(
-            url_for('articles.get_articles_summary', ids=article_ids),
-            headers=[create_authorization_header()]
-        )
-        assert response.status_code == 200
-
-        data = json.loads(response.get_data(as_text=True))
-
-        assert len(data) == 2
-        assert set([str(sample_article.id), str(article_1.id)]) == set(article_ids.split(','))
-
-    def it_returns_articles_by_tags_and_other_articles(self, client, sample_article, db_session):
+    @pytest.mark.parametrize("method_call", [
+        'get_articles_by_tags',
+        'get_articles_summary_by_tags'
+    ])
+    def it_returns_articles_by_tags_and_other_articles(self, client, method_call, sample_article, db_session):
         article_1 = create_article(title='test 1', tags='music', image_filename='a.jpg', article_state=APPROVED)
         article_2 = create_article(title='test 2', tags='art', image_filename='b.jpg', article_state=APPROVED)
         article_3 = create_article(title='test 3', tags='music,art', image_filename='c.jpg', article_state=APPROVED)
@@ -106,7 +94,7 @@ class WhenGettingArticles:
         create_article(title='test 5', tags='')
 
         response = client.get(
-            url_for('articles.get_articles_by_tags', tags='art,physics'),
+            url_for(f'articles.{method_call}', tags='art,physics'),
             headers=[create_authorization_header()]
         )
 
@@ -114,8 +102,12 @@ class WhenGettingArticles:
         data = json.loads(response.get_data(as_text=True))
 
         assert len(data) == 5
-        assert article_2.serialize() == data[0]
-        assert article_4.serialize() == data[1]
+        if method_call == 'get_articles_by_tags':
+            assert article_2.serialize() == data[0]
+            assert article_4.serialize() == data[1]
+        else:
+            assert article_2.serialize_summary() == data[0]
+            assert article_4.serialize_summary() == data[1]
 
     def it_returns_articles_by_tags_prioritised_and_all_articles(self, client, sample_article, db_session):
         article_1 = create_article(title='test 1', tags='music', image_filename='a.jpg', article_state=APPROVED)
