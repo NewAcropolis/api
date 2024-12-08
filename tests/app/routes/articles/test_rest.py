@@ -82,21 +82,51 @@ class WhenGettingArticles:
 
         assert len(data) == 5
 
-    def it_returns_selected_article_summary(self, client, sample_article, db_session):
-        article_1 = create_article(title='test 1')
-        create_article(title='test 2')
+    @pytest.mark.parametrize("method_call", [
+        'get_articles_by_tags',
+        'get_articles_summary_by_tags'
+    ])
+    def it_returns_articles_by_tags_and_other_articles(self, client, method_call, sample_article, db_session):
+        article_1 = create_article(title='test 1', tags='music', image_filename='a.jpg', article_state=APPROVED)
+        article_2 = create_article(title='test 2', tags='art', image_filename='b.jpg', article_state=APPROVED)
+        article_3 = create_article(title='test 3', tags='music,art', image_filename='c.jpg', article_state=APPROVED)
+        article_4 = create_article(title='test 4', tags='physics', image_filename='d.jpg', article_state=APPROVED)
+        create_article(title='test 5', tags='')
 
-        article_ids = "{},{}".format(sample_article.id, article_1.id)
         response = client.get(
-            url_for('articles.get_articles_summary', ids=article_ids),
+            url_for(f'articles.{method_call}', tags='art,physics'),
             headers=[create_authorization_header()]
         )
-        assert response.status_code == 200
 
+        assert response.status_code == 200
         data = json.loads(response.get_data(as_text=True))
 
-        assert len(data) == 2
-        assert set([str(sample_article.id), str(article_1.id)]) == set(article_ids.split(','))
+        assert len(data) == 5
+        if method_call == 'get_articles_by_tags':
+            assert article_2.serialize() == data[0]
+            assert article_4.serialize() == data[1]
+        else:
+            assert article_2.serialize_summary() == data[0]
+            assert article_4.serialize_summary() == data[1]
+
+    def it_returns_articles_by_tags_prioritised_and_all_articles(self, client, sample_article, db_session):
+        article_1 = create_article(title='test 1', tags='music', image_filename='a.jpg', article_state=APPROVED)
+        article_2 = create_article(title='test 2', tags='art', image_filename='b.jpg', article_state=APPROVED)
+        article_3 = create_article(title='test 3', tags='music,art', image_filename='c.jpg', article_state=APPROVED)
+        article_4 = create_article(title='test 4', tags='physics', image_filename='d.jpg', article_state=APPROVED)
+        create_article(title='test 5', tags='')
+
+        response = client.get(
+            url_for('articles.get_all_articles_with_tags_prioritised', tags='art,physics'),
+            headers=[create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+        data = json.loads(response.get_data(as_text=True))
+
+        assert len(data) == 6
+        assert article_2.serialize() == data[0]
+        assert article_4.serialize() == data[1]
 
 
 class WhenGettingArticleByID:
@@ -203,7 +233,7 @@ class WhenPostingAddArticle:
         assert len(articles) == 1
         assert articles[0].title == data['title']
         assert articles[0].article_state == DRAFT
-        assert articles[0].tags == data['tags']
+        assert articles[0].tags == data['tags'] + ","
         assert articles[0].magazine_id == sample_magazine.id
 
     def it_handles_duplicate_article_when_adding(self, client, db_session, sample_article):

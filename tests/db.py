@@ -197,7 +197,8 @@ def create_article(
         author='Mrs Black',
         content='Some info about Egypt\r\n\"Something in quotes\"',
         image_filename='article.jpg',
-        article_state=None
+        article_state=None,
+        tags='test'
 ):
     data = {
         'old_id': old_id,
@@ -205,7 +206,8 @@ def create_article(
         'author': author,
         'content': content,
         'image_filename': image_filename,
-        'article_state': article_state
+        'article_state': article_state,
+        'tags': tags + ","
     }
     article = Article(**data)
 
