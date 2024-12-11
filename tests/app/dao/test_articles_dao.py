@@ -31,6 +31,12 @@ class WhenUsingArticlesDAO:
         assert Article.query.count() == 2
         assert set(articles) == set(articles_from_db)
 
+    def it_gets_articles_with_limit(self, db, db_session, sample_article):
+        create_article()
+
+        articles_from_db = dao_get_articles(1)
+        assert len(articles_from_db) == 1
+
     def it_gets_an_article_by_id(self, db, db_session, sample_article):
         article = create_article()
 
