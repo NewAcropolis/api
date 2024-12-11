@@ -87,10 +87,10 @@ class WhenGettingArticles:
         'get_articles_summary_by_tags'
     ])
     def it_returns_articles_by_tags_and_other_articles(self, client, method_call, sample_article, db_session):
-        article_1 = create_article(title='test 1', tags='music', image_filename='a.jpg', article_state=APPROVED)
-        article_2 = create_article(title='test 2', tags='art', image_filename='b.jpg', article_state=APPROVED)
-        article_3 = create_article(title='test 3', tags='music,art', image_filename='c.jpg', article_state=APPROVED)
-        article_4 = create_article(title='test 4', tags='physics', image_filename='d.jpg', article_state=APPROVED)
+        article_1 = create_article(title='test 1', tags='music,', image_filename='a.jpg', article_state=APPROVED)
+        article_2 = create_article(title='test 2', tags='art,', image_filename='b.jpg', article_state=APPROVED)
+        article_3 = create_article(title='test 3', tags='music,art,', image_filename='c.jpg', article_state=APPROVED)
+        article_4 = create_article(title='test 4', tags='physics,', image_filename='d.jpg', article_state=APPROVED)
         create_article(title='test 5', tags='')
 
         response = client.get(
@@ -103,30 +103,11 @@ class WhenGettingArticles:
 
         assert len(data) == 5
         if method_call == 'get_articles_by_tags':
-            assert article_2.serialize() == data[0]
-            assert article_4.serialize() == data[1]
+            assert article_2.serialize() in data
+            assert article_4.serialize() in data
         else:
-            assert article_2.serialize_summary() == data[0]
-            assert article_4.serialize_summary() == data[1]
-
-    def it_returns_articles_by_tags_prioritised_and_all_articles(self, client, sample_article, db_session):
-        article_1 = create_article(title='test 1', tags='music', image_filename='a.jpg', article_state=APPROVED)
-        article_2 = create_article(title='test 2', tags='art', image_filename='b.jpg', article_state=APPROVED)
-        article_3 = create_article(title='test 3', tags='music,art', image_filename='c.jpg', article_state=APPROVED)
-        article_4 = create_article(title='test 4', tags='physics', image_filename='d.jpg', article_state=APPROVED)
-        create_article(title='test 5', tags='')
-
-        response = client.get(
-            url_for('articles.get_all_articles_with_tags_prioritised', tags='art,physics'),
-            headers=[create_authorization_header()]
-        )
-
-        assert response.status_code == 200
-        data = json.loads(response.get_data(as_text=True))
-
-        assert len(data) == 6
-        assert article_2.serialize() == data[0]
-        assert article_4.serialize() == data[1]
+            assert article_2.serialize_summary() in data
+            assert article_4.serialize_summary() in data
 
 
 class WhenGettingArticleByID:
@@ -243,7 +224,7 @@ class WhenPostingAddArticle:
             'content': 'Something interesting',
             'image_filename': 'new_filename.jpg',
             'image_data': base64img_encoded(),
-            'tags': 'Some tag',
+            'tags': 'some tag',
             'article_state': 'draft'
         }
         response = client.post(
@@ -316,7 +297,7 @@ class WhenPostingUpdateArticle:
         assert len(articles) == 1
         assert articles[0].title == data['title']
         assert articles[0].article_state == READY
-        assert articles[0].tags == data['tags']
+        assert articles[0].tags == data['tags'] + ','
         assert mock_smtp.called
 
     def it_does_not_update_an_article(

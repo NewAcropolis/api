@@ -38,9 +38,18 @@ class WhenUsingArticlesDAO:
         assert fetched_article == article
 
     def it_gets_articles_by_tags(self, db, db_session, sample_article):
-        article = create_article(tags='music', image_filename='a.jpg', article_state=APPROVED)
-        art_article = create_article(tags='art', image_filename='a.jpg', article_state=APPROVED)
+        article = create_article(tags='music,', image_filename='a.jpg', article_state=APPROVED)
+        art_article = create_article(tags='art,', image_filename='a.jpg', article_state=APPROVED)
         create_article(tags='', image_filename='a.jpg', article_state=APPROVED)
 
         fetched_articles = dao_get_articles_by_tags('music,art')
+
         assert fetched_articles == [article, art_article]
+
+    def it_gets_articles_by_not_matching_tags(self, db, db_session, sample_article):
+        article = create_article(tags='music,', image_filename='a.jpg', article_state=APPROVED)
+        art_article = create_article(tags='art,', image_filename='a.jpg', article_state=APPROVED)
+        no_tags_article = create_article(tags='', image_filename='a.jpg', article_state=APPROVED)
+
+        fetched_articles = dao_get_articles(without_tags='music')
+        assert fetched_articles == [sample_article, art_article, no_tags_article]
