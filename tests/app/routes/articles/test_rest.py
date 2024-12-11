@@ -55,6 +55,7 @@ class WhenGettingArticles:
         assert data[0]['id'] == str(sample_article.id)
 
     def it_returns_all_articles_summary(self, client, sample_article, db_session):
+        article = create_article(title='test 1', article_state=APPROVED)
         response = client.get(
             url_for('articles.get_articles_summary'),
             headers=[create_authorization_header()]
@@ -64,7 +65,7 @@ class WhenGettingArticles:
         data = json.loads(response.get_data(as_text=True))
 
         assert len(data) == 1
-        assert data[0]['id'] == str(sample_article.id)
+        assert data[0]['id'] == str(article.id)
 
     def it_returns_up_to_5_articles_summary(self, client, sample_article, db_session):
         create_article(title='test 1', article_state=APPROVED)

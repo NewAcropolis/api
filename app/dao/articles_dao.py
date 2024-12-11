@@ -1,4 +1,4 @@
-from sqlalchemy import and_, not_
+from sqlalchemy import and_, not_, func
 
 from app import db
 from app.dao.decorators import transactional
@@ -34,15 +34,25 @@ def dao_get_articles(article_ids=None, limit=None, without_tags=None):
         return articles.all()
 
 
-def dao_get_articles_with_images():
+def dao_get_articles_with_images(limit=5, without_tags=None):
     article_query = Article.query.filter(
         and_(
-            Article.image_filename != None,  # noqa E711 SqlAlchemy syntax
+            Article.image_filename + '' != '',  # noqa E711 SqlAlchemy syntax
             Article.article_state == APPROVED
         )
     )
 
-    return article_query.all()  # noqa E711 SqlAlchemy syntax
+    articles = article_query.order_by(func.random()).limit(limit).all()
+
+    if without_tags:
+        articles_without_tag = []
+        for article in articles:
+            for tag in without_tags.split(','):
+                if article not in articles_without_tag and (not article.tags or tag + ',' not in article.tags):
+                    articles_without_tag.append(article)
+        return articles_without_tag
+    else:
+        return articles
 
 
 def dao_get_article_by_id(article_id):
@@ -60,7 +70,7 @@ def dao_get_articles_by_tags(tags):
             for article in Article.query.filter(
                     and_(
                         Article.tags.ilike(f"%{tag},%"),
-                        Article.image_filename != None,  # noqa E711 SqlAlchemy syntax
+                        Article.image_filename + '' != '',  # noqa E711 SqlAlchemy syntax
                         Article.article_state == APPROVED
                     )
             ).all():
