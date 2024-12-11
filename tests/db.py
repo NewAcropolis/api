@@ -207,7 +207,7 @@ def create_article(
         'content': content,
         'image_filename': image_filename,
         'article_state': article_state,
-        'tags': tags + ","
+        'tags': tags
     }
     article = Article(**data)
 
