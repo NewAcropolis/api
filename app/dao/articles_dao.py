@@ -20,12 +20,10 @@ def dao_update_article(article_id, **kwargs):
     )
 
 
-def dao_get_articles(article_ids=None, limit=None, without_tags=None):
+def dao_get_articles(limit=None, without_tags=None):
     articles = None
     if without_tags:
         articles = Article.query.filter(not_(Article.tags.ilike(f"%{without_tags},%")))
-    elif article_ids:
-        articles = Article.query.filter(Article.id.in_(article_ids)).order_by(Article.title)
     else:
         articles = Article.query.order_by(Article.title)
     if limit:
