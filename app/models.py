@@ -91,6 +91,7 @@ class Article(db.Model):
             'short_content': get_short_content(num_words=110),
             'very_short_content': get_short_content(num_words=30),
             'image_filename': self.image_filename,
+            'tags': self.tags,
         }
 
 

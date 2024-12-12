@@ -66,7 +66,7 @@ def get_articles_by_tags(tags=None, summary=False):
         num_extra_articles = 5 - len(articles)
         extra_articles = [
             (a.serialize_summary() if summary else a.serialize())
-            if a else None for a in dao_get_articles(limit=num_extra_articles, without_tags=tags)]
+            if a else None for a in dao_get_articles_with_images(limit=num_extra_articles, without_tags=tags)]
         articles += extra_articles
 
     return jsonify(articles)
@@ -82,19 +82,8 @@ def get_articles_summary_by_tags(tags):
 @jwt_required()
 def get_articles_summary(ids=None):
     current_app.logger.info('Limit articles summary to 5')
-    articles = dao_get_articles_with_images()
-    len_articles = len(articles)
 
-    ids = []
-
-    end = 5 if len_articles > 4 else len_articles
-
-    while len(ids) < end:
-        index = randint(0, len(articles) - 1)
-        if str(articles[index].id) not in ids:
-            ids.append(str(articles[index].id))
-
-    articles = [a.serialize_summary() if a else None for a in dao_get_articles(ids)]
+    articles = [a.serialize_summary() if a else None for a in dao_get_articles_with_images()]
     return jsonify(articles)
 
 
