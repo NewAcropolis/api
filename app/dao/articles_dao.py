@@ -1,4 +1,4 @@
-from sqlalchemy import and_, not_, func
+from sqlalchemy import and_, not_, or_, func
 
 from app import db
 from app.dao.decorators import transactional
@@ -23,7 +23,11 @@ def dao_update_article(article_id, **kwargs):
 def dao_get_articles(limit=None, without_tags=None):
     articles = None
     if without_tags:
-        articles = Article.query.filter(not_(Article.tags.ilike(f"%{without_tags},%")))
+        without_tag_filter = ()
+        for tag in without_tags.split(','):
+            without_tag_filter = (*without_tag_filter, not_(Article.tags.ilike(f"%{tag},%")))
+
+        articles = Article.query.filter(or_(*without_tag_filter, Article.tags.is_(None))).order_by(Article.title)
     else:
         articles = Article.query.order_by(Article.title)
     if limit:
@@ -33,24 +37,26 @@ def dao_get_articles(limit=None, without_tags=None):
 
 
 def dao_get_articles_with_images(limit=5, without_tags=None):
-    article_query = Article.query.filter(
-        and_(
-            Article.image_filename + '' != '',  # noqa E711 SqlAlchemy syntax
-            Article.article_state == APPROVED
-        )
-    )
-
-    articles = article_query.order_by(func.random()).limit(limit).all()
-
     if without_tags:
-        articles_without_tag = []
-        for article in articles:
-            for tag in without_tags.split(','):
-                if article not in articles_without_tag and (not article.tags or tag + ',' not in article.tags):
-                    articles_without_tag.append(article)
-        return articles_without_tag
+        without_tag_filter = ()
+        for tag in without_tags.split(','):
+            without_tag_filter = (*without_tag_filter, not_(Article.tags.ilike(f"%{tag},%")))
+
+        article_query = Article.query.filter(
+            and_(
+                or_(*without_tag_filter, Article.tags.is_(None)),
+                Article.image_filename + '' != '',  # noqa E711 SqlAlchemy syntax
+                Article.article_state == APPROVED
+            )
+        )
     else:
-        return articles
+        article_query = Article.query.filter(
+            and_(
+                Article.image_filename + '' != '',  # noqa E711 SqlAlchemy syntax
+                Article.article_state == APPROVED
+            )
+        )
+    return article_query.order_by(func.random()).limit(limit).all()
 
 
 def dao_get_article_by_id(article_id):
