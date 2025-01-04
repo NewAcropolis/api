@@ -138,6 +138,25 @@ def upload_magazines(folder='data/pdfs'):
             application.logger.info("Magazine already uploaded: %s", item['Title'])
 
 
+@manager.command
+def get_emails_for_sending():
+    from flask import Flask
+    from flask_sqlalchemy import SQLAlchemy
+    application = Flask(__name__)
+    application.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+
+    db = SQLAlchemy(application)
+
+    from app.dao.emails_dao import dao_get_approved_emails_for_sending
+    emails = dao_get_approved_emails_for_sending()
+
+    if emails:
+        for email in emails:
+            print(email.subject)
+    else:
+        print("No emails to send")
+
+
 def get_access_token():
     auth_payload = {
         "username": application.config['ADMIN_CLIENT_ID'],
