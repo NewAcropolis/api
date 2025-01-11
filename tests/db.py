@@ -257,7 +257,7 @@ def create_email(
 ):
     if magazine_id:
         old_event_id = None
-    elif old_event_id:
+    elif not event_id and old_event_id:
         event = dao_get_event_by_old_id(old_event_id)
         if not event:
             event = create_event(old_id=old_event_id)

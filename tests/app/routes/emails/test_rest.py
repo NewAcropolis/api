@@ -347,6 +347,95 @@ class WhenPostingCreateEmail:
         emails = Email.query.all()
         assert not emails
 
+    def it_does_not_create_an_event_email_if_event_email_exists(self, client, db_session, sample_event_with_dates):
+        create_email(
+            event_id=str(sample_event_with_dates.id),
+            details="Some detail",
+            email_type="event"
+        )
+        data = {
+            "event_id": str(sample_event_with_dates.id),
+            "details": "<div>Some additional details</div>",
+            "extra_txt": "<div>Some more information about the event</div>",
+            "replace_all": False,
+            "email_type": "event"
+        }
+
+        response = client.post(
+            url_for('emails.create_email'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp['message'] == 'event email already exists: {}'.format(sample_event_with_dates.id)
+        emails = Email.query.all()
+        assert len(emails) == 1
+
+    def it_creates_a_magazine_email(self, client, db_session, sample_magazine):
+        data = {
+            "magazine_id": str(sample_magazine.id),
+            "details": "<div>Some additional details</div>",
+            "extra_txt": "<div>Some more information about the magazine</div>",
+            "replace_all": False,
+            "email_type": "magazine"
+        }
+
+        response = client.post(
+            url_for('emails.create_email'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 201
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp['email_type'] == 'magazine'
+        assert not json_resp['old_id']
+        assert json_resp['magazine_id'] == str(sample_magazine.id)
+        assert not json_resp['old_event_id']
+        assert json_resp['extra_txt'] == '<div>Some more information about the magazine</div>'
+        assert json_resp['details'] == '<div>Some additional details</div>'
+        assert not json_resp['replace_all']
+
+        emails = Email.query.all()
+
+        assert len(emails) == 1
+        assert emails[0].email_type == 'magazine'
+        assert emails[0].magazine_id == sample_magazine.id
+
+    def it_does_not_create_a_magazine_email_if_magazine_email_exists(self, client, db_session, sample_magazine):
+        create_email(
+            magazine_id=str(sample_magazine.id),
+            details="Some detail",
+            email_type="magazine"
+        )
+        data = {
+            "magazine_id": str(sample_magazine.id),
+            "details": "<div>Some additional details</div>",
+            "extra_txt": "<div>Some more information about the magazine</div>",
+            "replace_all": False,
+            "email_type": "magazine"
+        }
+
+        response = client.post(
+            url_for('emails.create_email'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp['message'] == 'magazine email already exists: {}'.format(sample_magazine.id)
+        emails = Email.query.all()
+        assert len(emails) == 1
+
 
 class WhenPostingUpdateEmail:
 

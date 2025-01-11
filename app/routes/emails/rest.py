@@ -25,6 +25,7 @@ from app.dao.emails_dao import (
     dao_get_future_emails,
     dao_get_latest_emails,
     dao_get_email_by_id,
+    dao_get_email_by_event_id,
     dao_get_email_by_magazine_id,
     dao_get_emails_for_year_starting_on,
     dao_update_email,
@@ -69,6 +70,24 @@ def create_email():
     validate(data, post_create_email_schema)
 
     email = Email(**data)
+
+    if data['email_type'] == EVENT:
+        try:
+            event = dao_get_event_by_id(data.get('event_id'))
+        except NoResultFound:
+            raise InvalidRequest('event not found: {}'.format(data.get('event_id')), 400)
+
+        if dao_get_email_by_event_id(data.get('event_id')):
+            raise InvalidRequest('event email already exists: {}'.format(data.get('event_id')), 400)
+
+    elif data['email_type'] == MAGAZINE:
+        try:
+            magazine = dao_get_magazine_by_id(email.magazine_id)
+        except NoResultFound:
+            raise InvalidRequest('magazine not found: {}'.format(data.get('magazine_id')), 400)
+
+        if dao_get_email_by_magazine_id(email.magazine_id):
+            raise InvalidRequest('magazine email already exists: {}'.format(data.get('magazine_id')), 400)
 
     dao_create_email(email)
 
