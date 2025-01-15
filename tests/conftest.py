@@ -148,12 +148,13 @@ def sample_book(db):
 
 
 @pytest.fixture(scope='function')
-def sample_email(db):
+def sample_email(db, sample_event_with_dates):
     return create_email(
         details='<strong>Fees:</strong> 10, <strong>Concessions:</strong> 5',
         created_at='2019-06-01',
         expires='2019-07-01',
-        email_state=APPROVED
+        email_state=APPROVED,
+        event_id=sample_event_with_dates.id
     )
 
 

@@ -25,6 +25,7 @@ from app.dao.emails_dao import (
     dao_get_future_emails,
     dao_get_latest_emails,
     dao_get_email_by_id,
+    dao_get_email_by_event_id,
     dao_get_email_by_magazine_id,
     dao_get_emails_for_year_starting_on,
     dao_update_email,
