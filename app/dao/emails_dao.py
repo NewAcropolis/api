@@ -30,6 +30,9 @@ def dao_create_email(email):
     if email.email_type == EVENT:
         try:
             event = dao_get_event_by_id(email.event_id)
+            if dao_get_email_by_event_id(email.event_id):
+                raise InvalidRequest('event email already exists: {}'.format(email.event_id), 400)
+
             email.subject = u"{}: {}".format(event.event_type.event_type, event.title)
             if not email.send_starts_at:
                 email.send_starts_at = datetime.strptime(event.get_first_event_date(), "%Y-%m-%d") - timedelta(weeks=2)
@@ -41,6 +44,9 @@ def dao_create_email(email):
         if email.magazine_id:
             try:
                 magazine = dao_get_magazine_by_id(email.magazine_id)
+                if dao_get_email_by_magazine_id(email.magazine_id):
+                    raise InvalidRequest('magazine email already exists: {}'.format(email.magazine_id), 400)
+
                 email.subject = u"New Acropolis bi-monthly magazine: {}".format(magazine.title)
                 if not email.send_starts_at:
                     email.send_starts_at = _get_nearest_bi_monthly_send_date()

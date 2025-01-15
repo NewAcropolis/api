@@ -19,7 +19,8 @@ from app.dao.emails_dao import (
 from app.errors import InvalidRequest
 from app.models import Email, EmailToMember, ANON_REMINDER, ANNOUNCEMENT, MAGAZINE, APPROVED, READY
 
-from tests.db import create_email, create_email_provider, create_email_to_member, create_magazine, create_member
+from tests.db import create_email, create_email_provider, create_email_to_member, create_event, \
+    create_magazine, create_member
 
 
 class WhenUsingEmailsDAO(object):
@@ -117,9 +118,11 @@ class WhenUsingEmailsDAO(object):
 
     @freeze_time("2019-06-10T10:00:00")
     def it_gets_emails_from_starting_date_from_specified_date(self, db, db_session):
+        _event = create_event()
         emails = [
             create_email(details='more details', created_at='2019-02-01'),
-            create_email(details='more details', created_at='2018-02-01')
+            create_email(
+                event_id=_event.id, details='more details', created_at='2018-02-01', send_starts_at='2019-06-12')
         ]
 
         emails_from_db = dao_get_emails_for_year_starting_on('2018-01-01')
@@ -135,10 +138,16 @@ class WhenUsingEmailsDAO(object):
     @freeze_time("2019-07-10T10:00:00")
     def it_gets_future_emails(self, db, db_session):
         active_email = create_email(created_at='2019-07-01 11:00', send_starts_at='2019-07-10', expires='2019-07-20')
-        active_email_2 = create_email(created_at='2019-07-01 11:00', send_starts_at='2019-07-01', expires='2019-07-12')
-        active_email_3 = create_email(created_at='2019-07-01 11:00', send_starts_at='2019-07-11', expires='2019-07-18')
+        event_2 = create_event()
+        active_email_2 = create_email(
+            event_id=event_2.id, created_at='2019-07-01 11:00', send_starts_at='2019-07-01', expires='2019-07-12')
+        event_3 = create_event()
+        active_email_3 = create_email(
+            event_id=event_3.id, created_at='2019-07-01 11:00', send_starts_at='2019-07-11', expires='2019-07-18')
         # these emails below are not active
-        create_email(created_at='2019-07-01 11:00', send_starts_at='2019-07-01', expires='2019-07-09')
+        _event = create_event()
+        create_email(
+            event_id=_event.id, created_at='2019-07-01 11:00', send_starts_at='2019-07-01', expires='2019-07-09')
 
         emails_from_db = dao_get_future_emails()
         assert len(emails_from_db) == 3
@@ -293,7 +302,7 @@ class WhenUsingEmailsDAO(object):
 
     @freeze_time("2020-12-20T12:30:00")
     def it_get_emails_sent_count_for_current_month(
-        self, db, db_session, sample_member, sample_email
+        self, db, db_session, sample_member
     ):
         email = create_email(
             send_starts_at="2020-11-30",
@@ -326,13 +335,15 @@ class WhenUsingEmailsDAO(object):
 
     @freeze_time("2020-12-20T12:30:00")
     def it_get_emails_sent_count_for_specified_month(
-        self, db, db_session, sample_member, sample_email
+        self, db, db_session, sample_member
     ):
         email = create_email(
             send_starts_at="2020-11-30",
             send_after="2020-11-30T20:30:00",
             expires="2020-12-20",
-            email_state=APPROVED
+            email_state=APPROVED,
+            old_event_id=None,
+            email_type=MAGAZINE
         )
         member = create_member(
             email="test1@example.com"

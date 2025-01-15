@@ -241,7 +241,7 @@ def create_book(
 
 def create_email(
         old_id=1,
-        old_event_id=2,
+        old_event_id=None,
         event_id=None,
         magazine_id=None,
         details='test event details',
@@ -257,11 +257,15 @@ def create_email(
 ):
     if magazine_id:
         old_event_id = None
-    elif not event_id and old_event_id:
+    elif old_event_id:
         event = dao_get_event_by_old_id(old_event_id)
         if not event:
             event = create_event(old_id=old_event_id)
             create_event_date(event_id=str(event.id), event_datetime='2019-06-21 19:00')
+        event_id = str(event.id)
+    elif not event_id:
+        event = create_event(title='test title')
+        create_event_date(event_id=str(event.id), event_datetime='2019-06-21 19:00')
         event_id = str(event.id)
 
     data = {

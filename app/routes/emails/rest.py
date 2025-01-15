@@ -71,24 +71,6 @@ def create_email():
 
     email = Email(**data)
 
-    if data['email_type'] == EVENT:
-        try:
-            event = dao_get_event_by_id(data.get('event_id'))
-        except NoResultFound:
-            raise InvalidRequest('event not found: {}'.format(data.get('event_id')), 400)
-
-        if dao_get_email_by_event_id(data.get('event_id')):
-            raise InvalidRequest('event email already exists: {}'.format(data.get('event_id')), 400)
-
-    elif data['email_type'] == MAGAZINE:
-        try:
-            magazine = dao_get_magazine_by_id(email.magazine_id)
-        except NoResultFound:
-            raise InvalidRequest('magazine not found: {}'.format(data.get('magazine_id')), 400)
-
-        if dao_get_email_by_magazine_id(email.magazine_id):
-            raise InvalidRequest('magazine email already exists: {}'.format(data.get('magazine_id')), 400)
-
     dao_create_email(email)
 
     return jsonify(email.serialize()), 201

@@ -347,6 +347,29 @@ class WhenPostingCreateEmail:
         emails = Email.query.all()
         assert not emails
 
+    def it_does_not_create_an_event_email_if_no_event_matches(self, client, db_session, sample_uuid):
+        data = {
+            "event_id": sample_uuid,
+            "details": "<div>Some additional details</div>",
+            "extra_txt": "<div>Some more information about the event</div>",
+            "replace_all": False,
+            "email_type": "event"
+        }
+
+        response = client.post(
+            url_for('emails.create_email'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp['message'] == 'event not found: {}'.format(sample_uuid)
+        emails = Email.query.all()
+        assert not emails
+
     def it_does_not_create_an_event_email_if_event_email_exists(self, client, db_session, sample_event_with_dates):
         create_email(
             event_id=str(sample_event_with_dates.id),
@@ -559,10 +582,10 @@ class WhenPostingUpdateEmail:
         assert emails[0].email_state == REJECTED
 
         assert mock_send_email.call_args[0][0] == [TEST_ADMIN_USER]
-        assert mock_send_email.call_args[0][1] == "test title email needs to be corrected"
+        assert mock_send_email.call_args[0][1] == "test_title email needs to be corrected"
         assert mock_send_email.call_args[0][2] == (
             '<div>Please correct this email <a href="http://frontend-test/admin/'
-            'emails/{}">workshop: test title</a>'
+            'emails/{}">workshop: test_title</a>'
             '</div><div>Reason: test reason</div>'.format(str(sample_email.id))
         )
 

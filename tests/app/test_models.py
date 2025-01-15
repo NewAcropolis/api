@@ -172,7 +172,7 @@ class WhenUsingEmailModel:
             }
         }
 
-    def it_shows_email_json_on_serialize_only_members_active(self, db, db_session, sample_email):
+    def it_shows_email_json_on_serialize_only_members_active(self, db, db_session):
         email = create_email(
             created_at='2019-06-01T10:00:00',
             send_starts_at='2019-06-02T11:00:00',

@@ -13,7 +13,7 @@ from urllib.parse import parse_qs
 from app.na_celery.email_tasks import send_emails, send_periodic_emails, send_missing_confirmation_emails
 from app.comms.encryption import decrypt, get_tokens
 from app.errors import InvalidRequest
-from app.models import APPROVED, DRAFT, TICKET_STATUS_UNUSED, Magazine, EmailToMember
+from app.models import APPROVED, DRAFT, TICKET_STATUS_UNUSED, Magazine, EmailToMember, MAGAZINE
 from tests.app.routes.orders.test_rest import sample_ipns
 
 from tests.db import (
@@ -31,7 +31,7 @@ class WhenProcessingSendEmailsTask:
         send_emails(sample_email.id)
 
         assert mock_send_email.call_args[0][0] == sample_member.email
-        assert mock_send_email.call_args[0][1] == 'workshop: test title'
+        assert mock_send_email.call_args[0][1] == 'workshop: test_title'
         page = BeautifulSoup(mock_send_email.call_args[0][2], 'html.parser')
         assert 'http://frontend-test/member/unsubscribe' in str(page)
 
@@ -188,7 +188,8 @@ class WhenProcessingSendEmailsTask:
             send_starts_at='2020-06-02',
             created_at='2020-06-01',
             send_after='2020-06-03 9:00',
-            email_state=APPROVED
+            email_state=APPROVED,
+            email_type=MAGAZINE
         )
         with freeze_time(now):
             send_periodic_emails()
