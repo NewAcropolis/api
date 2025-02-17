@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:9.5
+        image: postgres:16
         env:
           POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: na_api_test
