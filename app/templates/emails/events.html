@@ -11,6 +11,11 @@
             margin: auto;
             overflow: hidden;
         }
+        .event_inner_box {
+            margin-right:10px;
+            margin-left: auto;
+            overflow:hidden;
+        }
         .event_text {
             font-size: 15px;
         }
@@ -26,7 +31,8 @@
     <h3 style='text-align: center;'>
         {{ event_dates }}
     </h3>
-    <div class='event_box'>        
+    <div class='event_box'>
+        <div class="event_inner_box">
         <table width="100%" align="center" cellpadding="10" cellspacing="0">
         <tr>
             <td align="center">
@@ -65,6 +71,7 @@
             </td>
         </tr>
         </table>
+        </div>    
     </div>
 </div>
 
