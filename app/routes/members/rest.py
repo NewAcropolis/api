@@ -176,6 +176,8 @@ def import_members():
             current_app.logger.info(err)
             errors.append(err)
         else:
+            if not item['EmailAdd']:
+                continue
             member = Member(
                 old_id=item['id'],
                 name=item['Name'],

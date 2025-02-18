@@ -2,6 +2,9 @@
 {% block title %}Events{% endblock %}
 {% block extra_head%}
     <style>
+        table {
+            table-layout: fixed;
+        }
         .event_box {
             border:darkgray 1px solid;
             background-color: #f8faf3;
@@ -9,7 +12,6 @@
             margin-bottom:70px;
             padding:10px;
             margin: auto;
-            overflow: hidden;
         }
         .event_inner_box {
             margin-right:10px;
@@ -37,7 +39,7 @@
         <tr>
             <td align="center">
                 <div>
-                    <table class="msoFix" width="60%" cellpadding="0" cellspacing="0" align="left">
+                    <table class="msoFix" width="100%" cellpadding="0" cellspacing="0" align="left">
                     <tr>
                         <td width="15">&nbsp;</td>
                         <td width="100%" style="padding: 0px;">&nbsp;<br>
