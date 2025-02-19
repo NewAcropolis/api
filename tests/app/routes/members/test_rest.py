@@ -256,3 +256,37 @@ class WhenPostingMembers:
         members = Member.query.all()
 
         assert len(members) == 2
+
+    def it_doesnt_import_members_without_an_email_address(self, client, db_session, sample_marketing):
+        data = [
+            {
+                "id": "2",
+                "Name": "Test member 2",
+                "EmailAdd": "test2@example.com",
+                "Active": "y",
+                "CreationDate": "2019-08-02",
+                "Marketing": "1",
+                "IsMember": "n",
+                "LastUpdated": "2019-08-11 10:00:00"
+            },
+            {
+                "id": "3",
+                "Name": "Test member 3",
+                "EmailAdd": "anon",
+                "Active": "y",
+                "CreationDate": "2019-08-02",
+                "Marketing": "1",
+                "IsMember": "n",
+                "LastUpdated": "2019-08-11 10:00:00"
+            },
+        ]
+        response = client.post(
+            url_for('members.import_members'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+
+        members = Member.query.all()
+
+        assert len(members) == 1
