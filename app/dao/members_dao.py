@@ -50,7 +50,7 @@ def dao_get_active_member_count(month=None, year=None):
 
 
 def dao_get_member_by_email(email):
-    return Member.query.filter_by(email=email).first()
+    return Member.query.filter(Member.email.ilike(f"%{email}%")).first()
 
 
 def dao_get_member_by_id(member_id):
