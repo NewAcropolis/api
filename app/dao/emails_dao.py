@@ -14,7 +14,7 @@ from app.dao.events_dao import dao_get_event_by_id
 from app.dao.magazines_dao import dao_get_magazine_by_id
 from app.dao.members_dao import dao_get_member_by_id
 from app.errors import InvalidRequest
-from app.models import Email, EmailToMember, APPROVED, ANNOUNCEMENT, EVENT, MAGAZINE
+from app.models import Email, EmailToMember, APPROVED, ANNOUNCEMENT, BASIC, EVENT, MAGAZINE
 
 
 def _get_nearest_bi_monthly_send_date(created_at=None):
@@ -142,7 +142,7 @@ def dao_get_latest_emails():
     latest_emails = []
     magazine_found = False
     for e in emails:
-        if e.email_type not in [ANNOUNCEMENT, EVENT, MAGAZINE]:
+        if e.email_type not in [ANNOUNCEMENT, BASIC, EVENT, MAGAZINE]:
             continue
         if not e.email_type == MAGAZINE or not magazine_found:
             latest_emails.append(e)

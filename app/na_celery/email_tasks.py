@@ -14,7 +14,7 @@ from app.dao.members_dao import dao_get_members_not_sent_to, dao_get_first_membe
 from app.dao.orders_dao import dao_get_orders_without_email_status
 from app.dao.users_dao import dao_get_admin_users
 from app.errors import InvalidRequest
-from app.models import EVENT, MAGAZINE, APPROVED, Order
+from app.models import BASIC, EVENT, MAGAZINE, APPROVED, Order
 from app.routes.orders.rest import _replay_paypal_ipn
 
 
@@ -59,6 +59,8 @@ def send_emails(email_id):
                 )
             elif email.email_type == MAGAZINE:
                 message = get_email_html(MAGAZINE, magazine_id=email.magazine_id, member_id=member_id)
+            elif email.email_type == BASIC:
+                message = get_email_html(BASIC, message=email.extra_txt)
 
             email_status_code, email_provider_id = send_email(email_to, subject, message)
             if not current_app.config.get('EMAIL_TEST'):

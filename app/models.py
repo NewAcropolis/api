@@ -25,7 +25,7 @@ TICKET = 'ticket'
 EMAIL_TYPES = [
     ANON_PROCESS, ANON_REMINDER, EVENT, MAGAZINE, ANNOUNCEMENT, REPORT_MONTHLY, REPORT_ANNUALLY, TICKET, BASIC
 ]
-MANAGED_EMAIL_TYPES = [EVENT, MAGAZINE, ANNOUNCEMENT]
+MANAGED_EMAIL_TYPES = [EVENT, MAGAZINE, ANNOUNCEMENT, BASIC]
 
 DRAFT = 'draft'
 READY = 'ready'
@@ -269,6 +269,8 @@ class Email(db.Model):
 
             current_app.logger.error('No magazine found')
             return "Magazine not found"
+        elif self.email_type == BASIC:
+            return self.subject
 
         return 'No email type'
 
@@ -283,6 +285,8 @@ class Email(db.Model):
 
             send_start = _get_nearest_bi_monthly_send_date(created_at=self.created_at)
             return (send_start + datetime.timedelta(weeks=2)).strftime('%Y-%m-%d')
+        elif self.email_type == BASIC:
+            return (self.send_starts_at + datetime.timedelta(weeks=2)).strftime('%Y-%m-%d')
 
     def get_emails_sent_counts(self):
         return {
