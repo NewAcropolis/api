@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from flask import json, url_for
 
 from app.models import (
-    ANON_REMINDER, ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, APPROVED, READY, REJECTED, Email
+    ANON_REMINDER, ANNOUNCEMENT, BASIC, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, APPROVED, READY, REJECTED, Email
 )
 from app.dao.emails_dao import dao_add_member_sent_to_email
 from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
@@ -482,6 +482,30 @@ class WhenPostingUpdateEmail:
         emails = Email.query.all()
         assert len(emails) == 1
         assert emails[0].extra_txt == data['extra_txt']
+
+    def it_updates_a_basic_email_to_ready(
+        self, mocker, client, db, db_session, sample_admin_user, sample_basic_email
+    ):
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_smtp_email', return_value=200)
+        data = {
+            "subject": "Test subject",
+            "extra_txt": "Test message",
+            "email_type": BASIC,
+            "email_state": READY
+        }
+
+        response = client.post(
+            url_for('emails.update_email', email_id=str(sample_basic_email.id)),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.json['extra_txt'] == data['extra_txt']
+        emails = Email.query.all()
+        assert len(emails) == 1
+        assert emails[0].extra_txt == data['extra_txt']
+
+        assert mock_send_email.call_args[0][0] == [TEST_ADMIN_USER]
 
     def it_errors_when_incorrect_event_id(self, mocker, client, db, db_session, sample_email, sample_uuid):
         data = {

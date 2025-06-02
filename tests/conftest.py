@@ -20,7 +20,7 @@ import sqlalchemy
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from app import create_app, db as _db, get_env
-from app.models import APPROVED, EVENT, MAGAZINE, TICKET_STATUS_UNUSED
+from app.models import APPROVED, BASIC, EVENT, MAGAZINE, TICKET_STATUS_UNUSED
 from tests.db import (
     create_article,
     create_book,
@@ -155,6 +155,19 @@ def sample_email(db, sample_event_with_dates):
         expires='2019-07-01',
         email_state=APPROVED,
         event_id=sample_event_with_dates.id
+    )
+
+
+@pytest.fixture(scope='function')
+def sample_basic_email(db):
+    return create_email(
+        details='<strong>Fees:</strong> 10, <strong>Concessions:</strong> 5',
+        created_at='2019-06-01',
+        expires='2019-07-01',
+        email_type=BASIC,
+        email_state=APPROVED,
+        subject="Basic subject",
+        extra_txt="Basic content"
     )
 
 

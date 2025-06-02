@@ -38,7 +38,7 @@ from app.errors import register_errors, InvalidRequest
 
 from app.models import (
     Email, EmailToMember, Member,
-    ANON_REMINDER, ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, READY, APPROVED, REJECTED
+    ANON_REMINDER, ANNOUNCEMENT, EVENT, MAGAZINE, BASIC, MANAGED_EMAIL_TYPES, READY, APPROVED, REJECTED
 )
 from app.routes.emails.schemas import (
     post_create_email_schema, post_update_email_schema, post_import_emails_schema, post_preview_email_schema,
@@ -120,6 +120,11 @@ def update_email(email_id):
                 subject = 'Please review {}'.format(magazine.title)
 
                 magazine_html = get_email_html(MAGAZINE, magazine_id=magazine.id)
+                response = send_smtp_email(emails_to, subject, review_part + magazine_html)
+            elif email.email_type == BASIC:
+                subject = 'Please review {}'.format(email_data['subject'])
+
+                magazine_html = get_email_html(BASIC, message=email_data['extra_txt'])
                 response = send_smtp_email(emails_to, subject, review_part + magazine_html)
         elif data.get('email_state') == REJECTED:
             dao_update_email(email_id, email_state=REJECTED)

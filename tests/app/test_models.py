@@ -1,7 +1,7 @@
 from freezegun import freeze_time
 
 from app.dao import dao_create_record
-from app.models import MAGAZINE, TICKET_STATUS_UNUSED, OrderError
+from app.models import BASIC, MAGAZINE, TICKET_STATUS_UNUSED, OrderError
 from app.utils.time import get_local_time
 from tests.db import (
     create_article,
@@ -244,6 +244,40 @@ class WhenUsingEmailModel:
             'details': u'test event details',
             'replace_all': False,
             'email_type': u'magazine',
+            'email_state': u'draft',
+            'send_starts_at': '2019-07-01',
+            'expires': '2019-07-15',
+            'send_after': None,
+            'admin_email_sent_at': None,
+            'emails_sent_counts': {
+                'success': 0,
+                'failed': 0,
+                'total_active_members': 0
+            }
+        }
+
+    def it_shows_basic_email_json_on_serialize(self, db, db_session):
+        email = create_email(
+            email_type=BASIC,
+            subject='Test subject',
+            extra_txt='Test extra',
+            old_event_id=None,
+            created_at='2019-06-30T10:00:00',
+            send_starts_at='2019-07-01T11:00:00'
+        )
+
+        assert email.serialize() == {
+            'id': str(email.id),
+            'subject': u'Test subject',
+            'event_id': None,
+            'magazine_id': None,
+            'old_id': email.old_id,
+            'old_event_id': None,
+            'created_at': get_local_time(email.created_at).strftime('%Y-%m-%d %H:%M'),
+            'extra_txt': u'Test extra',
+            'details': u'test event details',
+            'replace_all': False,
+            'email_type': u'basic',
             'email_state': u'draft',
             'send_starts_at': '2019-07-01',
             'expires': '2019-07-15',

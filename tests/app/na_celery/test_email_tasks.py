@@ -13,7 +13,7 @@ from urllib.parse import parse_qs
 from app.na_celery.email_tasks import send_emails, send_periodic_emails, send_missing_confirmation_emails
 from app.comms.encryption import decrypt, get_tokens
 from app.errors import InvalidRequest
-from app.models import APPROVED, DRAFT, TICKET_STATUS_UNUSED, Magazine, EmailToMember, MAGAZINE
+from app.models import APPROVED, DRAFT, TICKET_STATUS_UNUSED, Email, Magazine, EmailToMember, MAGAZINE
 from tests.app.routes.orders.test_rest import sample_ipns
 
 from tests.db import (
@@ -309,6 +309,28 @@ class WhenProcessingSendEmailsTask:
 
         assert magazine.title in mock_send_email.call_args_list[0][0][1]
         assert magazine.filename in mock_send_email.call_args_list[0][0][2]
+        assert mock_send_email.call_count == 1
+        assert mock_send_email.call_args_list[0][0][0] == sample_member.email
+
+    def it_sends_a_basic_email(
+        self, mocker, db_session, sample_basic_email, sample_member, sample_email_provider
+    ):
+        mocker.patch.dict('app.application.config', {
+            'ENVIRONMENT': 'test',
+            'EMAIL_RESTRICT': 1
+        })
+
+        create_member(name='Test 1', email='test1@example.com')
+
+        mock_send_email = mocker.patch(
+            'app.na_celery.email_tasks.send_email', return_value=(200, str(sample_email_provider.id)))
+        send_emails(sample_basic_email.id)
+
+        basic = Email.query.filter_by(id=sample_basic_email.id).first()
+        assert basic
+
+        assert basic.subject in mock_send_email.call_args_list[0][0][1]
+        assert basic.extra_txt in mock_send_email.call_args_list[0][0][2]
         assert mock_send_email.call_count == 1
         assert mock_send_email.call_args_list[0][0][0] == sample_member.email
 

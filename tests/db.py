@@ -21,7 +21,7 @@ from app.dao.venues_dao import dao_create_venue
 from app.models import (
     Article, Book, BookToOrder, Email, EmailToMember, EmailProvider, Event, EventDate, EventType, Fee,
     Magazine, Marketing, Member, Order, RejectReason, Speaker, Ticket, User, Venue,
-    EVENT, TICKET_STATUS_UNUSED, DRAFT, API_AUTH
+    BASIC, EVENT, TICKET_STATUS_UNUSED, DRAFT, API_AUTH
 )
 
 
@@ -253,9 +253,10 @@ def create_email(
         send_starts_at=None,
         expires=None,
         send_after=None,
-        admin_email_sent_at=None
+        admin_email_sent_at=None,
+        subject=None,
 ):
-    if magazine_id:
+    if magazine_id or email_type == BASIC:
         old_event_id = None
     elif old_event_id:
         event = dao_get_event_by_old_id(old_event_id)
@@ -282,7 +283,8 @@ def create_email(
         'send_starts_at': send_starts_at,
         'expires': expires,
         'send_after': send_after,
-        'admin_email_sent_at': admin_email_sent_at
+        'admin_email_sent_at': admin_email_sent_at,
+        'subject': subject
     }
     email = Email(**data)
 
