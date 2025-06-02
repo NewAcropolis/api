@@ -3,7 +3,7 @@ import pytest
 
 from app.dao.emails_dao import dao_create_email_to_member
 from app.dao.members_dao import (
-    dao_update_member, dao_get_member_by_id, dao_get_members_not_sent_to
+    dao_update_member, dao_get_member_by_id, dao_get_members_not_sent_to, dao_get_member_by_email
 )
 from app.models import EmailToMember, Member
 
@@ -73,3 +73,10 @@ class WhenUsingMembersDAO(object):
         assert len(unsent_members) == 1
         assert str(member_id) == str(member.id)
         assert email == member.email
+
+    def it_gets_member_by_email(self, db_session):
+        member = create_member(email='Test@example.com')
+        member_found = dao_get_member_by_email('test@example.com')
+
+        assert member_found
+        assert member_found.email == member.email
