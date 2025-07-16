@@ -118,7 +118,7 @@ def get_email_html(email_type, **kwargs):
         return render_template(
             'emails/events.html',
             event=event,
-            event_dates=get_nice_event_dates(event.event_dates),
+            event_dates=get_nice_event_dates(event.event_dates, show_time=event.event_type != "Competition"),
             description=unescape(event.description),
             details=kwargs.get('details'),
             extra_txt=kwargs.get('extra_txt'),
