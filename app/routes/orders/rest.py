@@ -328,7 +328,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
 
                         if diff != 0:  # pragma: no cover
                             # do not test coverage as only UK shipping supported at the moment
-                            admin_message = f"<p>Order delivery zones: <table>{admin_message}" \
+                            admin_message += f"<p>Order delivery zones: <table>{admin_message}" \
                                 f"</table>Total: &pound;{_total_cost}</p>"
 
                             admin_message += "<p>Expected delivery zone: " \
