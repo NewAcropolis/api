@@ -23,7 +23,7 @@ from sqlalchemy.orm.exc import NoResultFound
 import time
 
 from flask_jwt_extended import jwt_required
-from app.comms.email import send_email, send_smtp_email
+from app.comms.email import get_email_html, send_email, send_smtp_email
 from app.dao import dao_create_record, dao_update_record
 from app.dao.books_dao import dao_create_book_to_order, dao_get_book_by_old_id, dao_get_book_by_id
 from app.dao.events_dao import dao_get_event_by_id
@@ -35,7 +35,7 @@ from app.errors import register_errors, InvalidRequest
 
 from app.models import (
     BookToOrder, Order, OrderError, Ticket,
-    BOOK, TICKET_STATUS_USED,
+    BASIC, BOOK, TICKET_STATUS_USED,
     DELIVERY_FEE_UK_EU, DELIVERY_FEE_UK_ROW, DELIVERY_FEE_EU_ROW,
     DELIVERY_REFUND_EU_UK, DELIVERY_REFUND_ROW_UK, DELIVERY_REFUND_ROW_EU
 )
@@ -451,10 +451,16 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
             )
 
         if allow_emails:
+            html_message = get_email_html(
+                BASIC,
+                title="New Acropolis Order",
+                message=message + product_message + delivery_message + error_message
+            )
+
             email_status_code, email_provider_id = send_email(
                 order.email_address,
                 'New Acropolis Order',
-                message + product_message + delivery_message + error_message
+                html_message
             )
             now = datetime.utcnow()
 

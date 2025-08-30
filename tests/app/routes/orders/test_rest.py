@@ -684,9 +684,9 @@ class WhenHandlingPaypalIPN:
 
         assert mock_send_email.call_args[0][0] == 'test1@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
-        assert mock_send_email.call_args[0][2] == f'<p>Thank you for your order ({orders[0].id})</p><div><span>' \
+        assert f'<p>Thank you for your order ({orders[0].id})</p><div><span>' \
             f'<img src="http://test/images/qr_codes/{orders[0].tickets[0].id}"></span>' \
-            f'<div>{event_title} on 1 Jan at 7PM</div></div>'
+            f'<div>{event_title} on 1 Jan at 7PM</div></div>' in mock_send_email.call_args[0][2]
 
         tickets = dao_get_tickets_for_order(orders[0].id)
         assert len(tickets) == 1
@@ -741,10 +741,11 @@ class WhenHandlingPaypalIPN:
 
         assert mock_send_email.call_args[0][0] == 'test1@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
-        assert mock_send_email.call_args[0][2] == f'<p>Thank you for your order ({orders[0].id})</p><div><span>' \
+        assert f'<p>Thank you for your order ({orders[0].id})</p><div><span>' \
             f'<img src="http://test/images/qr_codes/{orders[0].tickets[0].id}"></span>' \
             f'<div>{event_title} on 1 Jan at 7PM</div></div>' \
-            f'<p>Errors in order: <div>No event date for ticket: {invalid_ticket.id}</div></p>'
+            f'<p>Errors in order: <div>No event date for ticket: {invalid_ticket.id}</div></p>' in \
+            mock_send_email.call_args[0][2]
 
         tickets = dao_get_tickets_for_order(orders[0].id)
         assert len(tickets) == 2
@@ -893,15 +894,15 @@ class WhenHandlingPaypalIPN:
 
         orders = dao_get_orders()
         assert len(orders) == 1
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
             "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
             "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
             "</table><br><div>Deliver to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
-        )
+        ) in mock_send_email.call_args[0][2]
 
     def it_creates_a_book_order_for_correct_delivery_zone_with_shipping_cost(
         self, app, mocker, client, db_session, sample_book
@@ -927,15 +928,15 @@ class WhenHandlingPaypalIPN:
 
         orders = dao_get_orders()
         assert len(orders) == 1
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
             "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
             "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
             "</table><br><div>Deliver to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
-        )
+        ) in mock_send_email.call_args[0][2]
 
     def it_creates_a_book_order_for_old_id(
         self, app, mocker, client, db_session, sample_book, sample_email_provider
@@ -963,15 +964,15 @@ class WhenHandlingPaypalIPN:
 
         orders = dao_get_orders()
         assert len(orders) == 1
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
             "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
             "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
             "</table><br><div>Deliver to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
-        )
+        ) in mock_send_email.call_args[0][2]
 
     def it_creates_a_book_order_for_random_uuid_with_errors(
         self, app, mocker, client, db_session, sample_uuid, sample_email_provider
@@ -1000,12 +1001,12 @@ class WhenHandlingPaypalIPN:
         orders = dao_get_orders()
         assert len(orders) == 1
         assert mock_send_email.called
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p>"
             "<p>Errors in order: <div>Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c</div></p>"
-        )
+        ) in mock_send_email.call_args[0][2]
 
         assert len(orders[0].errors) == 1
         assert orders[0].errors[0].error == 'Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c'
@@ -1036,13 +1037,13 @@ class WhenHandlingPaypalIPN:
         orders = dao_get_orders()
         assert len(orders) == 1
         assert mock_send_email.called
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p>"
             "<p>Errors in order: <div>Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c</div>"
             "<div>Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c</div></p>"
-        )
+        ) in mock_send_email.call_args[0][2]
 
         assert len(orders[0].errors) == 2
         assert orders[0].errors[0].error == 'Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c'
@@ -1075,9 +1076,9 @@ class WhenHandlingPaypalIPN:
 
         orders = dao_get_orders()
         assert len(orders) == 1
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p>"
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[0].id}">'
             '</span><div>test_title on 1 Jan at 7PM</div></div>'
@@ -1085,7 +1086,7 @@ class WhenHandlingPaypalIPN:
             "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
             "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
             "</table><br><div>Deliver to: Flat 1, 1 Test Place,London, n1 1aa, United Kingdom</div>"
-        )
+        ) in mock_send_email.call_args[0][2]
 
     def it_creates_an_order_with_donation(
         self, mocker, app, client, db_session, sample_event_with_dates, sample_email_provider
@@ -1173,16 +1174,16 @@ class WhenHandlingPaypalIPN:
         orders = dao_get_orders()
         assert len(orders) == 1
         assert orders[0].delivery_status == 'missing_address'
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
             "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
             "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
             "</table><p>No address supplied. Please "
             "<a href='http://frontend-test/order/missing_address/1122334455'>complete</a> your order.</p>"
-        )
+        ) in mock_send_email.call_args[0][2]
 
     @pytest.mark.skip('Do not test for non UK delivery zones')
     def it_sends_an_email_if_wrong_delivery_zone_for_country(self, mocker, app, client, db_session, sample_book):
@@ -1211,12 +1212,13 @@ class WhenHandlingPaypalIPN:
         assert len(orders) == 1
         assert orders[0].delivery_status == 'extra'
 
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
             "<td> = 5</td></tr></table><p>Not enough delivery paid, &pound;2.50 due. Please <a href='"
-            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/2.50'>complete</a> your order.</p>")
+            f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/2.50'>complete</a> your order.</p>"
+        ) in mock_send_email.call_args[0][2]
 
     @pytest.mark.skip('Do not test for non UK delivery zones')
     def it_sends_an_email_if_delivery_zone_not_recognized(
@@ -1248,13 +1250,14 @@ class WhenHandlingPaypalIPN:
         assert len(orders) == 1
         assert orders[0].delivery_status == 'extra'
 
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
             "<td> = &pound;5</td></tr></table><p>No delivery fee paid, &pound;10 due. Please <a href='"
             f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/10'>complete</a> your order.</p>"
-            f"<p>Errors in order: <div>Delivery zone: Unknown not found</div></p>")
+            f"<p>Errors in order: <div>Delivery zone: Unknown not found</div></p>"
+        ) in mock_send_email.call_args[0][2]
         assert mock_send_smtp_email.called
 
     @pytest.mark.skip('Not needed as fixed shipping to UK')
@@ -1281,12 +1284,13 @@ class WhenHandlingPaypalIPN:
         orders = dao_get_orders()
         assert len(orders) == 1
         assert orders[0].delivery_status == 'extra'
-        assert mock_send_email.call_args == call(
-            'payer@example.com', 'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td>"
             "<td> x 1</td><td> = &pound;5</td></tr></table><p>No delivery fee paid, &pound;10 due. "
             f"Please <a href='http://frontend-test/order/extra/{orders[0].txn_id}/RoW/10'>complete</a> your order.</p>"
-        )
+        ) in mock_send_email.call_args[0][2]
 
     @pytest.mark.skip("Not needed as fixed UK delivery")
     def it_sends_payer_and_admin_emails_if_more_than_1_delivery_id_refund(
@@ -1326,12 +1330,13 @@ class WhenHandlingPaypalIPN:
             "<p>Expected delivery zone: RoW - &pound;10</p>"
         )
         assert len(mock_send_email.call_args_list) == 1
-        assert mock_send_email.call_args_list[0] == call(
-            'payer@example.com', 'New Acropolis Order',
+        assert mock_send_email.call_args_list[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args_list[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
             f"<td> = 5</td></tr></table><p>Refund of &pound;5 due as wrong delivery fee paid"
             f", please send a message to website admin if there is no refund within 5 working days.</p>"
-        )
+        ) in mock_send_email.call_args_list[0][2]
 
     @pytest.mark.skip('Not needed as fixed delivery costs to UK')
     def it_sends_an_email_if_more_than_1_delivery_id_costs_not_met(self, mocker, app, client, db_session, sample_book):
@@ -1360,11 +1365,13 @@ class WhenHandlingPaypalIPN:
         assert len(orders) == 1
         assert orders[0].delivery_status == 'extra'
 
-        assert mock_send_email.call_args == call(
-            'payer@example.com', 'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
             "<td> = 5</td></tr></table><p>Not enough delivery paid, &pound;0.50 due. Please "
-            f"<a href='http://frontend-test/order/extra/{orders[0].txn_id}/Europe/0.50'>complete</a> your order.</p>")
+            f"<a href='http://frontend-test/order/extra/{orders[0].txn_id}/Europe/0.50'>complete</a> your order.</p>"
+        ) in mock_send_email.call_args[0][2]
 
     @pytest.mark.skip('Not needed as shipping fixed only to UK')
     def it_sends_an_email_if_more_than_1_delivery_not_recognised(
@@ -1396,12 +1403,14 @@ class WhenHandlingPaypalIPN:
         assert len(orders) == 1
         assert orders[0].delivery_status == 'extra'
 
-        assert mock_send_email.call_args == call(
-            'payer@example.com', 'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
             "<td> = 5</td></tr></table><p>No delivery fee paid, &pound;7.50 due. Please <a href='"
             f"http://frontend-test/order/extra/{orders[0].txn_id}/Europe/7.50'>complete</a> your order.</p><p>Errors "
-            "in order: <div>Delivery zone: Unknown not found</div><div>Delivery zone: Unknown not found</div></p>")
+            "in order: <div>Delivery zone: Unknown not found</div><div>Delivery zone: Unknown not found</div></p>"
+        ) in mock_send_email.call_args[0][2]
         assert mock_send_smtp_email.called
 
     def it_completes_an_order_that_had_missing_or_incorrect_delivery_fee(
@@ -1430,12 +1439,12 @@ class WhenHandlingPaypalIPN:
         completion_order = Order.query.filter(Order.txn_type == 'web_accept').first()
 
         assert mock_send_email.called
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f'<p>Thank you for your order ({completion_order.id})</p><div>'
             f'Outstanding payment for order ({order.txn_id}) of &pound;3 for delivery to Europe has been paid.</div>'
-        )
+        ) in mock_send_email.call_args[0][2]
         order_json = completion_order.serialize()
         assert order_json['linked_txn_id'] == order.txn_id
 
@@ -1466,15 +1475,15 @@ class WhenHandlingPaypalIPN:
         completion_order = Order.query.filter(Order.txn_type == 'web_accept').first()
 
         assert mock_send_email.called
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f'<p>Thank you for your order ({completion_order.id})</p><div>'
             f'Outstanding payment for order ({order.txn_id}) of &pound;2 for delivery to Europe has been partially '
             'paid.</div><div>Not enough delivery paid, &pound;1 due.</div><p>Please '
             f"<a href='http://frontend-test/order/extra/{completion_order.txn_id}/Europe/1'>complete</a>"
             " your order.</p>"
-        )
+        ) in mock_send_email.call_args[0][2]
 
     def it_sends_more_refund_if_completion_order_overpaid(self, mocker, app, client, db_session):
         mock_send_email = mocker.patch('app.routes.orders.rest.send_email')
@@ -1500,13 +1509,13 @@ class WhenHandlingPaypalIPN:
         completion_order = Order.query.filter(Order.txn_type == 'web_accept').first()
 
         assert mock_send_email.called
-        assert mock_send_email.call_args == call(
-            'payer@example.com',
-            'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'payer@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f'<p>Thank you for your order ({completion_order.id})</p>'
             f'<p>You have overpaid for delivery on order ({order.txn_id}) by &pound;2, please send a message to '
             'website admin if there is no refund within 5 working days.</p>'
-        )
+        ) in mock_send_email.call_args[0][2]
 
     def it_does_not_create_an_order_if_payment_not_complete(self, mocker, client, db_session):
         with requests_mock.mock() as r:
@@ -1666,10 +1675,12 @@ class WhenHandlingPaypalIPN:
         orders = dao_get_orders()
         assert len(orders) == 1
         assert mock_send_email.called
-        assert mock_send_email.call_args == call(
-            'test1@example.com', 'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'test1@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f'<p>Thank you for your order ({orders[0].id})</p>'
-            f'<p>Errors in order: <div>{orders[0].errors[0].error}</div></p>')
+            f'<p>Errors in order: <div>{orders[0].errors[0].error}</div></p>'
+        ) in mock_send_email.call_args[0][2]
 
     def it_does_not_create_an_order_if_invalid_event_date(
         self, mocker, client, db_session, sample_event_with_dates, mock_storage
@@ -1709,13 +1720,15 @@ class WhenHandlingPaypalIPN:
         assert orders[0].tickets[0].eventdate_id == sample_event_with_dates.event_dates[0].id
         assert orders[0].tickets[1].eventdate_id == sample_event_with_dates.event_dates[1].id
         assert mock_send_email.called
-        assert mock_send_email.call_args == call(
-            'test1@example.com', 'New Acropolis Order',
+        assert mock_send_email.call_args[0][0] == 'test1@example.com'
+        assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
+        assert (
             f'<p>Thank you for your order ({orders[0].id})</p>'
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[0].id}"></span>'
             '<div>test_title on 1 Jan at 7PM</div></div>'
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[1].id}"></span>'
-            '<div>test_title on 2 Jan at 7PM</div></div>')
+            '<div>test_title on 2 Jan at 7PM</div></div>'
+        ) in mock_send_email.call_args[0][2]
 
     def it_does_not_create_orders_with_duplicate_txn_ids(
         self, mocker, client, db_session, sample_event_with_dates, mock_storage
