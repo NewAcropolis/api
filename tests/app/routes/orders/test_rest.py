@@ -684,7 +684,7 @@ class WhenHandlingPaypalIPN:
 
         assert mock_send_email.call_args[0][0] == 'test1@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
-        assert f'<p>Thank you for your order ({orders[0].id})</p><div><span>' \
+        assert f'<p>Thank you for your order ({orders[0].txn_id})</p><div><span>' \
             f'<img src="http://test/images/qr_codes/{orders[0].tickets[0].id}"></span>' \
             f'<div>{event_title} on 1 Jan at 7PM</div></div>' in mock_send_email.call_args[0][2]
 
@@ -741,7 +741,7 @@ class WhenHandlingPaypalIPN:
 
         assert mock_send_email.call_args[0][0] == 'test1@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
-        assert f'<p>Thank you for your order ({orders[0].id})</p><div><span>' \
+        assert f'<p>Thank you for your order ({orders[0].txn_id})</p><div><span>' \
             f'<img src="http://test/images/qr_codes/{orders[0].tickets[0].id}"></span>' \
             f'<div>{event_title} on 1 Jan at 7PM</div></div>' \
             f'<p>Errors in order: <div>No event date for ticket: {invalid_ticket.id}</div></p>' in \
@@ -897,7 +897,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p>"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
             "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
             "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
@@ -931,7 +931,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p>"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
             "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
             "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
@@ -967,7 +967,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p>"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
             "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
             "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
@@ -1004,7 +1004,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p>"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p>"
             "<p>Errors in order: <div>Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c</div></p>"
         ) in mock_send_email.call_args[0][2]
 
@@ -1040,7 +1040,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p>"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p>"
             "<p>Errors in order: <div>Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c</div>"
             "<div>Book not found for item_number: 42111e2a-c990-4d38-a785-394277bbc30c</div></p>"
         ) in mock_send_email.call_args[0][2]
@@ -1079,7 +1079,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p>"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p>"
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[0].id}">'
             '</span><div>test_title on 1 Jan at 7PM</div></div>'
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
@@ -1177,7 +1177,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p>"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p>"
             "<table><tr><td>The Spirits of Nature</td><td> x 1</td><td> = &pound;5</td></tr>"
             "<tr><td colspan=2>Delivery cost</td><td> = &pound;3.50</td></tr>"
             "<tr><td colspan=2>Total</td><td> = &pound;13.50</td></tr>"
@@ -1215,8 +1215,8 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
-            "<td> = 5</td></tr></table><p>Not enough delivery paid, &pound;2.50 due. Please <a href='"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p><table><tr><td>The Spirits of Nature</td>"
+            "<td> x 1</td><td> = 5</td></tr></table><p>Not enough delivery paid, &pound;2.50 due. Please <a href='"
             f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/2.50'>complete</a> your order.</p>"
         ) in mock_send_email.call_args[0][2]
 
@@ -1253,8 +1253,8 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
-            "<td> = &pound;5</td></tr></table><p>No delivery fee paid, &pound;10 due. Please <a href='"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p><table><tr><td>The Spirits of Nature</td>"
+            "<td> x 1</td><td> = &pound;5</td></tr></table><p>No delivery fee paid, &pound;10 due. Please <a href='"
             f"http://frontend-test/order/extra/{orders[0].txn_id}/RoW/10'>complete</a> your order.</p>"
             f"<p>Errors in order: <div>Delivery zone: Unknown not found</div></p>"
         ) in mock_send_email.call_args[0][2]
@@ -1287,7 +1287,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td>"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p><table><tr><td>The Spirits of Nature</td>"
             "<td> x 1</td><td> = &pound;5</td></tr></table><p>No delivery fee paid, &pound;10 due. "
             f"Please <a href='http://frontend-test/order/extra/{orders[0].txn_id}/RoW/10'>complete</a> your order.</p>"
         ) in mock_send_email.call_args[0][2]
@@ -1324,7 +1324,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_smtp_email.called
         assert mock_send_smtp_email.call_args_list[0] == call(
             'admin@example.com', 'New Acropolis refund',
-            f"Transaction ID: {orders[0].txn_id}<br>Order ID: {orders[0].id}<br>"
+            f"Transaction ID: {orders[0].txn_id}<br>Order ID: {orders[0].txn_id}<br>"
             "Refund of &pound;5 due as wrong delivery fee paid.<p>Order delivery zones: <table>"
             "<tr><td>Europe</td><td>7.50</td></tr><tr><td>Europe</td><td>7.50</td></tr></table>Total: &pound;15</p>"
             "<p>Expected delivery zone: RoW - &pound;10</p>"
@@ -1333,8 +1333,8 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args_list[0][0] == 'payer@example.com'
         assert mock_send_email.call_args_list[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
-            f"<td> = 5</td></tr></table><p>Refund of &pound;5 due as wrong delivery fee paid"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p><table><tr><td>The Spirits of Nature</td>"
+            f"<td> x 1</td><td> = 5</td></tr></table><p>Refund of &pound;5 due as wrong delivery fee paid"
             f", please send a message to website admin if there is no refund within 5 working days.</p>"
         ) in mock_send_email.call_args_list[0][2]
 
@@ -1368,8 +1368,8 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
-            "<td> = 5</td></tr></table><p>Not enough delivery paid, &pound;0.50 due. Please "
+            f"<p>Thank you for your order ({orders[0].txn_id})</p><table><tr><td>The Spirits of Nature</td>"
+            "<td> x 1</td><td> = 5</td></tr></table><p>Not enough delivery paid, &pound;0.50 due. Please "
             f"<a href='http://frontend-test/order/extra/{orders[0].txn_id}/Europe/0.50'>complete</a> your order.</p>"
         ) in mock_send_email.call_args[0][2]
 
@@ -1406,8 +1406,8 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f"<p>Thank you for your order ({orders[0].id})</p><table><tr><td>The Spirits of Nature</td><td> x 1</td>"
-            "<td> = 5</td></tr></table><p>No delivery fee paid, &pound;7.50 due. Please <a href='"
+            f"<p>Thank you for your order ({orders[0].txn_id})</p><table><tr><td>The Spirits of Nature</td>"
+            "<td> x 1</td><td> = 5</td></tr></table><p>No delivery fee paid, &pound;7.50 due. Please <a href='"
             f"http://frontend-test/order/extra/{orders[0].txn_id}/Europe/7.50'>complete</a> your order.</p><p>Errors "
             "in order: <div>Delivery zone: Unknown not found</div><div>Delivery zone: Unknown not found</div></p>"
         ) in mock_send_email.call_args[0][2]
@@ -1442,7 +1442,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f'<p>Thank you for your order ({completion_order.id})</p><div>'
+            f'<p>Thank you for your order ({completion_order.txn_id})</p><div>'
             f'Outstanding payment for order ({order.txn_id}) of &pound;3 for delivery to Europe has been paid.</div>'
         ) in mock_send_email.call_args[0][2]
         order_json = completion_order.serialize()
@@ -1478,7 +1478,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f'<p>Thank you for your order ({completion_order.id})</p><div>'
+            f'<p>Thank you for your order ({completion_order.txn_id})</p><div>'
             f'Outstanding payment for order ({order.txn_id}) of &pound;2 for delivery to Europe has been partially '
             'paid.</div><div>Not enough delivery paid, &pound;1 due.</div><p>Please '
             f"<a href='http://frontend-test/order/extra/{completion_order.txn_id}/Europe/1'>complete</a>"
@@ -1512,7 +1512,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'payer@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f'<p>Thank you for your order ({completion_order.id})</p>'
+            f'<p>Thank you for your order ({completion_order.txn_id})</p>'
             f'<p>You have overpaid for delivery on order ({order.txn_id}) by &pound;2, please send a message to '
             'website admin if there is no refund within 5 working days.</p>'
         ) in mock_send_email.call_args[0][2]
@@ -1678,7 +1678,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'test1@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f'<p>Thank you for your order ({orders[0].id})</p>'
+            f'<p>Thank you for your order ({orders[0].txn_id})</p>'
             f'<p>Errors in order: <div>{orders[0].errors[0].error}</div></p>'
         ) in mock_send_email.call_args[0][2]
 
@@ -1723,7 +1723,7 @@ class WhenHandlingPaypalIPN:
         assert mock_send_email.call_args[0][0] == 'test1@example.com'
         assert mock_send_email.call_args[0][1] == 'New Acropolis Order'
         assert (
-            f'<p>Thank you for your order ({orders[0].id})</p>'
+            f'<p>Thank you for your order ({orders[0].txn_id})</p>'
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[0].id}"></span>'
             '<div>test_title on 1 Jan at 7PM</div></div>'
             f'<div><span><img src="http://test/images/qr_codes/{orders[0].tickets[1].id}"></span>'

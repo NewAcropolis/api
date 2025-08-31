@@ -403,8 +403,8 @@ class WhenProcessingSendMissingConfirmationEmailsTask:
         send_missing_confirmation_emails()
 
         assert mock_send_email.call_count == 2
-        assert str(order.id) in mock_send_email.call_args_list[0][0][2]
-        assert str(order2.id) in mock_send_email.call_args_list[1][0][2]
+        assert str(order.txn_id) in mock_send_email.call_args_list[0][0][2]
+        assert str(order2.txn_id) in mock_send_email.call_args_list[1][0][2]
 
     @freeze_time("2022-11-24T09:00:00")
     def it_sets_email_status_500_on_missing_email_status_after_retry(
