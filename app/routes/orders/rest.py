@@ -230,7 +230,7 @@ def paypal_ipn(params=None, allow_emails=True, replace_order=False, email_only=F
             err_msg = f"Payment not Completed: {order_data['payment_status']}"
             errors = [err_msg]
         else:
-            message = f"<p>Thank you for your order ({order.id})</p>"
+            message = f"<p>Thank you for your order ({order.txn_id})</p>"
 
             if order_data['txn_type'] == 'web_accept' and order_data['linked_txn_id']:
                 linked_order = dao_get_order_with_txn_id(order_data['linked_txn_id'])
