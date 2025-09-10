@@ -4,6 +4,7 @@ werkzeug.cached_property = werkzeug.utils.cached_property
 
 from flask import current_app
 import pytz
+from requests.exceptions import HTTPError
 
 from app import celery
 from app.comms.email import send_email, get_email_html, get_email_provider
@@ -74,10 +75,12 @@ def send_emails(email_id):
                 "email",
                 "send success" if email_status_code in [200, 201, 202] else "send failed",
                 f"{subject} - {email.id}")
-    except InvalidRequest as e:
-        if e.status_code == 429:
-            current_app.logger.error("Email limit reached: %r", e.message)
-            if "Minute" in e.message:
+    except (InvalidRequest, HTTPError) as e:
+        message = str(e) if type(e) is HTTPError else e.message
+        if (type(e) is InvalidRequest and e.status_code == 429) or \
+                (type(e) is HTTPError and message.startswith("429 Client Error")):
+            current_app.logger.error("Email limit reached: %r", message)
+            if "Minute" in message:
                 send_periodic_emails.apply_async(countdown=60)
         raise
 

@@ -5,6 +5,7 @@ werkzeug.cached_property = werkzeug.utils.cached_property
 
 from flask import current_app
 from freezegun import freeze_time
+from requests.exceptions import HTTPError
 import json
 from mock import call
 import pytest
@@ -349,6 +350,20 @@ class WhenProcessingSendEmailsTask:
         assert args[1] == 'Minute limit reached'
         assert mock_send_periodic_task.called
         assert mock_send_periodic_task.call_args == call(countdown=60)
+
+    def it_logs_429_status_code_response_for_http_error(self, mocker, db_session, sample_email, sample_member):
+        mocker.patch(
+            'app.na_celery.email_tasks.send_email',
+            side_effect=HTTPError('429 Client Error: Too Many Requests')
+        )
+        mock_logger_error = mocker.patch('app.na_celery.email_tasks.current_app.logger.error')
+        mock_send_periodic_task = mocker.patch('app.na_celery.email_tasks.send_periodic_emails.apply_async')
+        with pytest.raises(expected_exception=HTTPError):
+            send_emails(sample_email.id)
+        assert mock_logger_error.called
+        args = mock_logger_error.call_args[0]
+        assert args[0] == 'Email limit reached: %r'
+        assert args[1] == '429 Client Error: Too Many Requests'
 
     def it_reraises_if_not_429_status_code_response(self, mocker, db_session, sample_email, sample_member):
         mocker.patch(
