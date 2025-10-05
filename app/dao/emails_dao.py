@@ -137,7 +137,7 @@ def dao_get_future_emails():
 
 
 def dao_get_latest_emails():
-    emails = Email.query.order_by(Email.created_at.desc()).limit(30).all()
+    emails = Email.query.order_by(Email.created_at.desc()).limit(90).all()
 
     latest_emails = []
     magazine_found = False
