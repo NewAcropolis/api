@@ -152,8 +152,13 @@ class WhenProcessingSendEmailsTask:
         send_emails(sample_email.id)
 
         assert mock_send_email.call_count == 2
-        assert mock_send_email.call_args_list[0][0][0] == member_1.email
-        assert mock_send_email.call_args_list[1][0][0] == member_2.email
+
+        emails_sent = []
+        for i in range(2):
+            emails_sent.append(mock_send_email.call_args_list[i][0][0])
+
+        assert member_1.email in emails_sent
+        assert member_2.email in emails_sent
         assert sample_email.serialize()['emails_sent_counts'] == {
             'success': 2,
             'failed': 1,

@@ -49,6 +49,38 @@ def dao_get_active_member_count(month=None, year=None):
         ).count()
 
 
+def _get_end_month_year(month, year):
+    end_month = int(month) + 1
+    end_year = int(year)
+    if end_month > 12:
+        end_month = 1
+        end_year += 1
+
+    return end_month, end_year
+
+
+def dao_get_new_member_count(month, year):
+    end_month, end_year = _get_end_month_year(month, year)
+
+    return Member.query.filter(
+        and_(
+            Member.created_at.between(f'{year}-{month}-01', f'{end_year}-{end_month}-01'),
+            Member.active == True  # noqa E711 SqlAlchemy syntax
+        )
+    ).count()
+
+
+def dao_get_unsubscribed_member_count(month, year):
+    end_month, end_year = _get_end_month_year(month, year)
+
+    return Member.query.filter(
+        and_(
+            Member.last_updated.between(f'{year}-{month}-01', f'{end_year}-{end_month}-01'),
+            Member.active == False  # noqa E711 SqlAlchemy syntax
+        )
+    ).count()
+
+
 def dao_get_member_by_email(email):
     return Member.query.filter(Member.email.ilike(f"%{email}%")).first()
 
