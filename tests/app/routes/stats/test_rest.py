@@ -51,3 +51,45 @@ class WhenGettingSubscribersAndSocialStats:
         )
 
         assert response.get_data(as_text=True) == "email count for 12/2020 = 10"
+
+
+class WhenGettingStats:
+    def it_returns_email_stats_for_month_year(self, mocker, client):
+        mocker.patch(
+            'app.routes.stats.rest.dao_get_emails_sent_count',
+            return_value=10
+        )
+
+        response = client.get(
+            url_for('stats.get_email_stats', month=12, year=2020),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.json == {"count": 10, "month": 12, "year": 2020}
+
+    def it_returns_member_stats_for_month_year(self, mocker, client):
+        mocker.patch(
+            'app.routes.stats.rest.dao_get_active_member_count',
+            return_value=100
+        )
+        mocker.patch(
+            'app.routes.stats.rest.dao_get_new_member_count',
+            return_value=10
+        )
+        mocker.patch(
+            'app.routes.stats.rest.dao_get_unsubscribed_member_count',
+            return_value=5
+        )
+
+        response = client.get(
+            url_for('stats.get_members_stats', month=12, year=2020),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.json == {
+            "month": 12,
+            "year": 2020,
+            "active_members_count": 100,
+            "new_members_count": 10,
+            "unsub_count": 5
+        }

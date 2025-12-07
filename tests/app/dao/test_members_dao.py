@@ -3,9 +3,15 @@ import pytest
 
 from app.dao.emails_dao import dao_create_email_to_member
 from app.dao.members_dao import (
-    dao_update_member, dao_get_member_by_id, dao_get_members_not_sent_to, dao_get_member_by_email
+    dao_update_member,
+    dao_get_member_by_id,
+    dao_get_members_not_sent_to,
+    dao_get_member_by_email,
+    dao_get_new_member_count,
+    dao_get_unsubscribed_member_count
 )
 from app.models import EmailToMember, Member
+from freezegun import freeze_time
 
 from tests.db import create_member
 
@@ -80,3 +86,39 @@ class WhenUsingMembersDAO(object):
 
         assert member_found
         assert member_found.email == member.email
+
+    def it_gets_new_members_count(self, db_session):
+        members = [
+            create_member(email='Test@example.com', created_at="2025-12-01T00:00:00"),
+            create_member(email='Test2@example.com', created_at="2025-12-31T23:00:00")
+        ]
+        create_member(email='Test3@example.com', created_at="2025-11-30T23:00:00")
+        create_member(email='Test4@example.com', created_at="2026-01-31T23:00:00")
+
+        new_members_count = dao_get_new_member_count(12, 2025)
+
+        assert new_members_count == len(members)
+
+    def it_gets_unsub_members_count(self, db_session):
+        members = [
+            create_member(email='Test@example.com', created_at="2025-12-01T00:00:00"),
+            create_member(email='Test2@example.com', created_at="2025-12-31T23:00:00"),
+            create_member(email='Test3@example.com', created_at="2025-11-30T23:00:00")
+        ]
+
+        Member.query.filter_by(id=members[0].id).update(
+            {
+                "active": False,
+                "last_updated": "2025-12-31T23:00:00"
+            }
+        )
+        Member.query.filter_by(id=members[2].id).update(
+            {
+                "active": False,
+                "last_updated": "2025-11-30T23:00:00"
+            }
+        )
+
+        unsub_count = dao_get_unsubscribed_member_count(12, 2025)
+
+        assert unsub_count == 1
