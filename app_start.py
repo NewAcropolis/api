@@ -13,7 +13,7 @@ from app.comms.encryption import decrypt, encrypt, get_tokens
 from app.dao.magazines_dao import dao_get_magazine_by_old_id
 from app.routes.magazines import get_magazine_filename, MAGAZINE_PATTERN
 from app.utils.pdf import extract_topics as _extract_topics
-from app.utils.pdf import extract_first_page
+from app.utils.pdf import extract_first_page as _extract_first_page
 from app.utils.storage import Storage
 from flask_migrate import Migrate, MigrateCommand
 
@@ -66,8 +66,7 @@ def extract_first_page():
 
         pdf_base64 = base64.b64encode(pdf).decode('utf-8')
         pdf_bin = base64.b64decode(pdf_base64)
-
-        extract_first_page(pdf_bin)
+        _extract_first_page(pdf_bin)
 
 
 @manager.command
