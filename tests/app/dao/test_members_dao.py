@@ -99,6 +99,19 @@ class WhenUsingMembersDAO(object):
 
         assert new_members_count == len(members)
 
+    def it_gets_new_members_count_range(self, db_session):
+        members = [
+            create_member(email='Test@example.com', created_at="2025-12-01T00:00:00"),
+            create_member(email='Test2@example.com', created_at="2025-12-31T23:00:00"),
+            create_member(email='Test2a@example.com', created_at="2026-01-31T23:00:00")
+        ]
+        create_member(email='Test3@example.com', created_at="2025-11-30T23:00:00")
+        create_member(email='Test4@example.com', created_at="2026-03-31T23:00:00")
+
+        new_members_count = dao_get_new_member_count(12, 2025, 2, 2026)
+
+        assert new_members_count == len(members)
+
     def it_gets_unsub_members_count(self, db_session):
         members = [
             create_member(email='Test@example.com', created_at="2025-12-01T00:00:00"),
@@ -122,3 +135,28 @@ class WhenUsingMembersDAO(object):
         unsub_count = dao_get_unsubscribed_member_count(12, 2025)
 
         assert unsub_count == 1
+
+    def it_gets_unsub_members_count_for_month_range(self, db_session):
+        members = [
+            create_member(email='Test@example.com', created_at="2025-12-01T00:00:00"),
+            create_member(email='Test2@example.com', created_at="2025-12-31T23:00:00"),
+            create_member(email='Test3@example.com', created_at="2025-11-30T23:00:00"),
+            create_member(email='Test4@example.com', created_at="2026-01-10T23:00:00")
+        ]
+
+        Member.query.filter_by(id=members[0].id).update(
+            {
+                "active": False,
+                "last_updated": "2025-12-31T23:00:00"
+            }
+        )
+        Member.query.filter_by(id=members[2].id).update(
+            {
+                "active": False,
+                "last_updated": "2025-11-30T23:00:00"
+            }
+        )
+
+        unsub_count = dao_get_unsubscribed_member_count(11, 2025, 12, 2025)
+
+        assert unsub_count == 2

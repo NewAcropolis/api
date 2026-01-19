@@ -202,14 +202,18 @@ def dao_get_last_minute_email_count_for_provider(email_provider_id):
     ).count()
 
 
-def dao_get_emails_sent_count(month=None, year=None):
+def dao_get_emails_sent_count(month=None, year=None, end_month=None, end_year=None):
     if not month:
         month = int(datetime.today().strftime("%m"))
     if not year:
         year = int(datetime.today().strftime("%Y"))
 
-    end_month = month + 1
-    end_year = year
+    if end_month:
+        end_month += 1
+    else:
+        end_month = month + 1
+    if not end_year:
+        end_year = year
 
     if end_month > 12:
         end_month = 1

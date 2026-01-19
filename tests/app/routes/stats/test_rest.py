@@ -127,3 +127,37 @@ class WhenGettingStats:
                 "unsub": 5
             }
         }
+
+    def it_returns_all_stats_range(self, mocker, client):
+        mocker.patch(
+            'app.routes.stats.rest.dao_get_emails_sent_count',
+            return_value=10
+        )
+        mocker.patch(
+            'app.routes.stats.rest.dao_get_active_member_count',
+            return_value=100
+        )
+        mocker.patch(
+            'app.routes.stats.rest.dao_get_new_member_count',
+            return_value=10
+        )
+        mocker.patch(
+            'app.routes.stats.rest.dao_get_unsubscribed_member_count',
+            return_value=5
+        )
+
+        response = client.get(
+            url_for('stats.get_stats', month=12, year=2020, end_month=1, end_year=2021),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.json == {
+            "emails": {
+                "count": 10
+            },
+            "members": {
+                "active": 100,
+                "new": 10,
+                "unsub": 5
+            }
+        }

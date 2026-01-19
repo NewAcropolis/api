@@ -368,6 +368,54 @@ class WhenUsingEmailsDAO(object):
         count = dao_get_emails_sent_count(month=11, year=2020)
         assert count == 1
 
+    @freeze_time("2020-12-20T12:30:00")
+    def it_get_emails_sent_count_for_month_range(
+        self, db, db_session, sample_member
+    ):
+        email = create_email(
+            send_starts_at="2020-11-30",
+            send_after="2020-11-30T20:30:00",
+            expires="2020-12-20",
+            email_state=APPROVED,
+            old_event_id=None,
+            email_type=MAGAZINE
+        )
+        email_2 = create_email(
+            send_starts_at="2020-12-30",
+            send_after="2020-12-30T20:30:00",
+            expires="2021-02-20",
+            email_state=APPROVED,
+            old_event_id=None,
+            email_type=MAGAZINE
+        )
+        member = create_member(
+            email="test1@example.com"
+        )
+        # counted
+        create_email_to_member(
+            email_id=email.id,
+            created_at="2020-11-30T12:00:00"
+        )
+        create_email_to_member(
+            member_id=sample_member.id,
+            email_id=email.id,
+            created_at="2020-12-11T12:30:00"
+        )
+        create_email_to_member(
+            member_id=member.id,
+            email_id=email.id,
+            created_at="2020-12-30T12:00:00"
+        )
+        # not counted
+        create_email_to_member(
+            member_id=member.id,
+            email_id=email_2.id,
+            created_at="2021-01-12T12:00:00"
+        )
+
+        count = dao_get_emails_sent_count(month=11, year=2020, end_month=12, end_year=2020)
+        assert count == 3
+
 
 class WhenGettingNearestBimonthlyDate:
 

@@ -84,12 +84,13 @@ def get_members_stats(month=None, year=None):
 
 
 @stats_blueprint.route('/stats/<int:month>/<int:year>')
+@stats_blueprint.route('/stats/<int:month>/<int:year>/to/<int:end_month>/<int:end_year>')
 @jwt_required()
-def get_stats(month=None, year=None):
-    emails_count = dao_get_emails_sent_count(month=month, year=year)
-    active_members_count = dao_get_active_member_count()
-    new_member_count = dao_get_new_member_count(month=month, year=year)
-    unsub_count = dao_get_unsubscribed_member_count(month=month, year=year)
+def get_stats(month=None, year=None, end_month=None, end_year=None):
+    emails_count = dao_get_emails_sent_count(month=month, year=year, end_month=end_month, end_year=end_year)
+    active_members_count = dao_get_active_member_count(month=month, year=year, end_month=end_month, end_year=end_year)
+    new_member_count = dao_get_new_member_count(month=month, year=year, end_month=end_month, end_year=end_year)
+    unsub_count = dao_get_unsubscribed_member_count(month=month, year=year, end_month=end_month, end_year=end_year)
 
     return jsonify(
         {
