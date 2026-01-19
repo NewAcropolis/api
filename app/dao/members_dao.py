@@ -31,15 +31,24 @@ def dao_get_first_member():
     return Member.query.first()
 
 
-def dao_get_active_member_count(month=None, year=None):
-    if not month:
-        return Member.query.filter_by(active=True).count()
+def _get_end_month_year(month, year, end_month=None, end_year=None):
+    if end_month and end_year:
+        end_month = int(end_month) + 1
     else:
         end_month = int(month) + 1
         end_year = int(year)
-        if end_month > 12:
-            end_month = 1
-            end_year += 1
+    if end_month > 12:
+        end_month = 1
+        end_year += 1
+
+    return end_month, end_year
+
+
+def dao_get_active_member_count(month=None, year=None, end_month=None, end_year=None):
+    if not month:
+        return Member.query.filter_by(active=True).count()
+    else:
+        end_month, end_year = _get_end_month_year(month, year, end_month, end_year)
 
         return Member.query.filter(
             and_(
@@ -49,18 +58,8 @@ def dao_get_active_member_count(month=None, year=None):
         ).count()
 
 
-def _get_end_month_year(month, year):
-    end_month = int(month) + 1
-    end_year = int(year)
-    if end_month > 12:
-        end_month = 1
-        end_year += 1
-
-    return end_month, end_year
-
-
-def dao_get_new_member_count(month, year):
-    end_month, end_year = _get_end_month_year(month, year)
+def dao_get_new_member_count(month, year, end_month=None, end_year=None):
+    end_month, end_year = _get_end_month_year(month, year, end_month, end_year)
 
     return Member.query.filter(
         and_(
@@ -70,8 +69,8 @@ def dao_get_new_member_count(month, year):
     ).count()
 
 
-def dao_get_unsubscribed_member_count(month, year):
-    end_month, end_year = _get_end_month_year(month, year)
+def dao_get_unsubscribed_member_count(month, year, end_month=None, end_year=None):
+    end_month, end_year = _get_end_month_year(month, year, end_month, end_year)
 
     return Member.query.filter(
         and_(
