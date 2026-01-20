@@ -44,15 +44,20 @@ def _get_end_month_year(month, year, end_month=None, end_year=None):
     return end_month, end_year
 
 
-def dao_get_active_member_count(month=None, year=None, end_month=None, end_year=None):
-    if not month:
+def dao_get_active_member_count(end_month=None, end_year=None):
+    if not end_month:
         return Member.query.filter_by(active=True).count()
     else:
-        end_month, end_year = _get_end_month_year(month, year, end_month, end_year)
+        end_month += 1
+        if end_month > 12:
+            end_month = 1
+            end_year += 1
+        START_MONTH = 1
+        START_YEAR = 2000
 
         return Member.query.filter(
             and_(
-                Member.created_at.between(f'{year}-{month}-01', f'{end_year}-{end_month}-01'),
+                Member.created_at.between(f'{START_YEAR}-{START_MONTH}-01', f'{end_year}-{end_month}-01'),
                 Member.active
             )
         ).count()

@@ -11,7 +11,7 @@ import requests
 from app import celery
 from app.comms.stats import send_ga_event
 from app.dao.users_dao import dao_get_admin_users
-from app.dao.members_dao import dao_get_active_member_count
+from app.dao.members_dao import dao_get_active_member_count, dao_get_new_member_count
 
 
 def get_facebook_count():
@@ -60,7 +60,7 @@ def send_num_subscribers_and_social_stats(inc_subscribers=True):
             num_subscribers
         )
 
-        num_new_subscribers = dao_get_active_member_count(month=month_year.split('-')[0], year=month_year.split('-')[1])
+        num_new_subscribers = dao_get_new_member_count(month=month_year.split('-')[0], year=month_year.split('-')[1])
 
         send_ga_event(
             "Number of new subscribers",
