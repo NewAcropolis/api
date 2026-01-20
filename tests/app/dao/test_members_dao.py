@@ -7,6 +7,7 @@ from app.dao.members_dao import (
     dao_get_member_by_id,
     dao_get_members_not_sent_to,
     dao_get_member_by_email,
+    dao_get_active_member_count,
     dao_get_new_member_count,
     dao_get_unsubscribed_member_count
 )
@@ -86,6 +87,19 @@ class WhenUsingMembersDAO(object):
 
         assert member_found
         assert member_found.email == member.email
+
+    def it_gets_active_members_count(self, db_session):
+        members = [
+            create_member(email='Test@example.com', created_at="2025-12-01T00:00:00"),
+            create_member(email='Test2@example.com', created_at="2025-12-31T23:00:00"),
+            create_member(email='Test3@example.com', created_at="2025-11-30T23:00:00"),
+            create_member(email='Test4@example.com', created_at="2020-11-30T23:00:00")
+        ]
+        create_member(email='Test5@example.com', created_at="2026-01-31T23:00:00")
+
+        active_members_count = dao_get_active_member_count(12, 2025)
+
+        assert active_members_count == len(members)
 
     def it_gets_new_members_count(self, db_session):
         members = [
