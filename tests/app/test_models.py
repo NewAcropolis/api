@@ -162,6 +162,7 @@ class WhenUsingEmailModel:
             'email_type': u'event',
             'email_state': u'draft',
             'send_starts_at': '2019-06-02',
+            'has_reminder': False,
             'expires': '2019-06-21',
             'send_after': get_local_time(email.send_after).strftime('%Y-%m-%d %H:%M'),
             'admin_email_sent_at': email.admin_email_sent_at.strftime('%Y-%m-%d %H:%M'),
@@ -215,6 +216,7 @@ class WhenUsingEmailModel:
             'email_state': u'draft',
             'send_starts_at': '2019-06-02',
             'expires': '2019-06-21',
+            'has_reminder': False,
             'send_after': get_local_time(email.send_after).strftime('%Y-%m-%d %H:%M'),
             'admin_email_sent_at': email.admin_email_sent_at.strftime('%Y-%m-%d %H:%M'),
             'emails_sent_counts': {
@@ -249,6 +251,7 @@ class WhenUsingEmailModel:
             'expires': '2019-07-15',
             'send_after': None,
             'admin_email_sent_at': None,
+            'has_reminder': False,
             'emails_sent_counts': {
                 'success': 0,
                 'failed': 0,
@@ -283,6 +286,7 @@ class WhenUsingEmailModel:
             'expires': '2019-07-15',
             'send_after': None,
             'admin_email_sent_at': None,
+            'has_reminder': False,
             'emails_sent_counts': {
                 'success': 0,
                 'failed': 0,

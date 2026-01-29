@@ -73,7 +73,35 @@ class WhenUsingMembersDAO(object):
         )
         dao_create_email_to_member(email_to_member)
 
-        unsent_members = dao_get_members_not_sent_to(sample_email.id)
+        unsent_members = dao_get_members_not_sent_to(sample_email.id, is_reminder=False)
+
+        member_id, email = unsent_members[0]
+
+        assert len(unsent_members) == 1
+        assert str(member_id) == str(member.id)
+        assert email == member.email
+
+    def it_gets_only_members_not_sent_to_for_reminders(self, db_session, sample_member, sample_email):
+        member = create_member(email='another@example.com')
+        create_member(email='inactive@example.com', active=False)
+        email_to_member = EmailToMember(
+            email_id=sample_email.id,
+            member_id=sample_member.id,
+            created_at='2019-08-01 12:00:00',
+            is_reminder=False
+        )
+        dao_create_email_to_member(email_to_member)
+        breakpoint()
+        email_to_member_reminder = EmailToMember(
+            email_id=sample_email.id,
+            member_id=sample_member.id,
+            created_at='2019-08-15 12:00:00',
+            is_reminder=True,
+            is_reminder_num=-1
+        )
+        dao_create_email_to_member(email_to_member_reminder)
+
+        unsent_members = dao_get_members_not_sent_to(sample_email.id, is_reminder=True)
 
         member_id, email = unsent_members[0]
 

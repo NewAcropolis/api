@@ -18,12 +18,12 @@ from app.models import BASIC, EVENT, MAGAZINE, APPROVED, Order
 from app.routes.orders.rest import _replay_paypal_ipn
 
 
-def send_emails(email_id):
+def send_emails(email_id, is_reminder=False):
     if current_app.config.get('EMAIL_TEST'):
         member = dao_get_first_member()
         members_not_sent_to = [(member.id, member.email)]
     else:
-        members_not_sent_to = dao_get_members_not_sent_to(email_id)
+        members_not_sent_to = dao_get_members_not_sent_to(email_id, is_reminder)
 
     if current_app.config.get('EMAIL_RESTRICT') or current_app.config.get('EMAIL_TEST'):
         limit = 1
@@ -66,7 +66,8 @@ def send_emails(email_id):
             if not current_app.config.get('EMAIL_TEST'):
                 dao_add_member_sent_to_email(
                     email_id, member_id, status_code=email_status_code,
-                    email_provider_id=email_provider_id
+                    email_provider_id=email_provider_id,
+                    is_reminder=is_reminder
                 )
 
             send_ga_event(
@@ -101,7 +102,7 @@ def send_periodic_emails():
         ", ".join([str(e.id) for e in emails]) if emails else 'no emails to send'))
 
     for email in emails:
-        send_emails(email.id)
+        send_emails(email.id, is_reminder=email.has_reminder)
 
 
 @celery.task(name='send_missing_confirmation_emails')

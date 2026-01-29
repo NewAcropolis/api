@@ -97,8 +97,9 @@ def dao_get_member_by_id(member_id):
         return Member.query.filter_by(old_id=member_id).one()
 
 
-def dao_get_members_not_sent_to(email_id):
-    subquery = db.session.query(EmailToMember.member_id).filter(EmailToMember.email_id == email_id)
+def dao_get_members_not_sent_to(email_id, is_reminder=False):
+    subquery = db.session.query(EmailToMember.member_id).filter(
+        EmailToMember.email_id == email_id, EmailToMember.is_reminder == is_reminder)
 
     return db.session.query(Member.id, Member.email).filter(
         and_(

@@ -79,7 +79,9 @@ def dao_update_email(email_id, **kwargs):
 
 
 @transactional
-def dao_add_member_sent_to_email(email_id, member_id, status_code=200, email_provider_id=None, created_at=None):
+def dao_add_member_sent_to_email(
+    email_id, member_id, status_code=200, email_provider_id=None, created_at=None, is_reminder=False
+):
     if not created_at:
         created_at = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
 
@@ -95,6 +97,7 @@ def dao_add_member_sent_to_email(email_id, member_id, status_code=200, email_pro
     email_to_member.created_at = created_at
     email_to_member.status_code = status_code
     email_to_member.email_provider_id = email_provider_id
+    email_to_member.is_reminder = is_reminder
 
 
 @transactional

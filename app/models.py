@@ -145,12 +145,14 @@ class Book(Product, db.Model):
 class EmailToMember(db.Model):
     __tablename__ = 'email_to_member'
     __table_args__ = (
-        PrimaryKeyConstraint('email_id', 'member_id'),
+        PrimaryKeyConstraint('email_id', 'member_id', 'is_reminder'),
     )
     email_id = db.Column(UUID(as_uuid=True), db.ForeignKey('emails.id'))
     member_id = db.Column(UUID(as_uuid=True), db.ForeignKey('members.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     status_code = db.Column(db.Integer)
+    is_reminder = db.Column(db.Boolean, default=False)
+    is_reminder_num = db.Column(db.Integer, default=0)
     email_provider_id = db.Column(UUID(as_uuid=True), db.ForeignKey('email_providers.id'))
 
     def serialize(self):
@@ -159,6 +161,7 @@ class EmailToMember(db.Model):
             'member_id': str(self.member_id),
             'created_at': str(self.created_at),
             'status_code': self.status_code,
+            'is_reminder': self.is_reminder,
             'email_provider_id': str(self.email_provider_id)
         }
 
@@ -222,6 +225,7 @@ class Email(db.Model):
     details = db.Column(db.String)
     extra_txt = db.Column(db.String)
     replace_all = db.Column(db.Boolean)
+    has_reminder = db.Column(db.Boolean, default=False)
     email_state = db.Column(
         db.String(255),
         db.ForeignKey('email_states.name'),
@@ -327,6 +331,7 @@ class Email(db.Model):
             'replace_all': self.replace_all,
             'email_type': self.email_type,
             'email_state': self.email_state,
+            'has_reminder': self.has_reminder,
             'created_at': get_local_time(self.created_at).strftime('%Y-%m-%d %H:%M'),
             'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d') if self.send_starts_at else None,
             'expires': self.expires.strftime('%Y-%m-%d') if self.expires else self.get_expired_date(),
