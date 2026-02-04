@@ -53,6 +53,26 @@ class WhenUsingEmailsDAO(object):
         create_email(email_type=MAGAZINE, old_id=None)
         assert Email.query.count() == 0
 
+    def it_creates_an_event_email_reminder(self, db_session, sample_event_with_dates):
+        email = create_email(event_id=sample_event_with_dates.id, old_event_id=None)
+        reminder_email = create_email(event_id=sample_event_with_dates.id, parent_email_id=email.id)
+        assert Email.query.count() == 2
+
+        email_from_db = Email.query.filter(Email.id == reminder_email.id).first()
+
+        assert reminder_email == email_from_db
+
+    def it_doesnt_creates_an_event_email_reminder_if_exists(self, db_session, sample_event_with_dates):
+        email = create_email(event_id=sample_event_with_dates.id, old_event_id=None)
+        reminder_email = create_email(event_id=sample_event_with_dates.id, parent_email_id=email.id)
+        with pytest.raises(expected_exception=InvalidRequest):
+            create_email(event_id=sample_event_with_dates.id, parent_email_id=email.id)
+        assert Email.query.count() == 2
+
+        email_from_db = Email.query.filter(Email.id == reminder_email.id).first()
+
+        assert reminder_email == email_from_db
+
     def it_creates_an_event_email(self, db_session, sample_event_with_dates):
         email = create_email(event_id=sample_event_with_dates.id, old_event_id=None)
         assert Email.query.count() == 1

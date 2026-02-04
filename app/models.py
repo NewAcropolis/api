@@ -216,6 +216,7 @@ class Email(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
     magazine_id = db.Column(UUID(as_uuid=True), db.ForeignKey('magazines.id'), nullable=True)
+    parent_email_id = db.Column(UUID(as_uuid=True), db.ForeignKey('emails.id'), nullable=True)
     old_id = db.Column(db.Integer)
     old_event_id = db.Column(db.Integer)
     subject = db.Column(db.String)
@@ -253,7 +254,8 @@ class Email(db.Model):
             from app.dao.events_dao import dao_get_event_by_id
 
             event = dao_get_event_by_id(str(self.event_id))
-            return u"{}: {}".format(event.event_type.event_type, event.title)
+            return u"{}: {}{}".format(
+                event.event_type.event_type, "Follow up for " if self.parent_email_id else "", event.title)
         elif self.email_type == MAGAZINE:
             if self.magazine_id:
                 from app.dao.magazines_dao import dao_get_magazine_by_id
@@ -320,6 +322,7 @@ class Email(db.Model):
             'subject': self.subject or self.get_subject(),
             'event_id': str(self.event_id) if self.event_id else None,
             'magazine_id': str(self.magazine_id) if self.magazine_id else None,
+            'parent_email_id': str(self.parent_email_id) if self.parent_email_id else None,
             'old_id': self.old_id,
             'old_event_id': self.old_event_id,
             'details': self.details,
