@@ -30,8 +30,12 @@ def dao_create_email(email):
     if email.email_type == EVENT:
         try:
             event = dao_get_event_by_id(email.event_id)
-            if dao_get_email_by_event_id(email.event_id):
-                raise InvalidRequest('event email already exists: {}'.format(email.event_id), 400)
+            if dao_get_email_by_event_id(email.event_id, parent_email_id=email.parent_email_id):
+                if email.parent_email_id:
+                    raise InvalidRequest('event email already exists: {} with parent: '.format(
+                        email.event_id, email.parent_email_id), 400)
+                else:
+                    raise InvalidRequest('event email already exists: {}'.format(email.event_id), 400)
 
             email.subject = u"{}: {}".format(event.event_type.event_type, event.title)
             if not email.send_starts_at:
@@ -121,8 +125,12 @@ def dao_get_email_by_id(email_id):
     return Email.query.filter_by(id=email_id).one()
 
 
-def dao_get_email_by_event_id(event_id):
-    return Email.query.filter_by(event_id=event_id).first()
+def dao_get_email_by_event_id(event_id, parent_email_id=None):
+    return Email.query.filter_by(event_id=event_id, parent_email_id=parent_email_id).first()
+
+
+def dao_has_child_email(email_id):
+    return Email.query.filter_by(parent_email_id=email_id).first()
 
 
 def dao_get_email_by_magazine_id(magazine_id):

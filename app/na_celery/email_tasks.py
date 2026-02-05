@@ -9,7 +9,9 @@ from app import celery
 from app.comms.email import send_email, get_email_html, get_email_provider
 from app.comms.stats import send_ga_event
 from app.dao import dao_update_record
-from app.dao.emails_dao import dao_get_email_by_id, dao_add_member_sent_to_email, dao_get_approved_emails_for_sending
+from app.dao.emails_dao import (
+    dao_get_email_by_id, dao_add_member_sent_to_email, dao_get_approved_emails_for_sending, dao_has_child_email
+)
 from app.dao.members_dao import dao_get_members_not_sent_to, dao_get_first_member
 from app.dao.orders_dao import dao_get_orders_without_email_status
 from app.dao.users_dao import dao_get_admin_users
@@ -101,7 +103,8 @@ def send_periodic_emails():
         ", ".join([str(e.id) for e in emails]) if emails else 'no emails to send'))
 
     for email in emails:
-        send_emails(email.id)
+        if not dao_has_child_email(email.id):
+            send_emails(email.id)
 
 
 @celery.task(name='send_missing_confirmation_emails')
