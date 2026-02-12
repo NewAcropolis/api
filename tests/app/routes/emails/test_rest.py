@@ -324,6 +324,48 @@ class WhenPostingCreateEmail:
         assert emails[0].email_type == 'event'
         assert emails[0].event_id == sample_event_with_dates.id
 
+    def it_creates_an_event_follow_up_email(self, mocker, client, db_session, sample_event_with_dates):
+        email = create_email(
+            event_id=str(sample_event_with_dates.id),
+            details="Some detail",
+            email_type="event"
+        )
+        data = {
+            "event_id": str(sample_event_with_dates.id),
+            "details": "<div>Some additional details</div>",
+            "extra_txt": "<div>Some more information about the event</div>",
+            "replace_all": False,
+            "email_type": "event",
+            "parent_email_id": email.id
+        }
+
+        response = client.post(
+            url_for('emails.create_email'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp['email_type'] == 'event'
+        assert not json_resp['old_id']
+        assert json_resp['event_id'] == str(sample_event_with_dates.id)
+        assert not json_resp['old_event_id']
+        assert json_resp['extra_txt'] == '<div>Some more information about the event</div>'
+        assert json_resp['details'] == '<div>Some additional details</div>'
+        assert not json_resp['replace_all']
+        assert json_resp['parent_email_id']
+
+        emails = Email.query.all()
+
+        assert len(emails) == 2
+        assert emails[0].email_type == 'event'
+        assert emails[0].event_id == sample_event_with_dates.id
+        assert emails[1].email_type == 'event'
+        assert emails[1].event_id == sample_event_with_dates.id
+        assert emails[1].parent_email_id == email.id
+        assert emails[1].get_subject() == "workshop: Follow up for test_title"
+
     def it_does_not_create_an_event_email_if_no_event_matches(self, client, db_session, sample_uuid):
         data = {
             "event_id": sample_uuid,

@@ -182,6 +182,39 @@ class WhenProcessingSendEmailsTask:
         assert mock_send_emails.call_count == 1
         assert mock_send_emails.call_args_list[0][0][0] == approved_email.id
 
+    @freeze_time("2019-06-03T10:00:00")
+    def it_doesnt_sends_approved_emails_periodically_if_has_child_email(
+        self, mocker, db, db_session, sample_email, sample_member
+    ):
+        mock_send_emails = mocker.patch('app.na_celery.email_tasks.send_emails')
+
+        approved_email_with_chiild_email = create_email(
+            send_starts_at='2019-06-02',
+            created_at='2019-06-01',
+            send_after='2019-06-03 9:00',
+            email_state=APPROVED
+        )
+        approved_email = create_email(
+            send_starts_at='2019-06-02',
+            created_at='2019-06-01',
+            send_after='2019-06-03 9:00',
+            email_state=APPROVED,
+            parent_email_id=approved_email_with_chiild_email.id
+        )
+
+        approved_email_without_parent = create_email(
+            send_starts_at='2019-06-02',
+            created_at='2019-06-01',
+            send_after='2019-06-03 9:00',
+            email_state=APPROVED
+        )
+
+        send_periodic_emails()
+
+        assert mock_send_emails.call_count == 2
+        assert mock_send_emails.call_args_list[0][0][0] == approved_email.id
+        assert mock_send_emails.call_args_list[1][0][0] == approved_email_without_parent.id
+
     @pytest.mark.parametrize('now', [
         "2020-09-05T23:00:01",
         "2020-09-05T06:00:00",
