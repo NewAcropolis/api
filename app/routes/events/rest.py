@@ -266,6 +266,7 @@ def update_event(event_id):
             db_event_date = [
                 e for e in event.event_dates if e.event_datetime.strftime('%Y-%m-%d %H:%M') == _date['event_date']][0]
             db_event_date.speakers = speakers
+            db_event_date.end_time = datetime.strptime(_date["end_time"], '%H:%M')
 
             if _date['event_date'] not in [_e.event_datetime for _e in event_dates]:
                 event_dates.append(db_event_date)

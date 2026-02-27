@@ -1476,6 +1476,7 @@ class WhenPostingUpdatingAnEvent:
                 {
                     "event_date": sample_req_event_data_with_event['event'].event_dates[0].event_datetime.strftime(
                         '%Y-%m-%d %H:%M'),
+                    "end_time": "00:00",
                     "speakers": []
                 },
             ],
@@ -1537,12 +1538,14 @@ class WhenPostingUpdatingAnEvent:
             "event_dates": [
                 {
                     "event_date": "2019-02-01 19:00",
+                    "end_time": "00:00",
                     "speakers": [
                         {"speaker_id": str(event.event_dates[0].speakers[1].id)},
                     ]
                 },
                 {
                     "event_date": "2019-02-02 19:00",
+                    "end_time": "00:00",
                     "speakers": [
                         {"speaker_id": str(event.event_dates[1].speakers[0].id)},
                         {"speaker_id": str(event.event_dates[1].speakers[1].id)},
@@ -1596,6 +1599,7 @@ class WhenPostingUpdatingAnEvent:
                 {
                     "event_date": sample_req_event_data_with_event['event'].event_dates[0].event_datetime.strftime(
                         '%Y-%m-%d %H:%M'),
+                    "end_time": "00:00",
                     "speakers": [
                         {"speaker_id": sample_req_event_data_with_event['speaker'].id},
                         {"speaker_id": speaker.id}
@@ -1645,12 +1649,14 @@ class WhenPostingUpdatingAnEvent:
             "event_dates": [
                 {
                     "event_date": event_datetime.strftime('%Y-%m-%d %H:%M'),
+                    "end_time": "00:00",
                     "speakers": [
                         {"speaker_id": sample_req_event_data_with_event['speaker'].id}
                     ]
                 },
                 {
                     "event_date": (event_datetime + timedelta(days=1)).strftime('%Y-%m-%d %H:%M'),
+                    "end_time": "00:00",
                     "speakers": [
                         {"speaker_id": sample_req_event_data_with_event['speaker'].id}
                     ]
@@ -1712,6 +1718,7 @@ class WhenPostingUpdatingAnEvent:
             "event_dates": [
                 {
                     "event_date": str(event.event_dates[0].event_datetime),
+                    "end_time": "00:00",
                     "speakers": [
                         {"speaker_id": sample_req_event_data['speaker'].id}
                     ]
