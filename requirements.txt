@@ -32,4 +32,4 @@ vine==5.1.0
 Wand==0.5.8
 Werkzeug==3.0.6
 
--e git+https://github.com/NewAcropolis/na-common.git@707862afd0321e17a2babdb561e1f06b832e6b32#egg=na-common
+-e git+https://github.com/NewAcropolis/na-common.git@0483548b6d80583fbcd95ba8d1e67716da3fe04b#egg=na-common
