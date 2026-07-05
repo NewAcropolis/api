@@ -134,7 +134,7 @@ def get_email_html(email_type, **kwargs):
             if all([':' in t for t in magazine_topics.split('\n')]):
                 _topics = [(t.split(':')[0], t.split(':')[1]) for t in magazine_topics.split('\n')]
                 for title, description in _topics:
-                    topics.append({'title': title, 'description': description})
+                    topics.append({'title': title.strip(), 'description': description.strip()})
             else:
                 match = None
                 for t in magazine_topics.split('\n'):
