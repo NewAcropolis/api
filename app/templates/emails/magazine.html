@@ -30,8 +30,8 @@
                                 {% for topic in topics %}
                                     {% if 'title' in topic %}
                                     <div>
-                                        <span class='topic_title'>{{ topic.title }}:</span>
-                                        <span>{{ topic.description }}</span>
+                                        <span class='topic_title'>{{- topic.title -}}:</span>
+                                        <span>{{- topic.description -}}</span>
                                     </div>
                                     {% else %}
                                     <div>
