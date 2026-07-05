@@ -345,6 +345,14 @@ class WhenGettingEmailHTML:
             ]
         ),
         (
+            "test 1 (Philosophy)\ntest 2 (Culture)\ntest 3 (Art)",
+            [
+                {'description': ' test 1', 'title': 'Philosophy'},
+                {'description': ' test 2', 'title': 'Culture'},
+                {'description': ' test 3', 'title': 'Art'}
+            ]
+        ),
+        (
             "Philosophy test 1\nCulture test 2\nArt test 3",
             [
                 'Philosophy test 1',

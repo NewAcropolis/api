@@ -136,7 +136,15 @@ def get_email_html(email_type, **kwargs):
                 for title, description in _topics:
                     topics.append({'title': title, 'description': description})
             else:
-                topics = magazine_topics.split('\n')
+                match = None
+                for t in magazine_topics.split('\n'):
+                    match = re.match(r"(?P<description>.+)\((?P<title>.+)\)", t)
+                    if match:
+                        topics.append(
+                            {'title': match['title'], 'description': match['description']}
+                        )
+                if not match:
+                    topics = magazine_topics.split('\n')
 
         return render_template(
             'emails/magazine.html',
