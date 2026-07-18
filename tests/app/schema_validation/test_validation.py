@@ -3,7 +3,7 @@ import pytest
 import json
 from jsonschema import ValidationError
 
-from app.schema_validation.definitions import uuid, datetime
+from app.schema_validation.definitions import uuid
 from app.schema_validation import validate
 
 test_uuid_schema = {

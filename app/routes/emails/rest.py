@@ -1,23 +1,19 @@
 from datetime import datetime, timedelta
 import json
-import os
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
     Blueprint,
     current_app,
     jsonify,
-    render_template,
     request
 )
 from urllib.parse import unquote
 
 from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
-from html.parser import HTMLParser
 
-from app.na_celery import email_tasks
-from app.comms.email import get_email_html, send_email, send_smtp_email
+from app.comms.email import get_email_html, send_smtp_email
 from app.dao.emails_dao import (
     dao_create_email,
     dao_create_email_to_member,
@@ -25,9 +21,6 @@ from app.dao.emails_dao import (
     dao_get_future_emails,
     dao_get_latest_emails,
     dao_get_email_by_id,
-    dao_get_email_by_event_id,
-    dao_get_email_by_magazine_id,
-    dao_get_emails_for_year_starting_on,
     dao_update_email,
 )
 from app.dao.magazines_dao import dao_get_magazine_by_id

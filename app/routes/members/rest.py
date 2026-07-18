@@ -7,7 +7,6 @@ from flask import (
     request
 )
 import json
-from sqlalchemy.orm.exc import NoResultFound
 
 from flask_jwt_extended import jwt_required
 
@@ -23,7 +22,7 @@ from app.dao.members_dao import (
 from app.comms.email import get_email_html, send_email
 from app.comms.encryption import decrypt, get_tokens
 from app.comms.stats import send_ga_event
-from app.errors import register_errors, InvalidRequest
+from app.errors import register_errors
 
 from app.models import Marketing, Member, BASIC
 from app.routes.members.schemas import (
@@ -72,7 +71,7 @@ def subscribe_member():
         ),
         member_id=member.id
     )
-    response = send_email(data['email'], 'New Acropolis subscription', basic_html)
+    send_email(data['email'], 'New Acropolis subscription', basic_html)
 
     return jsonify(member.serialize())
 

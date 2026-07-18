@@ -5,7 +5,7 @@ werkzeug.cached_property = werkzeug.utils.cached_property
 
 from flask import current_app
 from pytz import timezone
-from sqlalchemy import and_, or_
+from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
@@ -33,7 +33,7 @@ def dao_create_email(email):
             if dao_get_email_by_event_id(email.event_id, parent_email_id=email.parent_email_id):
                 if email.parent_email_id:
                     raise InvalidRequest('event email already exists: {} with parent: '.format(
-                        email.event_id, email.parent_email_id), 400)
+                        email.event_id, ), 400)
                 else:
                     raise InvalidRequest('event email already exists: {}'.format(email.event_id), 400)
 
@@ -193,7 +193,6 @@ def dao_get_todays_email_count_for_provider(email_provider_id):
 
 def dao_get_past_hour_email_count_for_provider(email_provider_id):
     now = datetime.now(timezone('Europe/London'))
-    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     return EmailToMember.query.filter(
         EmailToMember.created_at > now - timedelta(hours=1),

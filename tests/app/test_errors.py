@@ -2,17 +2,11 @@ import pytest
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
-from flask import json, url_for, Blueprint, Flask, jsonify, abort
+from flask import json, Blueprint, Flask, abort
 from flask_jwt_extended.exceptions import (
-    JWTDecodeError,
     NoAuthorizationError,
     InvalidHeaderError,
-    WrongTokenError,
-    RevokedTokenError,
-    FreshTokenRequired,
-    CSRFError,
-    UserLookupError,
-    UserClaimsVerificationError
+    RevokedTokenError
 )
 from jsonschema import ValidationError
 from jwt.exceptions import DecodeError, ExpiredSignatureError

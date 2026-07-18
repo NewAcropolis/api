@@ -3,7 +3,6 @@ from freezegun import freeze_time
 from app.dao.event_dates_dao import dao_get_event_date_by_id
 
 from app.dao.events_dao import (
-    dao_create_event,
     dao_delete_event,
     dao_update_event,
     dao_get_events,
@@ -14,7 +13,7 @@ from app.dao.events_dao import (
     dao_get_past_year_events,
     dao_get_existing_event_at_venue
 )
-from app.models import Event, EventDate, RejectReason
+from app.models import Event, EventDate
 
 from tests.db import create_event, create_event_date, create_speaker
 

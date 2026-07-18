@@ -3,8 +3,6 @@ from decimal import Decimal
 import json
 import io
 import pyqrcode
-import sys
-from urllib.parse import unquote, urlencode
 import requests
 from datetime import datetime
 import werkzeug
@@ -17,10 +15,7 @@ from flask import (
     request,
     url_for
 )
-import os.path
-import re
 from sqlalchemy.orm.exc import NoResultFound
-import time
 
 from flask_jwt_extended import jwt_required
 from app.comms.email import get_email_html, send_email, send_smtp_email
@@ -35,9 +30,7 @@ from app.errors import register_errors, InvalidRequest
 
 from app.models import (
     BookToOrder, Order, OrderError, Ticket,
-    BASIC, BOOK, TICKET_STATUS_USED,
-    DELIVERY_FEE_UK_EU, DELIVERY_FEE_UK_ROW, DELIVERY_FEE_EU_ROW,
-    DELIVERY_REFUND_EU_UK, DELIVERY_REFUND_ROW_UK, DELIVERY_REFUND_ROW_EU
+    BASIC, BOOK, TICKET_STATUS_USED
 )
 from app.routes.orders.schemas import post_update_order_address_schema, post_update_order_schema
 from app.schema_validation import validate

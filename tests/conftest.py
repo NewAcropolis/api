@@ -20,7 +20,7 @@ import sqlalchemy
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from app import create_app, db as _db, get_env
-from app.models import APPROVED, BASIC, EVENT, MAGAZINE, TICKET_STATUS_UNUSED
+from app.models import APPROVED, BASIC, MAGAZINE, TICKET_STATUS_UNUSED
 from tests.db import (
     create_article,
     create_book,
@@ -70,7 +70,6 @@ def app():
         'EMAIL_ANYTIME': False,
         'TEST_EMAIL': 'test@example.com',
         'EVENTS_MAX': 2,
-        'GOOGLE_APPLICATION_CREDENTIALS': 'test',
         'PROJECT': 'test-project',
         'STORAGE': 'test-store',
         'PAYPAL_URL': 'https://test.paypal',

@@ -18,7 +18,7 @@ function display_result {
   fi
 }
 
-pycodestyle .
+ruff check
 display_result $? 1 "Code style check"
 
 ## Code coverage

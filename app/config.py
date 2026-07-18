@@ -21,7 +21,7 @@ def main(argv):
 
     try:
         output(configs[args.env].PORT)
-    except:
+    except Exception:
         output('No environment')
 
 

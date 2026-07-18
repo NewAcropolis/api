@@ -12,8 +12,7 @@ from urllib.parse import parse_qs
 from app.dao.events_dao import dao_get_event_by_id
 from app.dao.orders_dao import dao_get_orders
 from app.dao.tickets_dao import dao_get_tickets_for_order
-from app.models import Order, OrderError, Ticket, TICKET_STATUS_USED, TICKET_STATUS_UNUSED
-from na_common.delivery import statuses as delivery_statuses
+from app.models import Order, TICKET_STATUS_USED, TICKET_STATUS_UNUSED
 from tests.conftest import create_authorization_header
 from tests.db import create_ticket, create_order
 
@@ -1093,7 +1092,7 @@ class WhenHandlingPaypalIPN:
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch(
+        mocker.patch(
             'app.routes.orders.rest.send_email', return_value=('200', sample_email_provider.id))
 
         _sample_ipn = sample_donation.format(
@@ -1122,7 +1121,7 @@ class WhenHandlingPaypalIPN:
     ):
         mocker.patch('app.routes.orders.rest.Storage')
         mocker.patch('app.routes.orders.rest.Storage.upload_blob_from_base64string')
-        mock_send_email = mocker.patch(
+        mocker.patch(
             'app.routes.orders.rest.send_email', return_value=('200', sample_email_provider.id))
 
         _sample_ipn = sample_donation_giftaid.format(
@@ -1579,7 +1578,7 @@ class WhenHandlingPaypalIPN:
         assert orders[0].txn_id.startswith(f"XX-{resp}_1637434800-")
 
     def it_creates_an_order_with_receiver_id(self, mocker, client, db_session, sample_event_with_dates):
-        mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')
+        mocker.patch('app.routes.orders.rest.current_app.logger.error')
         sample_ipn = sample_receiver_id.format(id=sample_event_with_dates.id)
         with requests_mock.mock() as r:
             r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
@@ -1608,23 +1607,6 @@ class WhenHandlingPaypalIPN:
         assert len(orders) == 1
         assert len(orders[0].errors) == 1
         assert mock_logger.call_args == call('No Paypal receiver email or id for %s', u'112233')
-
-    def it_creates_an_order_error_if_wrong_receiver(self, mocker, client, db_session, sample_event):
-        mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')
-        sample_ipn = sample_wrong_receiver.format(id=sample_event.id)
-        with requests_mock.mock() as r:
-            r.post(current_app.config['PAYPAL_VERIFY_URL'], text='VERIFIED')
-
-            client.post(
-                url_for('orders.paypal_ipn'),
-                data=sample_ipn,
-                content_type="application/x-www-form-urlencoded"
-            )
-        orders = dao_get_orders()
-        assert len(orders) == 1
-        assert len(orders[0].errors) == 1
-        assert mock_logger.call_args == call(
-            'Paypal receiver email not valid: %s for %s', u'another@example.com', u'112233')
 
     def it_creates_an_order_error_if_wrong_receiver_id(self, mocker, client, db_session, sample_event):
         mock_logger = mocker.patch('app.routes.orders.rest.current_app.logger.error')

@@ -1,7 +1,7 @@
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
-from flask import json, url_for
+from flask import url_for
 import pytest
 import requests_mock
 

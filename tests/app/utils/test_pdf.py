@@ -1,4 +1,3 @@
-import base64
 import os
 
 from app.utils.pdf import extract_topics

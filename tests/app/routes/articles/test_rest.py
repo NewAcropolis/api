@@ -4,7 +4,6 @@ werkzeug.cached_property = werkzeug.utils.cached_property
 import base64
 import os
 import pytest
-import uuid
 from zipfile import BadZipFile
 
 from flask import json, url_for
@@ -88,9 +87,9 @@ class WhenGettingArticles:
         'get_articles_summary_by_tags'
     ])
     def it_returns_articles_by_tags_and_other_articles(self, client, method_call, sample_article, db_session):
-        article_1 = create_article(title='test 1', tags='music,', image_filename='a.jpg', article_state=APPROVED)
+        create_article(title='test 1', tags='music,', image_filename='a.jpg', article_state=APPROVED)
         article_2 = create_article(title='test 2', tags='art,', image_filename='b.jpg', article_state=APPROVED)
-        article_3 = create_article(title='test 3', tags='music,art,', image_filename='c.jpg', article_state=APPROVED)
+        create_article(title='test 3', tags='music,art,', image_filename='c.jpg', article_state=APPROVED)
         article_4 = create_article(title='test 4', tags='physics,', image_filename='d.jpg', article_state=APPROVED)
         create_article(title='test 5', tags='')
 
@@ -172,7 +171,7 @@ class WhenPostingImportArticles(object):
             assert json_articles[i]["created_at"] == sample_articles[i]["entrydate"]
 
 
-class WhenPostingUpdateArticle:
+class WhenPostingUpdateArticleOldID:
 
     def it_updates_an_article(self, client, db_session, sample_article):
         data = {
@@ -305,8 +304,7 @@ class WhenPostingUpdateArticle:
         self, mocker, client, db_session, mock_storage,
         sample_email_provider, sample_admin_user, sample_uuid
     ):
-        mock_smtp = mocker.patch('app.routes.articles.rest.send_smtp_email')
-        UNIX_TIME = "1678543200.0"
+        mocker.patch('app.routes.articles.rest.send_smtp_email')
         data = {
             'title': 'Updated',
             'author': 'Updated Somone',

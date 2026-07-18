@@ -1,7 +1,6 @@
-import json
 
 from app.dao.venues_dao import (
-    dao_create_venue, dao_update_venue, dao_get_venues, dao_get_venue_by_id, dao_get_venue_by_old_id
+    dao_update_venue, dao_get_venues, dao_get_venue_by_id, dao_get_venue_by_old_id
 )
 from app.models import Venue
 

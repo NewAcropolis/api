@@ -1,7 +1,6 @@
 import base64
 import json
 import os
-import re
 import requests
 import werkzeug
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -9,9 +8,9 @@ from zipfile import ZipFile, ZIP_DEFLATED
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask_script import Manager, Server
 from app import create_app, db
-from app.comms.encryption import decrypt, encrypt, get_tokens
+from app.comms.encryption import encrypt
 from app.dao.magazines_dao import dao_get_magazine_by_old_id
-from app.routes.magazines import get_magazine_filename, MAGAZINE_PATTERN
+from app.routes.magazines import get_magazine_filename
 from app.utils.pdf import extract_topics as _extract_topics
 from app.utils.pdf import extract_first_page as _extract_first_page
 from app.utils.storage import Storage
@@ -144,7 +143,7 @@ def get_emails_for_sending():
     application = Flask(__name__)
     application.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 
-    db = SQLAlchemy(application)
+    SQLAlchemy(application)
 
     from app.dao.emails_dao import dao_get_approved_emails_for_sending
     emails = dao_get_approved_emails_for_sending()

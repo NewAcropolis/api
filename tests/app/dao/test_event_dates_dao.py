@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from app.dao.event_dates_dao import (
-    dao_create_event_date,
     dao_delete_event_date,
     dao_update_event_date,
     dao_get_event_dates,
@@ -11,7 +10,7 @@ from app.dao.event_dates_dao import (
 )
 from app.models import EventDate
 
-from tests.db import create_event_date, create_event, create_fee
+from tests.db import create_event_date, create_event
 
 
 class WhenUsingEventDatesDAO(object):

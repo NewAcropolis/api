@@ -1,8 +1,6 @@
 import base64
 import docx
 import io
-import os
-from random import randint
 from zipfile import ZipFile
 
 import werkzeug
@@ -19,7 +17,7 @@ import time
 
 from flask_jwt_extended import jwt_required
 
-from app.comms.email import get_email_html, send_email, send_smtp_email
+from app.comms.email import send_smtp_email
 from app.dao.articles_dao import (
     dao_create_article,
     dao_get_articles,
@@ -282,7 +280,7 @@ def update_article_by_id(article_id):
             else:
                 article_data[k] = data[k]
 
-    res = dao_update_article(article.id, **article_data)
+    dao_update_article(article.id, **article_data)
 
     image_data = data.get('image_data')
 

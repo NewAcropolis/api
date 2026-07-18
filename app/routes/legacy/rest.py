@@ -2,7 +2,6 @@ from io import StringIO, BytesIO
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import Blueprint, current_app, jsonify, request, send_file
-from sqlalchemy.orm.exc import NoResultFound
 
 from app.dao.events_dao import dao_get_event_by_old_id
 from app.dao.magazines_dao import dao_get_magazine_by_old_id
@@ -44,7 +43,7 @@ def event_handler():
 
     try:
         int(old_id)
-    except:
+    except Exception:
         raise InvalidRequest('invalid event old_id: {}'.format(old_id), 400)
 
     event = dao_get_event_by_old_id(old_id)

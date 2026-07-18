@@ -32,7 +32,7 @@ from app.dao.events_dao import (
     dao_get_past_year_events,
     dao_update_event,
 )
-from app.dao.event_dates_dao import dao_create_event_date, dao_get_event_date_by_id
+from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_get_event_type_by_old_id, dao_get_event_type_by_id
 from app.dao.reject_reasons_dao import dao_create_reject_reason, dao_update_reject_reason
 from app.dao.speakers_dao import dao_get_speaker_by_name, dao_get_speaker_by_id
@@ -40,7 +40,7 @@ from app.dao.tickets_dao import dao_get_tickets_for_event_date
 from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 
-from app.errors import register_errors, InvalidRequest, PaypalException
+from app.errors import register_errors, InvalidRequest
 from app.models import Event, EventDate, RejectReason, ReservedPlace, APPROVED, DRAFT, READY, REJECTED, BASIC
 
 from app.na_celery import paypal_tasks

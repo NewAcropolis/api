@@ -3,9 +3,7 @@ werkzeug.cached_property = werkzeug.utils.cached_property
 
 from flask import (
     Blueprint,
-    current_app,
     jsonify,
-    render_template,
     request
 )
 
@@ -15,8 +13,7 @@ from app.models import EmailProvider
 from flask_jwt_extended import jwt_required
 from app.dao.email_providers_dao import (
     dao_create_email_provider, dao_update_email_provider,
-    dao_get_email_provider_by_id, dao_get_first_email_provider,
-    dao_get_email_providers
+    dao_get_email_provider_by_id, dao_get_email_providers
 )
 from app.routes.email_providers.schemas import post_create_email_provider_schema, post_update_email_provider_schema
 from app.schema_validation import validate

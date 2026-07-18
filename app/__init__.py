@@ -1,6 +1,5 @@
 import os
 import logging
-import sys
 from logging.handlers import RotatingFileHandler
 
 import jinja2

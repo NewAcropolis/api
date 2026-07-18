@@ -2,14 +2,12 @@ from mock import call
 import json
 import pytest
 import requests_mock
-from urllib.parse import urlencode
 
-from tests.conftest import TEST_DATABASE_URI
 from app.comms.email import get_email_html, send_email, get_email_data
-from app.dao.email_providers_dao import dao_update_email_provider, dao_get_email_provider_by_id
+from app.dao.email_providers_dao import dao_get_email_provider_by_id
 from tests.db import create_email_provider
 from app.errors import InvalidRequest
-from app.models import API_AUTH, BEARER_AUTH, MAGAZINE, EmailProvider, Email
+from app.models import API_AUTH, BEARER_AUTH, MAGAZINE
 
 
 @pytest.fixture

@@ -3,13 +3,11 @@ werkzeug.cached_property = werkzeug.utils.cached_property
 
 from datetime import datetime, timedelta
 from freezegun import freeze_time
-from freezegun.api import FakeDatetime
-from mock import Mock, call
+from mock import call
 import pytest
 import six.moves.urllib as urllib
 from sqlalchemy.orm.exc import NoResultFound
 
-from bs4 import BeautifulSoup
 from flask import json, url_for
 
 from app.models import (
@@ -85,10 +83,10 @@ class WhenGettingFutureEmails:
         event_3 = create_event(title='Event 3')
         past_event = create_event(title='Past event')
 
-        event_date = create_event_date(event_id=str(event.id), event_datetime='2019-07-20 19:00')
-        event_date_2 = create_event_date(event_id=str(event_2.id), event_datetime='2019-07-13 19:00')
-        event_date_3 = create_event_date(event_id=str(event_3.id), event_datetime='2019-08-13 19:00')
-        past_event_date = create_event_date(event_id=str(past_event.id), event_datetime='2019-06-13 19:00')
+        create_event_date(event_id=str(event.id), event_datetime='2019-07-20 19:00')
+        create_event_date(event_id=str(event_2.id), event_datetime='2019-07-13 19:00')
+        create_event_date(event_id=str(event_3.id), event_datetime='2019-08-13 19:00')
+        create_event_date(event_id=str(past_event.id), event_datetime='2019-06-13 19:00')
 
         future_email = create_email(
             event_id=str(event.id), created_at='2019-07-01 11:00', send_starts_at='2019-07-10', expires='2019-07-20')
@@ -123,10 +121,10 @@ class WhenGettingLatestEmails:
         event_3 = create_event(title='Event 3')
         past_event = create_event(title='Past event')
 
-        event_date = create_event_date(event_id=str(event.id), event_datetime='2019-07-20 19:00')
-        event_date_2 = create_event_date(event_id=str(event_2.id), event_datetime='2019-07-13 19:00')
-        event_date_3 = create_event_date(event_id=str(event_3.id), event_datetime='2019-08-13 19:00')
-        past_event_date = create_event_date(event_id=str(past_event.id), event_datetime='2019-06-13 19:00')
+        create_event_date(event_id=str(event.id), event_datetime='2019-07-20 19:00')
+        create_event_date(event_id=str(event_2.id), event_datetime='2019-07-13 19:00')
+        create_event_date(event_id=str(event_3.id), event_datetime='2019-08-13 19:00')
+        create_event_date(event_id=str(past_event.id), event_datetime='2019-06-13 19:00')
 
         future_email = create_email(
             event_id=str(event.id), created_at='2019-07-01 11:00', send_starts_at='2019-07-10', expires='2019-07-20')
@@ -159,8 +157,8 @@ class WhenGettingApprovedEmails:
         event = create_event(title='Event 1')
         event_2 = create_event(title='Event 2')
 
-        event_date = create_event_date(event_id=str(event.id), event_datetime='2019-07-20 19:00')
-        event_date_2 = create_event_date(event_id=str(event_2.id), event_datetime='2019-07-13 19:00')
+        create_event_date(event_id=str(event.id), event_datetime='2019-07-20 19:00')
+        create_event_date(event_id=str(event_2.id), event_datetime='2019-07-13 19:00')
 
         approved_email = create_email(
             event_id=str(event.id), created_at='2019-07-01 11:00', send_starts_at='2019-07-10',
@@ -365,29 +363,6 @@ class WhenPostingCreateEmail:
         assert emails[1].event_id == sample_event_with_dates.id
         assert emails[1].parent_email_id == email.id
         assert emails[1].get_subject() == "workshop: Follow up for test_title"
-
-    def it_does_not_create_an_event_email_if_no_event_matches(self, client, db_session, sample_uuid):
-        data = {
-            "event_id": sample_uuid,
-            "details": "<div>Some additional details</div>",
-            "extra_txt": "<div>Some more information about the event</div>",
-            "replace_all": False,
-            "email_type": "event"
-        }
-
-        response = client.post(
-            url_for('emails.create_email'),
-            data=json.dumps(data),
-            headers=[('Content-Type', 'application/json'), create_authorization_header()]
-        )
-
-        assert response.status_code == 400
-
-        json_resp = json.loads(response.get_data(as_text=True))
-
-        assert json_resp['message'] == 'event not found: {}'.format(sample_uuid)
-        emails = Email.query.all()
-        assert not emails
 
     def it_does_not_create_an_event_email_if_no_event_matches(self, client, db_session, sample_uuid):
         data = {
@@ -822,7 +797,7 @@ class WhenPostingSendMessage:
             "message": "Test message"
         }
 
-        response = client.post(
+        client.post(
             url_for('emails.send_message'),
             data=json.dumps(data),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]

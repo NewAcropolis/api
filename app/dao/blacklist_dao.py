@@ -4,7 +4,6 @@ from sqlalchemy.orm.exc import NoResultFound
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
-from flask_jwt_extended import decode_token, get_jwt_identity
 
 from app import db
 from app.dao.decorators import transactional

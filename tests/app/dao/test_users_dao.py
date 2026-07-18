@@ -1,8 +1,6 @@
-import json
 
 from app.dao.users_dao import (
     dao_get_admin_users,
-    dao_create_user,
     dao_update_user,
     dao_get_users,
     dao_get_user_by_id,

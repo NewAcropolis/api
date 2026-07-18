@@ -3,7 +3,6 @@ import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
 from flask import current_app
-import pytz
 
 from app import celery
 from app.comms.email import send_smtp_email, get_email_html

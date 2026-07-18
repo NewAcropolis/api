@@ -1,4 +1,3 @@
-import pytest
 
 from app.models import MAGAZINE
 from app.na_celery.upload_tasks import upload_magazine

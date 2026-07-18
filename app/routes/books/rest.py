@@ -1,6 +1,4 @@
 import base64
-import os
-from random import randint
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 

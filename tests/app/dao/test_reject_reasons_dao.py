@@ -1,4 +1,4 @@
-from app.dao.reject_reasons_dao import dao_update_reject_reason, dao_create_reject_reason
+from app.dao.reject_reasons_dao import dao_update_reject_reason
 from app.models import RejectReason
 
 from tests.db import create_reject_reason

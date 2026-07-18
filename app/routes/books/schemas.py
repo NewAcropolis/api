@@ -1,4 +1,4 @@
-from app.schema_validation.definitions import uuid, number, money
+from app.schema_validation.definitions import money
 
 
 post_import_book_schema = {

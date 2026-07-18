@@ -13,12 +13,12 @@ from urllib.parse import parse_qs
 from app.na_celery.email_tasks import send_emails, send_periodic_emails, send_missing_confirmation_emails
 from app.comms.encryption import decrypt, get_tokens
 from app.errors import InvalidRequest
-from app.models import APPROVED, DRAFT, TICKET_STATUS_UNUSED, Email, Magazine, EmailToMember, MAGAZINE
+from app.models import APPROVED, DRAFT, Email, Magazine, EmailToMember, MAGAZINE
 from tests.app.routes.orders.test_rest import sample_ipns
 
 from tests.db import (
     create_email, create_event, create_event_date, create_member, create_email_to_member,
-    create_email_provider, create_order, create_ticket
+    create_email_provider, create_order
 )
 
 
@@ -412,7 +412,6 @@ class WhenProcessingSendMissingConfirmationEmailsTask:
     ):
         txn_ids = ['112233', '112244']
         txn_types = ['cart', 'cart']
-        num_tickets = [1, 2]
 
         create_order(created_at='2022-11-21T19:00:00', txn_id='111')  # more than 2 days before so ignore
 
@@ -435,7 +434,7 @@ class WhenProcessingSendMissingConfirmationEmailsTask:
             'app.routes.orders.rest.send_email', return_value=(200, str(sample_email_provider.id))
         )
 
-        mock_url_for = mocker.patch(
+        mocker.patch(
             'app.routes.orders.rest.url_for', return_value="/orders/ticket/ticket_id"
         )
         send_missing_confirmation_emails()
@@ -450,7 +449,6 @@ class WhenProcessingSendMissingConfirmationEmailsTask:
     ):
         txn_ids = ['112233']
         txn_types = ['cart']
-        num_tickets = [1]
 
         sample_ipns[0] = sample_ipns[0].format(
             id=sample_event_with_dates.id, txn_id=txn_ids[0], txn_type=txn_types[0])
@@ -463,7 +461,7 @@ class WhenProcessingSendMissingConfirmationEmailsTask:
             'app.routes.orders.rest.send_email', return_value=(200, str(sample_email_provider.id))
         )
 
-        mock_replay_ipn = mocker.patch(
+        mocker.patch(
             'app.na_celery.email_tasks._replay_paypal_ipn', return_value=None
         )
 

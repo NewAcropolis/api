@@ -1,7 +1,6 @@
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
-import pytest
 from flask import json, url_for
 from tests.conftest import create_authorization_header
 from app.models import Venue

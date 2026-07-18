@@ -1,4 +1,4 @@
-from app.schema_validation.definitions import datetime, number, uuid, nullable, time
+from app.schema_validation.definitions import datetime, uuid, time
 
 
 event_date_schema = {
