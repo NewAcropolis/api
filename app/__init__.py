@@ -56,10 +56,6 @@ def init_app(app):
     app.jinja_env.globals['IMAGES_URL'] = f"{app.config['PREVIEW_API_BASE_URL']}/static/images" \
         if app.config.get('EMAIL_TEST') else app.config['IMAGES_URL']
 
-    @app.before_request
-    def check_for_apikey():
-        # print("check: ", request)
-        pass
 
 
 def register_blueprint(bp):

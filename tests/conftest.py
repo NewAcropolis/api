@@ -14,8 +14,8 @@ from alembic.config import Config
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
-from flask_migrate import Migrate, MigrateCommand
-from flask_script import Manager
+from flask_migrate import Migrate  #, MigrateCommand
+# from flask_script import Manager
 import sqlalchemy
 from flask_jwt_extended import create_access_token, create_refresh_token
 
@@ -46,7 +46,8 @@ TEST_ADMIN_USER = 'admin@example.com'
 TEST_ADMIN_USER_CONFIG = 'admin-config@example.com'
 
 
-@pytest.yield_fixture(scope='session')
+# @pytest.fixture(scope='session')
+@pytest.fixture(scope='session')
 def app():
     _app = create_app(**{
         'TESTING': True,
@@ -90,13 +91,25 @@ def app():
         'DISABLE_STATS': False,
         'EMAIL_DISABLED': None,
         'SMTP_SERVER': 'test.smtp.server',
-        'TEST_VERIFY': None
+        'TEST_VERIFY': None,
+        'SERVER_NAME': 'localhost'
     })
 
     ctx = _app.app_context()
     ctx.push()
 
     yield _app
+
+    ctx.pop()
+
+
+@pytest.fixture()
+def client(app):
+    # return app.test_client()
+    ctx = app.app_context()
+    ctx.push()
+
+    yield app.test_client()
 
     ctx.pop()
 
@@ -108,7 +121,7 @@ def db(app):
     create_test_db_if_does_not_exist(_db)
 
     Migrate(app, _db)
-    Manager(_db, MigrateCommand)
+    # Manager(_db, MigrateCommand)
     BASE_DIR = os.path.dirname(os.path.dirname(__file__))
     ALEMBIC_CONFIG = os.path.join(BASE_DIR, 'migrations')
     config = Config(ALEMBIC_CONFIG + '/alembic.ini')

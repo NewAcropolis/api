@@ -18,7 +18,7 @@ class WhenAccessingSiteInfo(object):
         })
 
         response = client.get(
-            url_for('.get_info')
+            url_for('base.get_info')
         )
         query = 'SELECT version_num FROM alembic_version'
         version_from_db = db.session.execute(query).fetchone()[0]
@@ -27,10 +27,10 @@ class WhenAccessingSiteInfo(object):
         assert json_resp['info'] == version_from_db
         assert json_resp['workers'] == 'Running'
 
-    def it_shows_db_error(self, mocker, client, db, mock_stats):
+    def it_shows_db_error(self, mocker, app, client, mock_stats):
         mocker.patch('app.rest.db.session.execute', side_effect=Exception('db error'))
         response = client.get(
-            url_for('.get_info')
+            url_for('base.get_info')
         )
         json_resp = json.loads(response.get_data(as_text=True))['info']
         assert response.status_code == 200
@@ -38,7 +38,7 @@ class WhenAccessingSiteInfo(object):
 
     def it_shows_info_without_db(self, mock_stats, app, client):
         response = client.get(
-            url_for('.get_info_without_db')
+            url_for('base.get_info_without_db')
         )
         assert response.status_code == 200
         assert response.json == {

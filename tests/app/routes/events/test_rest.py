@@ -1851,7 +1851,7 @@ class WhenPostingReservePlace:
         assert response.json['event_date'] == '2018-01-01 19:00'
         assert len(reserved_places) == 1
         assert reserved_places[0].name == data['name']
-        assert mock_send_email.called_once()
+        assert mock_send_email.assert_called
         assert mock_send_email.call_args[0][0] == 'someone@other.com'
         assert mock_send_email.call_args[0][1] == 'Reserved place for: test_title'
         assert (

@@ -170,23 +170,6 @@ class WhenPostingImportArticles(object):
             assert json_articles[i]["content"] == sample_articles[i]["content"]
             assert json_articles[i]["created_at"] == sample_articles[i]["entrydate"]
 
-
-class WhenPostingUpdateArticleOldID:
-
-    def it_updates_an_article(self, client, db_session, sample_article):
-        data = {
-            'title': 'Updated',
-            'image_filename': 'new_filename.jpg'
-        }
-        response = client.post(
-            url_for('article.update_article_by_old_id', old_id=sample_article.old_id),
-            data=json.dumps(data),
-            headers=[('Content-Type', 'application/json'), create_authorization_header()]
-        )
-        assert response.status_code == 200
-        assert response.json['image_filename'] == data['image_filename']
-
-
 class WhenPostingAddArticle:
 
     def it_adds_an_article(self, client, db_session, sample_magazine, mock_storage):

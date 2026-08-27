@@ -1,4 +1,5 @@
 from mock import call
+import copy
 import json
 import pytest
 import requests_mock
@@ -12,7 +13,7 @@ from app.models import API_AUTH, BEARER_AUTH, MAGAZINE
 
 @pytest.fixture
 def mock_config_live(app):
-    old_config = app.config
+    old_config = copy.deepcopy(app.config)
     app.config['ENVIRONMENT'] = 'live'
     yield
 
@@ -21,7 +22,7 @@ def mock_config_live(app):
 
 @pytest.fixture
 def mock_config_restricted(app):
-    old_config = app.config
+    old_config =  copy.deepcopy(app.config)
     app.config['ENVIRONMENT'] = 'live'
     app.config['EMAIL_RESTRICT'] = 1
     yield

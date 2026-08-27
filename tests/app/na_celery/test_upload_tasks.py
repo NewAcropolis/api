@@ -9,7 +9,6 @@ class WhenUploadingMagazinePdfs:
     def it_uploads_a_magazine_pdf_and_sends_email(self, db_session, mocker, sample_magazine, sample_user):
         mocker.patch('app.na_celery.upload_tasks.Storage')
         mocker.patch('app.na_celery.upload_tasks.base64')
-        mocker.patch('app.na_celery.upload_tasks.extract_topics', return_value='Philosophy: Meaning of Life And Death')
         mock_send_email = mocker.patch('app.na_celery.upload_tasks.send_smtp_email')
 
         upload_magazine(sample_magazine.id, 'pdf data')
@@ -19,7 +18,6 @@ class WhenUploadingMagazinePdfs:
     def it_uploads_a_magazine_pdf_and_reuses_email(self, app, db_session, mocker, sample_magazine, sample_user):
         mocker.patch('app.na_celery.upload_tasks.Storage')
         mocker.patch('app.na_celery.upload_tasks.base64')
-        mocker.patch('app.na_celery.upload_tasks.extract_topics', return_value='Philosophy: Meaning of Life And Death')
         mock_send_email = mocker.patch('app.na_celery.upload_tasks.send_smtp_email', return_value=200)
         email = create_email(magazine_id=sample_magazine.id, email_type=MAGAZINE)
 
@@ -34,7 +32,6 @@ class WhenUploadingMagazinePdfs:
         magazine = create_magazine(topics="Test: Test topic")
         mocker.patch('app.na_celery.upload_tasks.Storage')
         mocker.patch('app.na_celery.upload_tasks.base64')
-        mocker.patch('app.na_celery.upload_tasks.extract_topics', return_value='Philosophy: Meaning of Life And Death')
         mock_send_email = mocker.patch('app.na_celery.upload_tasks.send_smtp_email', return_value=200)
         email = create_email(magazine_id=magazine.id, email_type=MAGAZINE)
 

@@ -4,9 +4,8 @@ import os
 import requests
 import werkzeug
 from zipfile import ZipFile, ZIP_DEFLATED
-
 werkzeug.cached_property = werkzeug.utils.cached_property
-from flask_script import Manager, Server
+
 from app import create_app, db
 from app.comms.encryption import encrypt
 from app.dao.magazines_dao import dao_get_magazine_by_old_id
@@ -14,42 +13,37 @@ from app.routes.magazines import get_magazine_filename
 from app.utils.pdf import extract_topics as _extract_topics
 from app.utils.pdf import extract_first_page as _extract_first_page
 from app.utils.storage import Storage
-from flask_migrate import Migrate, MigrateCommand
+from flask_migrate import Migrate
+
+app = create_app()
+migrate = Migrate(app, db)
 
 
-application = create_app()
-migrate = Migrate(application, db)
-manager = Manager(application)
-
-manager.add_command('db', MigrateCommand)
-manager.add_command("runserver", Server(host='0.0.0.0'))
-
-
-@manager.command
+@app.shell_context_processor
 def list_routes():
     """List URLs of all application routes."""
-    for rule in sorted(application.url_map.iter_rules(), key=lambda r: r.rule):
+    for rule in sorted(app.url_map.iter_rules(), key=lambda r: r.rule):
         print("{:10} {}".format(", ".join(rule.methods - set(['OPTIONS', 'HEAD'])), rule.rule))
 
 
-@manager.command
+@app.shell_context_processor
 def generate_web_images(year=None):
     """Generate web images, thumbnail, standard."""
-    application.logger.info('Generate web images')
-    storage = Storage(application.config['STORAGE'])
+    app.logger.info('Generate web images')
+    storage = Storage(app.config['STORAGE'])
     storage.generate_web_images(year)
 
 
-@manager.command
+@app.shell_context_processor
 def get_unsubcode(member_id):
     unsubcode = encrypt(
-        "{}={}".format(application.config['EMAIL_TOKENS']['member_id'], member_id),
-        application.config['EMAIL_UNSUB_SALT']
+        "{}={}".format(app.config['EMAIL_TOKENS']['member_id'], member_id),
+        app.config['EMAIL_UNSUB_SALT']
     )
     print(unsubcode)
 
 
-@manager.command
+@app.shell_context_processor
 def extract_topics():
     filename = 'Bi_monthly_Issue 49.pdf'
     with open(os.path.join('data', 'pdfs', filename), "rb") as f:
@@ -57,7 +51,7 @@ def extract_topics():
         print(_extract_topics(pdf_binary))
 
 
-@manager.command
+@app.shell_context_processor
 def extract_first_page():
     filename = 'Bi_monthly_Issue 49.pdf'
     with open(os.path.join('data', 'pdfs', filename), "rb") as f:
@@ -68,13 +62,13 @@ def extract_first_page():
         _extract_first_page(pdf_bin)
 
 
-@manager.command
+@app.shell_context_processor
 def send_stats():
     from app.na_celery.stats_tasks import send_num_subscribers_and_social_stats
     send_num_subscribers_and_social_stats(inc_subscribers=False)
 
 
-@manager.command
+@app.shell_context_processor
 def create_test_zip():
     """Create zipfile for testing"""
     DATA_ROOT = os.path.join('tests', 'test_files')
@@ -84,21 +78,21 @@ def create_test_zip():
         myzip.write("Test 2.docx", arcname="test_2_final.docx")
 
 
-@manager.command
+@app.shell_context_processor
 def upload_file(filename, target_filename=None):
     """Upload file."""
     if not target_filename:
         target_filename = f'test/{filename}'
-    application.logger.info('Upload file')
-    storage = Storage(application.config['STORAGE'])
+    app.logger.info('Upload file')
+    storage = Storage(app.config['STORAGE'])
     storage.upload_blob(filename, target_filename, set_public=True)
 
 
-@manager.command
+@app.shell_context_processor
 def upload_magazines(folder='data/pdfs'):
     """Upload magazines."""
-    application.logger.info('Upload magazines')
-    storage = Storage(application.config['STORAGE'])
+    app.logger.info('Upload magazines')
+    storage = Storage(app.config['STORAGE'])
 
     share_items = []
     with open(os.path.join('data', 'shareitems.json')) as f:
@@ -121,7 +115,7 @@ def upload_magazines(folder='data/pdfs'):
                             filename,
                             new_filename,
                             base64.b64encode(pdf),
-                            content_type='application/pdf'
+                            content_type='app/pdf'
                         )
 
                 payload = {
@@ -133,17 +127,17 @@ def upload_magazines(folder='data/pdfs'):
 
                 auth_request('magazine/import', access_token, payload)
         else:
-            application.logger.info("Magazine already uploaded: %s", item['Title'])
+            app.logger.info("Magazine already uploaded: %s", item['Title'])
 
 
-@manager.command
+@app.shell_context_processor
 def get_emails_for_sending():
     from flask import Flask
     from flask_sqlalchemy import SQLAlchemy
-    application = Flask(__name__)
-    application.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 
-    SQLAlchemy(application)
+    SQLAlchemy(app)
 
     from app.dao.emails_dao import dao_get_approved_emails_for_sending
     emails = dao_get_approved_emails_for_sending()
@@ -157,14 +151,14 @@ def get_emails_for_sending():
 
 def get_access_token():
     auth_payload = {
-        "username": application.config['ADMIN_CLIENT_ID'],
-        "password": application.config['ADMIN_CLIENT_SECRET'],
+        "username": app.config['ADMIN_CLIENT_ID'],
+        "password": app.config['ADMIN_CLIENT_SECRET'],
     }
 
     auth_response = requests.post(
-        os.path.join(application.config['API_BASE_URL'], 'auth/login'),
+        os.path.join(app.config['API_BASE_URL'], 'auth/login'),
         data=json.dumps(auth_payload),
-        headers={'Content-Type': 'application/json'},
+        headers={'Content-Type': 'app/json'},
     )
 
     return auth_response.json()["access_token"]
@@ -172,11 +166,7 @@ def get_access_token():
 
 def auth_request(endpoint, access_token, payload):
     return requests.post(
-        os.path.join(application.config['API_BASE_URL'], endpoint),
+        os.path.join(app.config['API_BASE_URL'], endpoint),
         data=json.dumps(payload),
         headers={'Authorization': 'Bearer {}'.format(access_token)},
     )
-
-
-if __name__ == '__main__':
-    manager.run()
