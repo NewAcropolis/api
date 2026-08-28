@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - master
-      - test-deploy
+      - update-python3.14
     tags:
       - 'v*'
   pull_request:
