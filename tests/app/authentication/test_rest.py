@@ -86,7 +86,7 @@ class WhenDoingLogout(object):
     ])
     @freeze_time("2017-12-10T23:10:00")
     def it_logs_the_user_out_and_adds_token_to_blacklist(
-            self, client, mocker, url, create_header, sample_decoded_token):
+            self, client, mocker, db, url, create_header, sample_decoded_token):
         mock_store_token = mocker.patch("app.routes.authentication.rest.store_token")
         mock_prune_database = mocker.patch("app.routes.authentication.rest.prune_database")
         mocker.patch(
@@ -108,7 +108,7 @@ class WhenDoingLogout(object):
 
 class WhenRefreshingToken(object):
 
-    def it_returns_a_valid_access_token(self, client, mocker):
+    def it_returns_a_valid_access_token(self, client, db, mocker):
         response = client.post(
             url_for('auth.refresh'),
             headers=[('Content-Type', 'application/json'), create_refresh_header()]
@@ -118,7 +118,7 @@ class WhenRefreshingToken(object):
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['access_token']
 
-    def it_403_on_an_invalid_refresh_token(self, client, mocker):
+    def it_403_on_an_invalid_refresh_token(self, client, db, mocker):
         response = client.post(
             url_for('auth.refresh'),
             headers=[('Content-Type', 'application/json'), create_refresh_header('invalid_user')]
