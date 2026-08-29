@@ -18,7 +18,7 @@ kombu==5.4.2
 markupsafe==2.1.1
 pdftotext==2.2.2
 pillow==10.3.0
-protobuf==4.25.8
+protobuf==5.29.6
 psycopg2-binary==2.9.7
 pyOpenSSL==18.0.0
 pypng==0.0.20
