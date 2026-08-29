@@ -101,7 +101,7 @@ jobs:
         run: |
           ./scripts/deploy.sh development
   deploy_to_preview:
-    if: github.ref == 'refs/heads/update-python3.14'
+    if: github.ref == 'refs/heads/master'
     environment: preview
     needs: test
     runs-on: ubuntu-latest
@@ -109,10 +109,10 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.14'
+          python-version: '3.10'
       - name: Deploy to preview
         env:
-          deploy_host_preview: ${{ secrets.DEPLOY_ALT_HOST }}
+          deploy_host_preview: ${{ secrets.DEPLOY_HOST }}
           user_preview: ${{ secrets.USER }}
           DEPLOY_KEY_preview: ${{ secrets.DEPLOY_KEY }}
           ADMIN_CLIENT_ID_preview: ${{ secrets.ADMIN_CLIENT_ID }}
@@ -151,7 +151,8 @@ jobs:
         run: |
           ./scripts/deploy.sh preview
   deploy_to_live:
-    if: startsWith(github.ref, 'refs/tags/')
+    # if: startsWith(github.ref, 'refs/tags/')
+    if: github.ref == 'refs/heads/update-python3.14'
     environment: live
     needs: test
     runs-on: ubuntu-latest
@@ -162,7 +163,7 @@ jobs:
           python-version: '3.10'
       - name: Deploy to live
         env:
-          deploy_host_live: ${{ secrets.DEPLOY_HOST }}
+          deploy_host_live: ${{ secrets.DEPLOY_ALT_HOST }}
           user_live: ${{ secrets.USER }}
           DEPLOY_KEY_live: ${{ secrets.DEPLOY_KEY }}
           ADMIN_CLIENT_ID_live: ${{ secrets.ADMIN_CLIENT_ID }}
