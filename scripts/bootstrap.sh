@@ -5,7 +5,7 @@ fi
 
 if [ -z "$VIRTUAL_ENV" ] && [ -d env ]; then
   echo 'activate env'
-  source ./env/bin/activate
+  source ./env/bin/activate --system-site-packages
 fi
 
 pip install -r requirements.txt
