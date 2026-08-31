@@ -1,5 +1,5 @@
 beautifulsoup4==4.12.2
-celery==5.4.0
+celery==5.6.3
 cryptography==42.0.7
 dateutils==0.6.12
 Flask==2.3.2
@@ -15,7 +15,7 @@ idna==2.7
 imagehash==4.3.1
 iso8601==0.1.12
 jsonschema==2.6.0
-kombu==5.4.2
+kombu==5.6.2
 markupsafe==2.1.1
 pdftotext==2.2.2
 pillow==12.3.0
@@ -25,7 +25,7 @@ pyOpenSSL==18.0.0
 pypng==0.0.20
 pyqrcode==1.2.1
 python-docx==0.8.11
-redis==3.5.3
+redis==8.1.0
 requests>=2.0.0
 six==1.17.0
 SQLAlchemy==1.4.54

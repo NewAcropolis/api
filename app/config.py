@@ -63,17 +63,17 @@ class Config(object):
     GITHUB_SHA = os.environ.get('GITHUB_SHA')
 
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
-    CELERY_TIMEZONE = 'Europe/London'
+    TIMEZONE = 'Europe/London'
     CELERY_ENABLE_UTC = True
-    CELERY_ACCEPT_CONTENT = ['json']
-    CELERY_TASK_SERIALIZER = 'json'
-    # CELERY_IMPORTS = ("app.na_celery.event_tasks", "app.na_celery.stats_tasks",)
-    CELERY_IMPORTS = ("app.na_celery.event_tasks",)
+    ACCEPT_CONTENT = ['json']
+    TASK_SERIALIZER = 'json'
+    # imports = ("app.na_celery.event_tasks", "app.na_celery.stats_tasks",)
+    IMPORTS = ("app.na_celery.event_tasks",)
 
     if not os.environ.get('GITHUB_ACTIONS'):  # pragma: no cover
         from celery.schedules import crontab
 
-        CELERYBEAT_SCHEDULE = {
+        BEAT_SCHEDULE = {
             'send-event-reminder-email': {
                 'task': 'send_event_email_reminder',
                 'schedule': crontab(minute=0, hour='10') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
