@@ -1,4 +1,5 @@
 import base64
+import click
 import json
 import os
 import requests
@@ -19,14 +20,15 @@ app = create_app()
 migrate = Migrate(app, db)
 
 
-@app.shell_context_processor
+@app.cli.command("list-routes")
 def list_routes():
     """List URLs of all application routes."""
     for rule in sorted(app.url_map.iter_rules(), key=lambda r: r.rule):
         print("{:10} {}".format(", ".join(rule.methods - set(['OPTIONS', 'HEAD'])), rule.rule))
 
 
-@app.shell_context_processor
+@app.cli.command("upload-magazine")
+@click.argument("file_path")
 def generate_web_images(year=None):
     """Generate web images, thumbnail, standard."""
     app.logger.info('Generate web images')
@@ -34,7 +36,8 @@ def generate_web_images(year=None):
     storage.generate_web_images(year)
 
 
-@app.shell_context_processor
+@app.cli.command("get-unsubcode")
+@click.argument("member_id")
 def get_unsubcode(member_id):
     unsubcode = encrypt(
         "{}={}".format(app.config['EMAIL_TOKENS']['member_id'], member_id),
@@ -43,7 +46,7 @@ def get_unsubcode(member_id):
     print(unsubcode)
 
 
-@app.shell_context_processor
+@app.cli.command("extract-topics")
 def extract_topics():
     filename = 'Bi_monthly_Issue 49.pdf'
     with open(os.path.join('data', 'pdfs', filename), "rb") as f:
@@ -51,7 +54,7 @@ def extract_topics():
         print(_extract_topics(pdf_binary))
 
 
-@app.shell_context_processor
+@app.cli.command("extract-first-page")
 def extract_first_page():
     filename = 'Bi_monthly_Issue 49.pdf'
     with open(os.path.join('data', 'pdfs', filename), "rb") as f:
@@ -62,13 +65,13 @@ def extract_first_page():
         _extract_first_page(pdf_bin)
 
 
-@app.shell_context_processor
+@app.cli.command("send-stats")
 def send_stats():
     from app.na_celery.stats_tasks import send_num_subscribers_and_social_stats
     send_num_subscribers_and_social_stats(inc_subscribers=False)
 
 
-@app.shell_context_processor
+@app.cli.command("create-test-zip")
 def create_test_zip():
     """Create zipfile for testing"""
     DATA_ROOT = os.path.join('tests', 'test_files')
@@ -78,7 +81,9 @@ def create_test_zip():
         myzip.write("Test 2.docx", arcname="test_2_final.docx")
 
 
-@app.shell_context_processor
+@app.cli.command("upload-file")
+@click.argument("filename")
+@click.argument("target-filename")
 def upload_file(filename, target_filename=None):
     """Upload file."""
     if not target_filename:
@@ -88,7 +93,8 @@ def upload_file(filename, target_filename=None):
     storage.upload_blob(filename, target_filename, set_public=True)
 
 
-@app.shell_context_processor
+@app.cli.command("upload-magazines")
+@click.argument("folder")
 def upload_magazines(folder='data/pdfs'):
     """Upload magazines."""
     app.logger.info('Upload magazines')
@@ -130,7 +136,39 @@ def upload_magazines(folder='data/pdfs'):
             app.logger.info("Magazine already uploaded: %s", item['Title'])
 
 
-@app.shell_context_processor
+@app.cli.command("upload-magazine")
+@click.argument("file_path")
+@click.argument("title")
+@click.argument("create_magazine")
+def upload_magazine(file_path='', title='', create_magazine='False'):
+    """Upload magazine."""
+    app.logger.info(f'Upload magazine {file_path}')
+    storage = Storage(app.config['STORAGE'])
+
+    filename = file_path.split('/')[-1]
+    with open(file_path, "rb") as f:
+        pdf = f.read()
+
+        if create_magazine == 'True':
+            access_token = get_access_token()
+
+            payload = {
+                'title': title,
+                'filename': filename,
+                'pdf_data': base64.b64encode(pdf).decode('utf-8'),
+            }
+
+            auth_request('magazine', access_token, payload)
+
+        storage.upload_blob_from_base64string(
+            filename,
+            filename,
+            base64.b64encode(pdf),
+            content_type='application/pdf'
+        )
+
+
+@app.cli.command("get-emails-for-sending")
 def get_emails_for_sending():
     from flask import Flask
     from flask_sqlalchemy import SQLAlchemy
@@ -158,7 +196,7 @@ def get_access_token():
     auth_response = requests.post(
         os.path.join(app.config['API_BASE_URL'], 'auth/login'),
         data=json.dumps(auth_payload),
-        headers={'Content-Type': 'app/json'},
+        headers={'Content-Type': 'application/json'},
     )
 
     return auth_response.json()["access_token"]
