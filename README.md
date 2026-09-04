@@ -126,7 +126,7 @@ Imports can be run via `integration_test.sh`
 ./integration_test.sh -ie2m <local|preview|live> emailmailings_0-10000.json
 
 # import magazines
-python app_start.py upload_magazines data/pdfs
+flask app_start.py upload-magazines data/pdfs
 ```
 
 ### Importing images
@@ -141,11 +141,11 @@ gsutil -m rsync -r -d -p gs://<dev storage name> gs://<target storage name>
 
 Generate web images by running this command:
 
-    python app_start.py generate_web_images --year=2019 
+    flask app_start.py generate-web-images --year=2019 
 
 ### Import magazines
 
-    python app_start.py upload_magazines --folder=<folder path> 
+    flask app_start.py upload-magazines --folder=<folder path> 
 
 ## Logging
 
