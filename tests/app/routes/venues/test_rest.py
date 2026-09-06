@@ -59,7 +59,6 @@ class WhenPostingVenues(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert len(json_resp) == len(data)
-        # python 3 udpate code?
         assert sorted(data, key=lambda k: k['name']) == sorted([
             {
                 'name': j['name'],
