@@ -160,6 +160,7 @@ def upload_magazine(file_path='', title='', create_magazine='False'):
 
             auth_request('magazine', access_token, payload)
 
+        # upload it directly as it doesn't appear to work in the payload
         storage.upload_blob_from_base64string(
             filename,
             filename,
