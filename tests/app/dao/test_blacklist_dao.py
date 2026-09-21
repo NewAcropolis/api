@@ -4,13 +4,9 @@ import uuid
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
-from flask_jwt_extended import (
-    create_access_token,
-    create_refresh_token,
-)
 
 from app.routes.authentication.errors import TokenNotFound
-from app.dao.blacklist_dao import store_token, is_token_revoked, get_user_tokens, unrevoke_token, prune_database
+from app.dao.blacklist_dao import is_token_revoked, get_user_tokens, unrevoke_token, prune_database
 from app.models import TokenBlacklist
 from tests.conftest import get_unixtime_start_and_expiry
 from tests.db import create_token_blacklist

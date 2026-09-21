@@ -18,7 +18,7 @@ function display_result {
   fi
 }
 
-pycodestyle .
+ruff check
 display_result $? 1 "Code style check"
 
 ## Code coverage
@@ -28,4 +28,5 @@ else
   COV_REPORT=lcov
 fi
 
-py.test --cov=app --cov-report=${COV_REPORT} tests/ --junitxml=test_results.xml --strict -v --disable-pytest-warnings
+pytest --cov=app --cov-report=${COV_REPORT} tests/ --junitxml=test_results.xml --strict -v --disable-pytest-warnings
+

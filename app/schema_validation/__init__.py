@@ -18,7 +18,7 @@ def string_is_number(value):
     try:
         int(value)
         return True
-    except:
+    except Exception:
         return False
 
 

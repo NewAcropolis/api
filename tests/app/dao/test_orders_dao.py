@@ -1,7 +1,5 @@
-import pytest
 
 from app.dao.orders_dao import dao_get_orders
-from app.models import Order
 
 from tests.db import create_order
 

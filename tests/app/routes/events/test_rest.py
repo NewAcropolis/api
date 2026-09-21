@@ -6,17 +6,15 @@ import copy
 from datetime import timedelta
 import pytest
 from flask import json, url_for
-from uuid import UUID
-from mock import Mock, call
+from mock import call
 
 from freezegun import freeze_time
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.errors import PaypalException
 from app.models import Event, EventDate, RejectReason, ReservedPlace, APPROVED, DRAFT, READY, REJECTED
 
-from tests.conftest import create_authorization_header, sample_event_with_dates, TEST_ADMIN_USER
-from tests.db import create_event, create_event_date, create_event_type, create_speaker, DATA_MAP
+from tests.conftest import create_authorization_header
+from tests.db import create_event, create_event_date, create_event_type, create_speaker
 
 base64img = (
     'iVBORw0KGgoAAAANSUhEUgAAADgAAAAsCAYAAAAwwXuTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEMElEQVRoge2ZTUxcVRTH'
@@ -1853,7 +1851,7 @@ class WhenPostingReservePlace:
         assert response.json['event_date'] == '2018-01-01 19:00'
         assert len(reserved_places) == 1
         assert reserved_places[0].name == data['name']
-        assert mock_send_email.called_once()
+        assert mock_send_email.assert_called
         assert mock_send_email.call_args[0][0] == 'someone@other.com'
         assert mock_send_email.call_args[0][1] == 'Reserved place for: test_title'
         assert (
@@ -1971,7 +1969,7 @@ class WhenTestingPaypal:
 class WhenSyncPaypal:
 
     def it_calls_paypal_task_create_update_paypal_button_task(self, client, mock_paypal_task, sample_uuid):
-        response = client.get(
+        client.get(
             url_for('events.sync_paypal', event_id=sample_uuid),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )

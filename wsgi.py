@@ -1,4 +1,4 @@
-from app_start import application
+from app_start import app as application
 
 
 if __name__ == "__main__":

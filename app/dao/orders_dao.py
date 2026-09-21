@@ -3,7 +3,7 @@ from sqlalchemy import and_
 
 from app import db
 from app.dao.decorators import transactional
-from app.models import EventDate, Order
+from app.models import Order
 
 
 def dao_get_orders(year=None):

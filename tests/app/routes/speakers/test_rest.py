@@ -39,7 +39,6 @@ class WhenPostingSpeakers(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert len(json_resp) == len(data)
-        # python 3 update code
         assert sorted(data, key=lambda k: k['title']) == \
             sorted([{'title': j['title'], 'name': j['name']} for j in json_resp], key=lambda k: k['title'])
 

@@ -1,7 +1,6 @@
 import pdftotext
 # from PIL import Image
 from wand.image import Image
-import os
 import io
 
 TOPICS = [

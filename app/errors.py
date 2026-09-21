@@ -9,15 +9,9 @@ from jwt.exceptions import DecodeError, ExpiredSignatureError
 from sqlalchemy.exc import DataError, IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from flask_jwt_extended.exceptions import (
-    JWTDecodeError,
     NoAuthorizationError,
     InvalidHeaderError,
-    WrongTokenError,
-    RevokedTokenError,
-    FreshTokenRequired,
-    CSRFError,
-    UserLookupError,
-    UserClaimsVerificationError
+    RevokedTokenError
 )
 
 from app.routes.authentication.errors import AuthenticationError, TokenNotFound

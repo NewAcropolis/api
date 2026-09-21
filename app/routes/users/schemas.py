@@ -1,4 +1,3 @@
-from app.schema_validation.definitions import uuid, datetime
 
 
 post_create_user_schema = {

@@ -11,7 +11,6 @@ revision = '0012 allow null speaker event'
 down_revision = '0011 update events model'
 
 from alembic import op
-import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 def upgrade():

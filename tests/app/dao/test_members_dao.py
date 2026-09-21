@@ -12,7 +12,6 @@ from app.dao.members_dao import (
     dao_get_unsubscribed_member_count
 )
 from app.models import EmailToMember, Member
-from freezegun import freeze_time
 
 from tests.db import create_member
 

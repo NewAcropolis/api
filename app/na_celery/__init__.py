@@ -1,9 +1,6 @@
 from celery import Celery
-from celery.schedules import crontab
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
-
-from flask import current_app
 
 
 class NewAcropolisCelery(Celery):  # pragma: no cover
@@ -24,7 +21,7 @@ class NewAcropolisCelery(Celery):  # pragma: no cover
 
         self.conf.update(app.config)
 
-        app.logger.info('Celery beat schedule: %r', app.config['CELERYBEAT_SCHEDULE'])
+        app.logger.info('Celery beat schedule: %r', app.config['BEAT_SCHEDULE'])
 
         class ContextTask(self.Task):
             def __call__(self, *args, **kwargs):

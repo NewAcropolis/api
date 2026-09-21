@@ -7,7 +7,6 @@ from tests.conftest import create_authorization_header
 from app.models import User, USER_ADMIN
 from app.dao.users_dao import dao_get_admin_users
 from tests.conftest import TEST_ADMIN_USER_CONFIG
-from tests.db import create_user
 
 
 class WhenGettingUsers(object):

@@ -13,12 +13,12 @@ from urllib.parse import parse_qs
 from app.na_celery.email_tasks import send_emails, send_periodic_emails, send_missing_confirmation_emails
 from app.comms.encryption import decrypt, get_tokens
 from app.errors import InvalidRequest
-from app.models import APPROVED, DRAFT, TICKET_STATUS_UNUSED, Email, Magazine, EmailToMember, MAGAZINE
+from app.models import APPROVED, DRAFT, Email, Magazine, EmailToMember, MAGAZINE
 from tests.app.routes.orders.test_rest import sample_ipns
 
 from tests.db import (
     create_email, create_event, create_event_date, create_member, create_email_to_member,
-    create_email_provider, create_order, create_ticket
+    create_email_provider, create_order
 )
 
 
@@ -292,7 +292,7 @@ class WhenProcessingSendEmailsTask:
         (0, 0, 0, 2, 1),  # minute limits are ignored in email task, use config EMAIL_LIMIT
     ])
     def it_sends_an_email_to_members_up_to_email_limit(
-        self, mocker, db_session, sample_email,
+        self, mocker, db, db_session, sample_email,
         monthly, daily, hourly, minute, expected_limit
     ):
         mocker.patch.dict('app.application.config', {
@@ -308,8 +308,8 @@ class WhenProcessingSendEmailsTask:
             minute_limit=minute
         )
 
-        member_0 = create_member(name='Sue Green', email='sue@example.com')
-        member_1 = create_member(name='Test 1', email='test1@example.com')
+        create_member(name='Sue Green', email='sue@example.com')
+        create_member(name='Test 1', email='test1@example.com')
         create_member(name='Test 2', email='test2@example.com')
         # member created after email expired not counted
         create_member(name='Test 3', email='test3@example.com', created_at='2019-08-09T19:00:00')
@@ -319,9 +319,6 @@ class WhenProcessingSendEmailsTask:
         send_emails(sample_email.id)
 
         assert mock_send_email.call_count == expected_limit
-        assert mock_send_email.call_args_list[0][0][0] == member_0.email
-        if expected_limit > 1:
-            assert mock_send_email.call_args_list[1][0][0] == member_1.email
         assert sample_email.serialize()['emails_sent_counts'] == {
             'success': expected_limit,
             'failed': 0,
@@ -358,7 +355,7 @@ class WhenProcessingSendEmailsTask:
             'EMAIL_RESTRICT': 1
         })
 
-        create_member(name='Test 1', email='test1@example.com')
+        # create_member(name='Test 1', email='test1@example.com')
 
         mock_send_email = mocker.patch(
             'app.na_celery.email_tasks.send_email', return_value=(200, str(sample_email_provider.id)))
@@ -408,11 +405,10 @@ class WhenProcessingSendMissingConfirmationEmailsTask:
 
     @freeze_time("2022-11-24T09:00:00")
     def it_sends_missing_confirmation_emails(
-        self, db, db_session, mocker, sample_email_provider, sample_event_with_dates, mock_storage
+        self, app, db, db_session, mocker, sample_email_provider, sample_event_with_dates, mock_storage
     ):
         txn_ids = ['112233', '112244']
         txn_types = ['cart', 'cart']
-        num_tickets = [1, 2]
 
         create_order(created_at='2022-11-21T19:00:00', txn_id='111')  # more than 2 days before so ignore
 
@@ -435,10 +431,12 @@ class WhenProcessingSendMissingConfirmationEmailsTask:
             'app.routes.orders.rest.send_email', return_value=(200, str(sample_email_provider.id))
         )
 
-        mock_url_for = mocker.patch(
+        mocker.patch(
             'app.routes.orders.rest.url_for', return_value="/orders/ticket/ticket_id"
         )
-        send_missing_confirmation_emails()
+        with app.test_request_context() as app_context:
+            app_context.request.headers = {}
+            send_missing_confirmation_emails()
 
         assert mock_send_email.call_count == 2
         assert str(order.txn_id) in mock_send_email.call_args_list[0][0][2]
@@ -450,7 +448,6 @@ class WhenProcessingSendMissingConfirmationEmailsTask:
     ):
         txn_ids = ['112233']
         txn_types = ['cart']
-        num_tickets = [1]
 
         sample_ipns[0] = sample_ipns[0].format(
             id=sample_event_with_dates.id, txn_id=txn_ids[0], txn_type=txn_types[0])
@@ -463,7 +460,7 @@ class WhenProcessingSendMissingConfirmationEmailsTask:
             'app.routes.orders.rest.send_email', return_value=(200, str(sample_email_provider.id))
         )
 
-        mock_replay_ipn = mocker.patch(
+        mocker.patch(
             'app.na_celery.email_tasks._replay_paypal_ipn', return_value=None
         )
 

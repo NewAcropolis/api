@@ -1,7 +1,5 @@
-import json
 
 from app.dao.speakers_dao import (
-    dao_create_speaker,
     dao_update_speaker,
     dao_get_speakers,
     dao_get_speaker_by_id,

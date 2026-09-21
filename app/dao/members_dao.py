@@ -1,12 +1,12 @@
 from uuid import UUID
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from pytz import timezone
 from sqlalchemy import and_
 
 from app import db
 from app.dao.decorators import transactional
-from app.models import Email, EmailToMember, Member
+from app.models import EmailToMember, Member
 
 
 @transactional
@@ -93,7 +93,7 @@ def dao_get_member_by_id(member_id):
     try:
         UUID(str(member_id), version=4)
         return Member.query.filter_by(id=member_id).one()
-    except ValueError as e:
+    except ValueError:
         return Member.query.filter_by(old_id=member_id).one()
 
 

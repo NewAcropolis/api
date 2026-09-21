@@ -1,4 +1,3 @@
-import base64
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
@@ -9,19 +8,16 @@ from flask import (
     send_file
 )
 from flask_jwt_extended import jwt_required
-from io import StringIO, BytesIO
-import requests
+from io import BytesIO
 
 from app.na_celery import upload_tasks
 from app.comms.stats import send_ga_event
 from app.dao import dao_create_record, dao_update_record
-from app.dao.emails_dao import dao_create_email
 from app.dao.magazines_dao import (
     dao_get_magazine_by_id, dao_get_magazine_by_old_id, dao_get_magazines, dao_get_latest_magazine
 )
-from app.dao.users_dao import dao_get_users
 from app.errors import register_errors, InvalidRequest
-from app.models import Email, Magazine, MAGAZINE, READY
+from app.models import Magazine
 from app.routes.magazines import get_magazine_filename
 from app.routes.magazines.schemas import (
     post_create_magazine_schema, post_import_magazine_schema, post_update_magazine_schema

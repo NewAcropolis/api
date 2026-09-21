@@ -4,13 +4,10 @@ import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import current_app
 import json
-import pytz
 import re
 import requests
 
-from app import celery
 from app.comms.stats import send_ga_event
-from app.dao.users_dao import dao_get_admin_users
 from app.dao.members_dao import dao_get_active_member_count, dao_get_new_member_count
 
 

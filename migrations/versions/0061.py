@@ -11,7 +11,6 @@ revision = '0061 orders txn_id unique'
 down_revision = '0060 set all show_banner_text'
 
 from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():

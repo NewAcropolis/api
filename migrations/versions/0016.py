@@ -11,7 +11,6 @@ revision = '0016 FK nullable event_id'
 down_revision = '0015 add event_date_to_speaker'
 
 from alembic import op
-import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 def upgrade():

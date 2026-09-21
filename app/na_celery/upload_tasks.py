@@ -2,18 +2,15 @@ import base64
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 from flask import (
-    current_app,
-    jsonify
+    current_app
 )
 
 from app import celery
 from app.comms.email import get_email_html, send_smtp_email
-from app.dao import dao_update_record
 from app.dao.emails_dao import dao_create_email, dao_get_email_by_magazine_id
 from app.dao.magazines_dao import dao_get_magazine_by_id
 from app.dao.users_dao import dao_get_users
-from app.models import Email, Magazine, MAGAZINE, READY
-from app.utils.pdf import extract_topics
+from app.models import Email, MAGAZINE, READY
 from app.utils.storage import Storage
 
 

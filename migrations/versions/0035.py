@@ -11,10 +11,8 @@ revision = '0035 add basic email template'
 down_revision = '0034 add send_after to emails'
 
 from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
-from app.models import EmailType, EMAIL_TYPES
+from app.models import EMAIL_TYPES
 
 
 def upgrade():

@@ -1,16 +1,14 @@
 from email.mime.text import MIMEText
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
-from flask import current_app, jsonify, render_template
-from html import escape, unescape
+from flask import current_app, render_template
+from html import unescape
 import json
-import os
 import re
 import requests
 import smtplib
 import ssl
 
-from html import unescape
 
 from na_common.dates import get_nice_event_dates
 
@@ -36,8 +34,6 @@ def get_email_provider(override=False, email_provider=None, use_minute_limit=Tru
         if not email_provider:
             return None
 
-    minute_email_count = hourly_email_count = daily_email_count = monthly_email_count = 0
-
     def _get_email_provider_or_count(limit, dao_count, limit_reached):
         email_count = dao_count(email_provider.id)
         if email_count > limit:
@@ -62,7 +58,7 @@ def get_email_provider(override=False, email_provider=None, use_minute_limit=Tru
             dao_get_last_30_days_email_count_for_provider,
             'monthly_limit_reached')
 
-        if type(email_provider_or_count) == int:
+        if type(email_provider_or_count) is int:
             email_provider.limit = email_provider.monthly_limit - email_provider_or_count
         else:
             return email_provider_or_count
@@ -73,7 +69,7 @@ def get_email_provider(override=False, email_provider=None, use_minute_limit=Tru
             dao_get_todays_email_count_for_provider,
             'daily_limit_reached')
 
-        if type(email_provider_or_count) == int:
+        if type(email_provider_or_count) is int:
             email_provider.limit = email_provider.daily_limit - email_provider_or_count
         else:
             return email_provider_or_count
@@ -84,7 +80,7 @@ def get_email_provider(override=False, email_provider=None, use_minute_limit=Tru
             dao_get_past_hour_email_count_for_provider,
             'hourly_limit_reached')
 
-        if type(email_provider_or_count) == int:
+        if type(email_provider_or_count) is int:
             email_provider.limit = email_provider.hourly_limit - email_provider_or_count
         else:
             return email_provider_or_count
@@ -95,7 +91,7 @@ def get_email_provider(override=False, email_provider=None, use_minute_limit=Tru
             dao_get_last_minute_email_count_for_provider,
             'minute_limit_reached')
 
-        if type(email_provider_or_count) == int:
+        if type(email_provider_or_count) is int:
             email_provider.limit = email_provider.minute_limit - email_provider_or_count
         else:
             return email_provider_or_count

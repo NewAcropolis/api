@@ -12,7 +12,7 @@ class WhenInitializingApp(object):
         ('www-live', Live),
         ('', Development)
     ])
-    def it_has_correct_environment(self, mocker, returnval, config_class):
+    def it_has_correct_environment(self, app, mocker, returnval, config_class):
         mocker.patch("os.environ", {})
         mocker.patch.dict('app.application.config', {
             'SQLALCHEMY_DATABASE_URI': 'db://localhost/test_db',
@@ -22,6 +22,7 @@ class WhenInitializingApp(object):
             'IMAGES_URL': 'http://frontent-test/images'
         })
         mocker.patch("app.get_root_path", return_value=returnval)
+        mocker.patch("app.db")
         mocked_config = mocker.patch("app.application.config.from_object", return_value={})
         create_app()
 
@@ -57,7 +58,9 @@ class WhenInitializingApp(object):
         assert not mock_handler.called
 
     def it_inits_celery_when_is_celery_kwarg_set(self, mocker):
+        mocker.patch("app.application.config")
         mocker.patch('app.configure_logging')
+        mocker.patch("app.db")
         mocker.patch('app.report_missing_config')
         mocker.patch('app.init_app')
         mocker.patch('app.SQLAlchemy.__init__')

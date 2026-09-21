@@ -54,7 +54,7 @@ if [ -z "$GITHUB_SHA" ]; then
   export GITHUB_SHA=$(git rev-parse HEAD)
 fi
 
-python3 app_start.py db upgrade
+flask db upgrade
 
 if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
   export APP_SERVER=gunicorn
@@ -87,7 +87,7 @@ if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
     # --bind=unix:$SOCKFILE
 else
   export APP_SERVER=flask
-  python3 app_start.py runserver --port $port
+  flask run --port $port
 
   if [ $www_dir != "www" ]; then
       echo "running on " $ENV

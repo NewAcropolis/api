@@ -1,4 +1,3 @@
-from datetime import datetime
 import pytz
 
 TIMEZONE_STR = 'Europe/London'

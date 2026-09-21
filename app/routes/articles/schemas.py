@@ -1,4 +1,4 @@
-from app.schema_validation.definitions import number, state
+from app.schema_validation.definitions import state
 
 
 post_import_article_schema = {

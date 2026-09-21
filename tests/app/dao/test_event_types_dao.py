@@ -1,5 +1,4 @@
 from app.dao.event_types_dao import (
-    dao_create_event_type,
     dao_update_event_type,
     dao_get_event_types,
     dao_get_event_type_by_id,

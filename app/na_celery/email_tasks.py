@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
@@ -14,7 +14,6 @@ from app.dao.emails_dao import (
 )
 from app.dao.members_dao import dao_get_members_not_sent_to, dao_get_first_member
 from app.dao.orders_dao import dao_get_orders_without_email_status
-from app.dao.users_dao import dao_get_admin_users
 from app.errors import InvalidRequest
 from app.models import BASIC, EVENT, MAGAZINE, APPROVED, Order
 from app.routes.orders.rest import _replay_paypal_ipn

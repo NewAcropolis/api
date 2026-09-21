@@ -1,4 +1,4 @@
-from app.schema_validation.definitions import uuid, datetime, number
+from app.schema_validation.definitions import number
 
 
 post_create_event_type_schema = {

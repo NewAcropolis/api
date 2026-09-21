@@ -124,7 +124,7 @@ class WhenPostingUpdateBook:
     @pytest.fixture
     def mock_storage(self, mocker):
         mock_storage = mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
-        mock_storage_blob_exists = mocker.patch("app.utils.storage.Storage.blob_exists")
+        mocker.patch("app.utils.storage.Storage.blob_exists")
         mock_upload_blob = mocker.patch("app.utils.storage.Storage.upload_blob_from_base64string")
         yield
         mock_storage.assert_called_with('test-store')
@@ -167,7 +167,7 @@ class WhenPostingCreateBook:
     @pytest.fixture
     def mock_storage(self, mocker):
         mock_storage = mocker.patch("app.utils.storage.Storage.__init__", return_value=None)
-        mock_storage_blob_exists = mocker.patch("app.utils.storage.Storage.blob_exists")
+        mocker.patch("app.utils.storage.Storage.blob_exists")
         mock_upload_blob = mocker.patch("app.utils.storage.Storage.upload_blob_from_base64string")
         yield
         mock_storage.assert_called_with('test-store')

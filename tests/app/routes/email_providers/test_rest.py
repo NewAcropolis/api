@@ -1,10 +1,6 @@
 import werkzeug
 werkzeug.cached_property = werkzeug.utils.cached_property
 
-import json
-import pytest
-import uuid
-
 from flask import json, url_for
 from tests.conftest import create_authorization_header
 from tests.db import create_email_provider

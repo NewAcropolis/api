@@ -12,7 +12,6 @@ down_revision = '0054 add reserved_places'
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 def upgrade():
     op.alter_column('orders', 'payment_total',

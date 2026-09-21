@@ -70,7 +70,7 @@ class WhenPostingMembers:
             'email': 'test@example.com',
             'marketing_id': sample_marketing.id
         }
-        response = client.post(
+        client.post(
             url_for('members.subscribe_member'),
             data=json.dumps(data),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]

@@ -2,7 +2,6 @@ import json
 
 from app import db
 from app.dao.decorators import transactional
-from app.dao.emails_dao import dao_get_past_hour_email_count_for_provider, dao_get_todays_email_count_for_provider
 from app.models import EmailProvider
 
 

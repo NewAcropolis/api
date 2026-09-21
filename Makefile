@@ -11,19 +11,19 @@ dependencies: ## Install dependencies
 		
 .PHONY: current
 current: ## Current db
-	python app_start.py db current
+	flask db current
 
 .PHONY: migrate
 migrate: ## Migrate
-	python app_start.py db migrate
+	flask db migrate
 
 .PHONY: upgrade
 upgrade: ## Upgrade
-	python app_start.py db upgrade
+	flask db upgrade
 
 .PHONY: downgrade
 downgrade: ## Downgrade
-	python app_start.py db downgrade
+	flask db downgrade
 
 .PHONY: test
 test: ## Run all tests
@@ -44,6 +44,10 @@ test-dir: ## Test directory under tests/app, make test-dir dir=<directory of tes
 .PHONY: run
 run: ## Run app
 	./scripts/run_app.sh
+
+.PHONY: run
+run-gunicorn: ## Run app
+	./scripts/run_app.sh gunicorn
 
 .PHONY: run-mock-paypal
 run-mock-paypal: ## Run mock paypal server to verify IPN

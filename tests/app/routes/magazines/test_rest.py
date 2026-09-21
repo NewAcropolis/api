@@ -4,7 +4,6 @@ werkzeug.cached_property = werkzeug.utils.cached_property
 import base64
 import os
 from flask import json, url_for
-from mock import Mock, call
 import pytest
 import requests_mock
 
