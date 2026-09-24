@@ -83,6 +83,11 @@ def send_emails(email_id):
         raise
 
 
+@celery.task(bind=True)  # pragma: no cover
+def send_periodic_emails_task(self):
+    send_periodic_emails()
+
+
 @celery.task(name='send_periodic_emails')
 def send_periodic_emails():
     tz_London = pytz.timezone('Europe/London')
