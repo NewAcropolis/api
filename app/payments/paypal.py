@@ -148,6 +148,6 @@ class PayPal:
             return process_resp['HOSTEDBUTTONID'][0]
         else:
             error_msg = ""
-            for key in [k for k in process_resp.keys() if k.startswith('L_LONGMESSAGE')]:
+            for key in [k for k in process_resp.keys() if k.startswith('L_LONGMESSAGE') or k.startswith('L_ERRORCODE')]:
                 error_msg += f'{process_resp[key]}, '
             raise PaypalException('Paypal error: {}'.format(error_msg))
