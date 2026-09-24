@@ -1119,6 +1119,13 @@ function UpdateBook {
     -d "$update_book"
 }
 
+function CelerySendPeriodicEmail {
+    echo "*** Test Celery Send Periodic Email ***"
+
+    curl -X GET $api_server'/celery/send_periodic_emails' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" 
+}
 
 function Logout {
     echo "*** Logout ***"
@@ -1410,6 +1417,10 @@ case "$arg" in
 
         -gep)
             GetEmailProviders
+        ;;
+
+        -cspe)
+            CelerySendPeriodicEmail
         ;;
 
         -setup)
