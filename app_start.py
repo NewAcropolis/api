@@ -71,6 +71,12 @@ def send_stats():
     send_num_subscribers_and_social_stats(inc_subscribers=False)
 
 
+@app.cli.command("send-periodic-emails")
+def send_periodic_emails_task():
+    from app.na_celery.email_tasks import send_periodic_emails_task
+    send_periodic_emails_task.apply_async()
+    print("Sending periodic emails")
+
 @app.cli.command("create-test-zip")
 def create_test_zip():
     """Create zipfile for testing"""

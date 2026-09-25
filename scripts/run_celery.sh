@@ -25,7 +25,7 @@ if [ -f "celerybeat.pid" ]; then
   kill -9 `cat celerybeat.pid` && rm celerybeat.pid
 fi
 
-eval "celery -A run_celery.celery worker -n worker-$ENV --loglevel=INFO --concurrency=1"$logoutput
+eval "celery -A run_celery.celery worker -n worker-$ENV --loglevel=INFO --concurrency=1 --pool=solo"$logoutput
 eval "celery -A run_celery.celery beat"$logoutput
 
 # check that celery has started properly
