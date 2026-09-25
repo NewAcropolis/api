@@ -14,6 +14,7 @@ logs/*.log*
 # venv
 venv
 env
+venv*
 
 # cache
 .cache
