@@ -27,6 +27,7 @@ pyqrcode==1.2.1
 python-docx==0.8.11
 redis==8.1.0
 requests>=2.0.0
+rq==v2.12
 six==1.17.0
 SQLAlchemy==1.4.54
 vine==5.1.0
