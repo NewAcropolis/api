@@ -34,3 +34,8 @@ def send_event_email_reminder():
                 if status_code != 200:
                     current_app.logger.error(
                         f"Problem sending reminder email {subject} for {user.id}, status code: {status_code}")
+
+
+@celery.task(bind=True)  # pragma: no cover
+def send_event_email_reminder_task(self):
+    send_event_email_reminder()
