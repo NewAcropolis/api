@@ -39,7 +39,8 @@ services:
       - na_redis
     command: >
       bash -c "
-      eval \"celery -A run_celery.celery beat\" >>/var/log/na-api/celery-development.log 2>&1 &
+      eval \"rq cron rq_cron.py\" >>/var/log/na-api/rq-cron.log 2>&1 &
+      eval \"rq worker --with-scheduler\" >>/var/log/na-api/rq-worker.log 2>&1 &
       celery -A run_celery.celery worker -n worker-development --loglevel=INFO --concurrency=1"
     # tail -f /dev/null"
     volumes:
