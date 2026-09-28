@@ -25,6 +25,29 @@ def main(argv):
         output('No environment')
 
 
+def get_beat_schedule(environment):
+    from celery.schedules import crontab
+
+    return {
+            'send-event-reminder-email': {
+                'task': 'send_event_email_reminder',
+                'schedule': crontab(minute=0, hour='10') if environment != 'development' else crontab(minute='*/10'),
+            },
+            'send-periodic-emails': {
+                'task': 'send_periodic_emails',
+                'schedule': crontab(minute=0, hour='*') if environment != 'development' else crontab(minute='*/10'),
+            },
+            'send-missing-confirmation-emails': {
+                'task': 'send_missing_confirmation_emails',
+                'schedule': crontab(minute=0, hour='9') if environment != 'development' else crontab(minute='*/10'),
+            },
+            # 'send-num-subscribers-and-social-stats': {
+            #     'task': 'send_num_subscribers_and_social_stats',
+            #     'schedule': crontab(hour=7, day_of_month=1) \
+            #                 if ENVIRONMENT != 'development' else crontab(minute='*/10'),
+            # },
+        }
+
 class Config(object):
     DEBUG = False
     ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
@@ -73,25 +96,7 @@ class Config(object):
     if not os.environ.get('GITHUB_ACTIONS'):  # pragma: no cover
         from celery.schedules import crontab
 
-        BEAT_SCHEDULE = {
-            'send-event-reminder-email': {
-                'task': 'send_event_email_reminder',
-                'schedule': crontab(minute=0, hour='10') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
-            },
-            'send-periodic-emails': {
-                'task': 'send_periodic_emails',
-                'schedule': crontab(minute=0, hour='*') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
-            },
-            'send-missing-confirmation-emails': {
-                'task': 'send_missing_confirmation_emails',
-                'schedule': crontab(minute=0, hour='9') if ENVIRONMENT != 'development' else crontab(minute='*/10'),
-            },
-            # 'send-num-subscribers-and-social-stats': {
-            #     'task': 'send_num_subscribers_and_social_stats',
-            #     'schedule': crontab(hour=7, day_of_month=1) \
-            #                 if ENVIRONMENT != 'development' else crontab(minute='*/10'),
-            # },
-        }
+        BEAT_SCHEDULE = get_beat_schedule(ENVIRONMENT)
 
     EMAIL_DELAY = 4 if ENVIRONMENT != 'development' else 0  # hours
     EMAIL_LIMIT = 400

@@ -77,6 +77,13 @@ def send_periodic_emails_task():
     send_periodic_emails_task.apply_async()
     print("Sending periodic emails")
 
+
+@app.cli.command("run-periodic-tasks")
+def run_periodic_tasks():
+    from app.na_celery.periodic_tasks import run_periodic_tasks
+    run_periodic_tasks()
+
+
 @app.cli.command("create-test-zip")
 def create_test_zip():
     """Create zipfile for testing"""

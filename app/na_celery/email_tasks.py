@@ -111,6 +111,11 @@ def send_periodic_emails():
             send_emails(email.id)
 
 
+@celery.task(bind=True)  # pragma: no cover
+def send_missing_confirmation_emails_task(self):
+    send_missing_confirmation_emails()
+
+
 @celery.task(name='send_missing_confirmation_emails')
 def send_missing_confirmation_emails():
     for order in dao_get_orders_without_email_status():
