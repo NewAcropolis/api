@@ -15,7 +15,9 @@ from app.models import (
 )
 from app.dao.emails_dao import dao_add_member_sent_to_email
 from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
-from tests.db import create_email, create_event, create_event_date, create_magazine, create_member
+from tests.db import (
+    create_email, create_event, create_event_date, create_magazine, create_member, create_email_to_member
+)
 
 
 @pytest.fixture
@@ -150,6 +152,30 @@ class WhenGettingLatestEmails:
         assert json_latest_emails[2] == future_email.serialize()
         assert json_latest_emails[3] == past_email.serialize()
 
+
+class WhenGettingLastEmailSent:
+    @freeze_time("2026-09-29T10:00:00")
+    def it_returns_last_email_sent(self, client, db, db_session, sample_email):
+        event = create_event(title='Event 1')
+
+        create_event_date(event_id=str(event.id), event_datetime='2019-07-20 19:00')
+
+        email = create_email(
+            event_id=str(event.id), created_at='2019-07-01 11:00', send_starts_at='2019-07-10', expires='2019-07-20')
+        member = create_member(name='John White', email='test2@example.com')
+        _latest_email = create_email_to_member(email_id=email.id, member_id=member.id, created_at='2026-09-29T09:00:00')
+        create_email_to_member(email_id=email.id, created_at='2026-09-29T08:00:00')
+        create_email_to_member(email_id=sample_email.id, member_id=member.id, created_at='2026-09-20T08:00:00')
+
+        response = client.get(
+            url_for('emails.get_last_email_sent'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        json_last_email_sent = json.loads(response.get_data(as_text=True))
+
+        assert json_last_email_sent['last_sent_at'] == 'Tue, 29 Sep 2026 09:00:00 GMT'
+        assert json_last_email_sent['subject'] == 'workshop: Event 1'
+        assert json_last_email_sent['email_id'] == str(email.id)
 
 class WhenGettingApprovedEmails:
     @freeze_time("2019-07-11T10:00:00")
