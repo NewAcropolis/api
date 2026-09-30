@@ -160,6 +160,14 @@ def dao_get_latest_emails():
     return latest_emails
 
 
+def dao_get_last_email_sent():
+    return db.session.query(
+            Email, EmailToMember
+        ).join(
+            EmailToMember
+        ).order_by(EmailToMember.created_at.desc()).first()
+
+
 def dao_get_approved_emails_for_sending():
     now = datetime.now(timezone('Europe/London'))
 
