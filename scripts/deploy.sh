@@ -30,10 +30,8 @@ fi
 
 if [ -z $debug ]; then
     output_params=">&- 2>&- <&- &"
-    celery_output_params=">&- 2>&- <&- &"
 else
     output_params="&>> /var/log/na-api/$environment.log"
-    celery_output_params="&>> /var/log/na-api/celery-$environment.log"
 fi
 
 port="$(python $src/app/config.py -e $environment)"
@@ -63,6 +61,7 @@ if [ $port != 'No environment' ]; then
     eval "FRONTEND_URL=\$FRONTEND_URL_$environment"
     eval "IMAGES_URL=\$IMAGES_URL_$environment"
     eval "CELERY_BROKER_URL=\$CELERY_BROKER_URL_$environment"
+    eval "RQ_INTERVAL=\$RQ_INTERVAL_$environment"
     eval "PROJECT=\$PROJECT_$environment"
     eval "GOOGLE_AUTH_USER=\$GOOGLE_AUTH_USER_$environment"
     eval "JWT_SECRET=\$JWT_SECRET_$environment"
@@ -109,6 +108,7 @@ IMAGES_URL=$IMAGES_URL
 GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
 GITHUB_SHA=$GITHUB_SHA
 CELERY_BROKER_URL=$CELERY_BROKER_URL
+RQ_INTERVAL=$RQ_INTERVAL
 RESTART_CELERY=$RESTART_CELERY
 GA_ID=$GA_ID
 INSTAGRAM_URL="$INSTAGRAM_URL"
@@ -120,11 +120,9 @@ EOL
 
 sudo systemctl daemon-reload
 sudo systemctl restart na-api.service
-
-cd www-$environment
-set -a
-. ./env/bin/activate && . ./na-api.env && ./scripts/run_celery.sh $environment $celery_output_params
-set +a
+sudo systemctl restart workers_celery
+sudo systemctl restart workers_rq_cron
+sudo systemctl restart workers_rq
         """
     else
         ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
@@ -172,7 +170,6 @@ set +a
         if [ -z "$RESTART_CELERY" ]; then
             ./scripts/run_app.sh $environment gunicorn $output_params
         fi
-        ./scripts/run_celery.sh $environment $celery_output_params
         """
     fi
 
