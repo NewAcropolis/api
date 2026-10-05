@@ -817,6 +817,14 @@ function GetMembers {
     -H "Authorization: Bearer $TKN" 
 }
 
+function GetLastEmailSent {
+    echo "*** Get last email sent ***"
+
+    curl -X GET $api_server'/emails/last_email_sent' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" 
+}
+
 function GetUserByEmail {
     echo "*** Get user by email ***"
 
@@ -1421,6 +1429,10 @@ case "$arg" in
 
         -cspe)
             CelerySendPeriodicEmail
+        ;;
+
+        -gles)
+            GetLastEmailSent
         ;;
 
         -setup)
