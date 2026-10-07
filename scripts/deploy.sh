@@ -68,6 +68,7 @@ if [ $port != 'No environment' ]; then
     eval "GA_ID=\$GA_ID_$environment"
     eval "INSTAGRAM_URL=\$INSTAGRAM_URL"
     eval "RESTART_CELERY=\$RESTART_CELERY"
+    eval "RQ_INTERVAL=\$RQ_INTERVAL_$environment"
     eval "GOOGLE_APPLICATION_CREDENTIALS=\$GOOGLE_APPLICATION_CREDENTIALS_$environment"
     eval "SMTP_SERVER=\$SMTP_SERVER"
     eval "SMTP_USER=\$SMTP_USER_$environment"
@@ -110,6 +111,7 @@ GITHUB_SHA=$GITHUB_SHA
 CELERY_BROKER_URL=$CELERY_BROKER_URL
 RQ_INTERVAL=$RQ_INTERVAL
 RESTART_CELERY=$RESTART_CELERY
+RQ_INTERVAL=$RQ_INTERVAL
 GA_ID=$GA_ID
 INSTAGRAM_URL="$INSTAGRAM_URL"
 SMTP_SERVER=$SMTP_SERVER
@@ -173,9 +175,7 @@ sudo systemctl restart workers_rq
         """
     fi
 
-    if [ -z "$RESTART_CELERY" ]; then
-       source ./scripts/check_site.sh $deploy_host:$port
-    fi
+    source ./scripts/check_site.sh $deploy_host:$port
 else
     echo "$port"
     exit 1
