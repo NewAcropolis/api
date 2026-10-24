@@ -278,7 +278,7 @@ def send_smtp_email(to, subject, message, from_email=None, from_name='', smtp_in
         return
 
     current_app.logger.info("Starting to send smtp")
-    current_app.logger.info(f"Debug message: {message}")
+
     if not smtp_info:
         smtp_info = {
             "SMTP_SERVER": current_app.config.get("SMTP_SERVER"),
